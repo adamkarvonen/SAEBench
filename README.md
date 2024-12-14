@@ -1,14 +1,33 @@
 # SAE Bench
 
 ## Table of Contents
-- [Installation](#installation)
 - [Overview](#overview)
+- [Installation](#installation)
 - [Running Evaluations](#running-evaluations)
 - [Custom SAE Usage](#custom-sae-usage)
 - [Training Your Own SAEs](#training-your-own-saes)
 - [Graphing Results](#graphing-results)
 
-CURRENT REPO STATUS: This repo is still under development as we clean up some of the rough edges left over from the research process. However, it is usable in the current state for both SAE Lens SAEs and custom SAEs.
+CURRENT REPO STATUS: SAE Bench is currently a beta release. This repo is still under development as we clean up some of the rough edges left over from the research process. However, it is usable in the current state for both SAE Lens SAEs and custom SAEs.
+
+
+## Overview
+
+SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE) models:
+- **[Feature Absorption](https://arxiv.org/abs/2409.14507)**
+- **[AutoInterp](https://blog.eleuther.ai/autointerp/)**
+- **L0 / Loss Recovered**
+- **[RAVEL](https://arxiv.org/abs/2402.17700) (under development)**
+- **[Spurious Correlation Removal (SCR)](https://arxiv.org/abs/2411.18895)**
+- **[Targeted Probe Pertubation (TPP)](https://arxiv.org/abs/2411.18895)**
+- **Sparse Probing**
+- **[Unlearning](https://arxiv.org/abs/2410.19278)**
+
+For more information, refer to our [blog post](https://www.neuronpedia.org/sae-bench/info).
+
+### Supported Models and SAEs
+- **SAE Lens Pretrained SAEs**: Supports evaluations on any SAE Lens SAE.
+- **Custom SAEs**: Supports any general SAE object with `encode()` and `decode()` methods (see [Custom SAE Usage](#custom-sae-usage)).
 
 ### Installation
 Set up a virtual environment with python >= 3.10.
@@ -23,28 +42,12 @@ All evals can be ran with current batch sizes on Gemma-2-2B on a 24GB VRAM GPU (
 
 Autointerp requires the creation of `openai_api_key.txt`. Unlearning requires requesting access to the WMDP bio dataset (refer to `unlearning/README.md`).
 
-## Overview
-
-SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE) models:
-- **[Feature Absorption](https://arxiv.org/abs/2409.14507)**
-- **[AutoInterp](https://blog.eleuther.ai/autointerp/)**
-- **L0 / Loss Recovered**
-- **[RAVEL](https://arxiv.org/abs/2402.17700) (under development)**
-- **[Spurious Correlation Removal (SCR)](https://arxiv.org/abs/2411.18895)**
-- **[Targeted Probe Pertubation (TPP)](https://arxiv.org/abs/2411.18895)**
-- **Sparse Probing**
-- **[Unlearning](https://arxiv.org/abs/2410.19278)** (requires access to the WMDP dataset, see README)
-
-### Supported Models and SAEs
-- **SAE Lens Pretrained Models**: Supports evaluations on any SAE Lens pretrained model.
-- **Custom SAEs**: Supports any general SAE object with `encode()` and `decode()` methods (see [Custom SAE Usage](#custom-sae-usage)).
-
 ## Getting Started
 
 We recommend to get starting by going through the `sae_bench_demo.ipynb` notebook. In this notebook, we load both a custom SAE and an SAE Lens SAE, run both of them on multiple evaluations, and plot graphs of the results.
 
 ## Running Evaluations
-Each evaluation has an example command located in its respective `main.py` file. To run all evaluations on a selection of SAE Lens SAEs, refer to `shell_scripts/`. Here's how to run a sparse probing evaluation on a single SAE Bench Pythia-70M SAE:
+Each evaluation has an example command located in its respective `main.py` file. To run all evaluations on a selection of SAE Lens SAEs, refer to `shell_scripts/README.md`. Here's an example of how to run a sparse probing evaluation on a single SAE Bench Pythia-70M SAE:
 
 ```
 python evals/sparse_probing/main.py \
@@ -53,7 +56,7 @@ python evals/sparse_probing/main.py \
     --model_name pythia-70m-deduped
 ```
 
-The results will be saved to the eval_results/sparse_probing directory.
+The results will be saved to the `eval_results/sparse_probing` directory.
 
 We use regex patterns to select SAE Lens SAEs. For more examples of regex patterns, refer to `sae_regex_selection.ipynb`.
 
@@ -63,7 +66,7 @@ For a tutorial of using SAE Lens SAEs, including calculating L0 and Loss Recover
 
 ## Custom SAE Usage
 
-Our goal is to have first class support for custom SAEs as the field is rapidly evolving. Our evaluations can run on any SAE object with `encode()`, `decode()`, and a few config values. We recommend referring to `custom_sae_demo.ipynb`. In this notebook, we load a custom SAE and an SAE Bench baseline SAE, run them on two evals, and graph the results.
+Our goal is to have first class support for custom SAEs as the field is rapidly evolving. Our evaluations can run on any SAE object with `encode()`, `decode()`, and a few config values. We recommend referring to `sae_bench_demo.ipynb`. In this notebook, we load a custom SAE and an SAE Bench baseline SAE, run them on two evals, and graph the results. There is additional information about custom SAE usage in `custom_saes/README.md`.
 
 There are two ways to evaluate custom SAEs:
 
@@ -81,8 +84,8 @@ We currently have a suite of SAE Bench SAEs on layers 3 and 4 of Pythia-70M and 
 
 ## Training Your Own SAEs
 
-You can replicate the training of our SAEs using scripts provided [here](https://github.com/canrager/dictionary_training/), or implement your own SAE, or make a change to one of our SAE implementations. Once you train your new version, you can benchmark against our existing SAEs for a true apples to apples comparison.
+You can deterministically replicate the training of our SAEs using scripts provided [here](https://github.com/canrager/dictionary_training/), or implement your own SAE, or make a change to one of our SAE implementations. Once you train your new version, you can benchmark against our existing SAEs for a true apples to apples comparison.
 
 ## Graphing Results
 
-To graph the results, refer to `graphing.ipynb`, which can graph the generated SAE Bench data. Note that many graphs plot SAEs by L0 and / or Loss Recovered. To obtain these scores, run `evals/core/main.py`.
+If evaluating your own SAEs, we recommend using the graphing cells in `sae_bench_demo.ipynb`. To replicate all SAE Bench plots, refer to `graphing.ipynb`. In this notebook, we download all SAE Bench data and create a variety of plots.
