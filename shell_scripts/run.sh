@@ -12,7 +12,7 @@ declare -a sae_block_patterns=(
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting pattern ${sae_block_pattern}..."
-    python evals/absorption/main.py \
+    python sae_bench/evals/absorption/main.py \
         --sae_regex_pattern "${sae_regex_pattern}" \
         --sae_block_pattern "${sae_block_pattern}" \
         --model_name ${model_name} || {
@@ -24,7 +24,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting pattern ${sae_block_pattern}..."
-    python evals/autointerp/main.py \
+    python sae_bench/evals/autointerp/main.py \
         --sae_regex_pattern "${sae_regex_pattern}" \
         --sae_block_pattern "${sae_block_pattern}" \
         --model_name ${model_name} || {
@@ -36,7 +36,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting core eval for pattern ${sae_block_pattern}..."
-    python evals/core/main.py "${sae_regex_pattern}" "${sae_block_pattern}" \
+    python sae_bench/evals/core/main.py "${sae_regex_pattern}" "${sae_block_pattern}" \
     --batch_size_prompts 16 \
     --n_eval_sparsity_variance_batches 2000 \
     --n_eval_reconstruction_batches 200 \
@@ -50,7 +50,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting SCR eval for pattern ${sae_block_pattern}..."
-    python evals/scr_and_tpp/main.py \
+    python sae_bench/evals/scr_and_tpp/main.py \
     --sae_regex_pattern "${sae_regex_pattern}" \
     --sae_block_pattern "${sae_block_pattern}" \
     --model_name ${model_name} \
@@ -64,7 +64,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting TPP eval for pattern ${sae_block_pattern}..."
-    python evals/scr_and_tpp/main.py \
+    python sae_bench/evals/scr_and_tpp/main.py \
     --sae_regex_pattern "${sae_regex_pattern}" \
     --sae_block_pattern "${sae_block_pattern}" \
     --model_name ${model_name} \
@@ -78,7 +78,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting sparse probing for pattern ${sae_block_pattern}..."
-    python evals/sparse_probing/main.py \
+    python sae_bench/evals/sparse_probing/main.py \
     --sae_regex_pattern "${sae_regex_pattern}" \
     --sae_block_pattern "${sae_block_pattern}" \
     --model_name ${model_name} \
@@ -91,7 +91,7 @@ done
 
 for sae_block_pattern in "${sae_block_patterns[@]}"; do
     echo "Starting unlearning for pattern ${sae_block_pattern}..."
-    python evals/unlearning/main.py \
+    python sae_bench/evals/unlearning/main.py \
     --sae_regex_pattern "${sae_regex_pattern}" \
     --sae_block_pattern "${sae_block_pattern}" \
     --model_name ${model_name_it} || {
