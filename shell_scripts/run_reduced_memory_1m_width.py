@@ -1,5 +1,5 @@
 import subprocess
-from sae_bench_utils.sae_selection_utils import get_saes_from_regex
+from sae_bench.sae_bench_utils.sae_selection_utils import get_saes_from_regex
 
 # User configuration
 sae_regex_pattern = "gemma-scope-2b-pt-res"
@@ -117,7 +117,7 @@ for sae_block_pattern in sae_block_patterns:
 
     cmd = [
         "python",
-        "evals/sparse_probing/main.py",
+        "sae_bench/evals/sparse_probing/main.py",
         "--sae_regex_pattern",
         sae_regex_pattern,
         "--sae_block_pattern",
@@ -140,7 +140,7 @@ for sae_block_pattern in sae_block_patterns:
     print(f"Starting absorption eval for pattern {sae_block_pattern}...")
     cmd = [
         "python",
-        "evals/absorption/main.py",
+        "sae_bench/evals/absorption/main.py",
         "--sae_regex_pattern",
         sae_regex_pattern,
         "--sae_block_pattern",
@@ -160,7 +160,7 @@ for sae_block_pattern in sae_block_patterns:
     print(f"Starting autointerp eval for pattern {sae_block_pattern}...")
     cmd = [
         "python",
-        "evals/autointerp/main.py",
+        "sae_bench/evals/autointerp/main.py",
         "--sae_regex_pattern",
         sae_regex_pattern,
         "--sae_block_pattern",
@@ -178,7 +178,7 @@ for sae_block_pattern in sae_block_patterns:
     print(f"Starting core eval for pattern {sae_block_pattern}...")
     cmd = [
         "python",
-        "evals/core/main.py",
+        "sae_bench/evals/core/main.py",
         sae_regex_pattern,
         sae_block_pattern,
         "--batch_size_prompts",
@@ -202,7 +202,7 @@ for sae_block_pattern in sae_block_patterns:
     print(f"Starting unlearning eval for pattern {sae_block_pattern}...")
     cmd = [
         "python",
-        "evals/unlearning/main.py",
+        "sae_bench/evals/unlearning/main.py",
         "--sae_regex_pattern",
         sae_regex_pattern,
         "--sae_block_pattern",
