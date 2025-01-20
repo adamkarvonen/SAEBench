@@ -153,6 +153,11 @@ def plot_results(
     return_fig: bool = False,
     baseline_sae_path: str | None = None,
     baseline_label: str | None = None,
+    xlims: tuple[float, float] | None = None,
+    ylims: tuple[float, float] | None = None,
+    plot_3var: bool = True,
+    plot_2var_sae: bool = True,
+    plot_2var_dict: bool = True,
 ):
     eval_results = get_eval_results(eval_filenames)
     core_results = get_core_results(core_filenames)
@@ -183,36 +188,46 @@ def plot_results(
     title_3var = f"{title_prefix}L0 vs Loss Recovered vs {custom_metric_name}"
     title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
 
-    plot_3var_graph(
-        eval_results,
-        title_3var,
-        custom_metric,
-        colorbar_label="Custom Metric",
-        output_filename=f"{image_base_name}_3var.png",
-        trainer_markers=trainer_markers,
-    )
-    fig = plot_2var_graph(
-        eval_results,
-        custom_metric,
-        y_label=custom_metric_name,
-        title=title_2var,
-        output_filename=f"{image_base_name}_2var_sae_type.png",
-        trainer_markers=trainer_markers,
-        trainer_colors=trainer_colors,
-        baseline_value=baseline_value,
-        baseline_label=baseline_label,
-    )
+    fig = None
+    if plot_3var:
+        plot_3var_graph(
+            eval_results,
+            title_3var,
+            custom_metric,
+            colorbar_label="Custom Metric",
+            output_filename=f"{image_base_name}_3var.png",
+            trainer_markers=trainer_markers,
+            xlims=xlims,
+            ylims=ylims,
+        )
+    if plot_2var_sae:
+        fig = plot_2var_graph(
+            eval_results,
+            custom_metric,
+            y_label=custom_metric_name,
+            title=title_2var,
+            output_filename=f"{image_base_name}_2var_sae_type.png",
+            trainer_markers=trainer_markers,
+            trainer_colors=trainer_colors,
+            baseline_value=baseline_value,
+            baseline_label=baseline_label,
+            xlims=xlims,
+            ylims=ylims,
+        )
 
-    plot_2var_graph_dict_size(
-        eval_results,
-        custom_metric,
-        y_label=custom_metric_name,
-        title=title_2var,
-        output_filename=f"{image_base_name}_2var_dict_size.png",
-        baseline_value=baseline_value,
-        baseline_label=baseline_label,
-        trainer_markers=trainer_markers,
-    )
+    if plot_2var_dict:
+        plot_2var_graph_dict_size(
+            eval_results,
+            custom_metric,
+            y_label=custom_metric_name,
+            title=title_2var,
+            output_filename=f"{image_base_name}_2var_dict_size.png",
+            baseline_value=baseline_value,
+            baseline_label=baseline_label,
+            trainer_markers=trainer_markers,
+            xlims=xlims,
+            ylims=ylims,
+        )
 
     if return_fig:
         return fig
@@ -305,8 +320,8 @@ def get_custom_metric_key_and_name(
         custom_metric = f"sae_top_{k}_test_accuracy"
         custom_metric_name = f"Sparse Probing Top {k} Test Accuracy"
     elif "absorption" in eval_path:
-        custom_metric = "mean_absorption_score"
-        custom_metric_name = "Mean Absorption Score"
+        custom_metric = "mean_absorption_fraction_score"
+        custom_metric_name = "Mean Absorption Fraction Score"
     elif "autointerp" in eval_path:
         custom_metric = "autointerp_score"
         custom_metric_name = "Autointerp Score"
