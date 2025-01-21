@@ -37,7 +37,7 @@ evals/ravel/models/
 **bio-forget-corpus.jsonl
 
 
-**/images/
+**/images*
 **/results/
 **/artifacts/
 **/test_results/

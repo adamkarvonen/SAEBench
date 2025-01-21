@@ -21,36 +21,39 @@ from scipy import stats
 # create a dictionary mapping trainer types to marker shapes
 
 TRAINER_MARKERS = {
-    "standard": "o",
-    "standard_april_update": "o",
+    "standard": "s",
+    "standard_april_update": "s",
     "jumprelu": "X",
     "topk": "^",
-    "batch_topk": "s",
+    "batch_topk": "o",
     "p_anneal": "P",
-    "matryoshka_batch_topk": "*",
-    "gated": "d",
+    "matryoshka_batch_topk": "d",
+    "matroyshka_batch_topk": "d",
+    "gated": ">",
 }
 
 TRAINER_COLORS = {
-    "standard": "blue",
-    "standard_april_update": "blue",
-    "jumprelu": "orange",
-    "topk": "green",
-    "batch_topk": "purple",
-    "p_anneal": "red",
-    "matryoshka_batch_topk": "brown",
-    "gated": "purple",
+    "standard": "#ff7f0e",
+    "standard_april_update": "#ff7f0e",
+    "jumprelu": "#00c7ca",
+    "topk": "#00ca00",
+    "batch_topk": "#002eff",
+    "p_anneal": "#000000",
+    "matroyshka_batch_topk": "#ff0000",
+    "matryoshka_batch_topk": "#ff0000",
+    "gated": "#00bf00", 
 }
 
 
 TRAINER_LABELS = {
-    "standard": "Standard",
-    "standard_april_update": "Standard",
+    "standard": "ReLU",
+    "standard_april_update": "ReLU",
     "jumprelu": "JumpReLU",
     "topk": "TopK",
     "batch_topk": "Batch TopK",
-    "p_anneal": "Standard with P-Annealing",
+    "p_anneal": "ReLU with p-Annealing",
     "matryoshka_batch_topk": "Matryoshka Batch TopK",
+    "matroyshka_batch_topk": "Matryoshka Batch TopK",
     "gated": "Gated",
 }
 
@@ -669,7 +672,10 @@ def plot_2var_graph(
     trainer_markers: dict[str, str] | None = None,
     trainer_colors: dict[str, str] | None = None,
     return_fig: bool = False,
-    connect_points: bool = False,  # New parameter to control line connections
+    connect_points: bool = False,
+    passed_ax: plt.Axes | None = None,
+    hide_legend: bool = False,
+    show_grid: bool = True,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
@@ -682,7 +688,11 @@ def plot_2var_graph(
     )
 
     # Create the scatter plot with extra width for legend
-    fig, ax = plt.subplots(figsize=(12, 6))
+    if passed_ax is None:
+        fig, ax = plt.subplots(figsize=(12, 6))
+    else:
+        ax = passed_ax
+        assert return_fig is False, "Cannot return fig if ax is provided"
 
     handles, labels = [], []
 
@@ -749,13 +759,20 @@ def plot_2var_graph(
     # x log
     ax.set_xscale("log")
 
+    # Add grid if requested
+    if show_grid:
+        ax.grid(True, alpha=0.3)  # Semi-transparent grid
+
     if baseline_value is not None:
         ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
         labels.append(baseline_label)
         handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
 
     # Place legend outside the plot on the right
-    ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
+    if legend_mode == 'show outside':
+        ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
+    elif legend_mode == 'show'
+
 
     # Set axis limits
     if xlims:
@@ -771,8 +788,8 @@ def plot_2var_graph(
 
     if return_fig:
         return fig
-
-    plt.show()
+    elif passed_ax is None:
+        plt.show()
 
 
 def plot_2var_graph_dict_size(
