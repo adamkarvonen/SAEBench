@@ -81,7 +81,7 @@ image_name = f"plot_core_matryoshka_batchtopk_{selection_title.replace(' ', '_')
 #%%
 
 # Create a 2x2 subplot figure
-fig, axes = plt.subplots(1, 1, figsize=(12, 8))
+fig, axes = plt.subplots(1, 1, figsize=(10, 7))
 # axes = axes.flatten()
 
 # Loop through eval types and create subplot for each
@@ -166,7 +166,7 @@ for idx, eval_type in enumerate(eval_types):
         baseline_value=baseline_value,
         baseline_label=baseline_label,
         passed_ax=axes,
-        hide_legend=False,
+        legend_mode='show_inside',
         connect_points=True,
     )
 

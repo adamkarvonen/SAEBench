@@ -674,8 +674,9 @@ def plot_2var_graph(
     return_fig: bool = False,
     connect_points: bool = False,
     passed_ax: plt.Axes | None = None,
-    hide_legend: bool = False,
+    legend_mode: str = "show_outside", # show_outside, show_inside, hide
     show_grid: bool = True,
+    bold_x0: bool = False,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
@@ -769,16 +770,22 @@ def plot_2var_graph(
         handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
 
     # Place legend outside the plot on the right
-    if legend_mode == 'show outside':
+    if legend_mode == 'show_outside':
         ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
-    elif legend_mode == 'show'
-
+    elif legend_mode == 'show_inside':
+        ax.legend(handles, labels)
+    elif legend_mode == 'hide':
+        pass
+    else:
+        raise ValueError(f"Invalid legend mode: {legend_mode}. Must be one of: show_outside, show_inside, hide")
 
     # Set axis limits
     if xlims:
         ax.set_xlim(*xlims)
     if ylims:
         ax.set_ylim(*ylims)
+    if bold_x0:
+        ax.axhline(0, color='black', linestyle='-', linewidth=2, zorder=-1)
 
     plt.tight_layout()
 
