@@ -1,0 +1,6 @@
+python paper_plotting/download_and_format.py
+python paper_plotting/adam_plot_diff_widths.py
+python paper_plotting/adam_plot_2x4_architectures.py
+python paper_plotting/adam_plot_2x2_architectures.py
+python paper_plotting/adam_plot_checkpoints.py
+python paper_plotting/adam_stack_checkpoint_images.py

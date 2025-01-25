@@ -41,7 +41,7 @@ TRAINER_COLORS = {
     "p_anneal": "#000000",
     "matroyshka_batch_topk": "#ff0000",
     "matryoshka_batch_topk": "#ff0000",
-    "gated": "#00bf00", 
+    "gated": "#00bf00",
 }
 
 
@@ -674,15 +674,31 @@ def plot_2var_graph(
     return_fig: bool = False,
     connect_points: bool = False,
     passed_ax: plt.Axes | None = None,
-    legend_mode: str = "show_outside", # show_outside, show_inside, hide
+    legend_mode: str = "show_outside",  # show_outside, show_inside, hide
     show_grid: bool = True,
     bold_x0: bool = False,
+    max_l0: float | None = None,
+    highlighted_class: str | None = None,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
 
     if not trainer_colors:
         trainer_colors = TRAINER_COLORS
+
+    for k, v in results.items():
+        if v["sae_class"] == "matroyshka_batch_topk":
+            raise ValueError("Matroyshka found in results, please rename to matryoshka_batch_topk")
+
+    # Filter results if max_l0 is provided
+    if max_l0 is not None:
+        results = {k: v for k, v in results.items() if v[x_axis_key] <= max_l0}
+
+    # Verify highlighted_class exists if provided
+    if highlighted_class is not None:
+        assert any(v["sae_class"] == highlighted_class for v in results.values()), (
+            f"Highlighted class {highlighted_class} not found in results {results}"
+        )
 
     trainer_markers, trainer_colors = update_trainer_markers_and_colors(
         results, trainer_markers, trainer_colors
@@ -713,17 +729,22 @@ def plot_2var_graph(
             l0_values = [p[0] for p in points]
             custom_metric_values = [p[1] for p in points]
 
-            # Add connecting line
+            # Add connecting line with transparency based on highlighted_class
+            line_alpha = 1.0 if trainer == highlighted_class else 0.2 if highlighted_class else 0.5
+            line_width = 2.0 if trainer == highlighted_class else 1.0
+
             ax.plot(
                 l0_values,
                 custom_metric_values,
                 color=trainer_colors[trainer],
                 linestyle="-",
-                alpha=0.5,
+                alpha=line_alpha,
+                linewidth=line_width,
                 zorder=1,  # Ensure lines are plotted behind points
             )
 
         # Plot data points
+        point_alpha = 1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
         ax.scatter(
             l0_values,
             custom_metric_values,
@@ -732,6 +753,7 @@ def plot_2var_graph(
             label=trainer,
             color=trainer_colors[trainer],
             edgecolor="black",
+            alpha=point_alpha,
             zorder=2,  # Ensure points are plotted on top of lines
         )
 
@@ -743,6 +765,7 @@ def plot_2var_graph(
             s=100,
             color=trainer_colors[trainer],
             edgecolor="black",
+            alpha=point_alpha,
         )
         handles.append(legend_handle)
 
@@ -770,14 +793,16 @@ def plot_2var_graph(
         handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
 
     # Place legend outside the plot on the right
-    if legend_mode == 'show_outside':
+    if legend_mode == "show_outside":
         ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
-    elif legend_mode == 'show_inside':
+    elif legend_mode == "show_inside":
         ax.legend(handles, labels)
-    elif legend_mode == 'hide':
+    elif legend_mode == "hide":
         pass
     else:
-        raise ValueError(f"Invalid legend mode: {legend_mode}. Must be one of: show_outside, show_inside, hide")
+        raise ValueError(
+            f"Invalid legend mode: {legend_mode}. Must be one of: show_outside, show_inside, hide"
+        )
 
     # Set axis limits
     if xlims:
@@ -785,7 +810,7 @@ def plot_2var_graph(
     if ylims:
         ax.set_ylim(*ylims)
     if bold_x0:
-        ax.axhline(0, color='black', linestyle='-', linewidth=2, zorder=-1)
+        ax.axhline(0, color="black", linestyle="-", linewidth=2, zorder=-1)
 
     plt.tight_layout()
 
@@ -1283,7 +1308,7 @@ def plot_training_steps(
     if output_filename:
         plt.savefig(output_filename, bbox_inches="tight")
 
-    # plt.show()
+    plt.show()
 
 
 def get_sae_class_archived(sae_cfg: dict, sae_release) -> str:

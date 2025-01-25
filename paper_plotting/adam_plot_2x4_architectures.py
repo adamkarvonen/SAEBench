@@ -32,13 +32,23 @@ selection = {
     # "SAE Bench Gemma-2-2B 4K Width Series": [
     #     r"saebench_gemma-2-2b_width-2pow12_date-0108(?!.*step).*",
     # ],
+    "SAE Bench Pythia-160M 4K Architecture Series": [
+        r"saebench_pythia-160m-deduped_width-2pow12_date-0108.*",
+    ],
+    "SAE Bench Pythia-160M 16K Architecture Series": [
+        r"saebench_pythia-160m-deduped_width-2pow14_date-0108.*",
+    ],
+    "SAE Bench Pythia-160M 65K Architecture Series": [
+        r"saebench_pythia-160m-deduped_width-2pow16_date-0108.*",
+    ],
+    "SAE Bench Gemma-2-2B 4K Architecture Series": [
+        r"saebench_gemma-2-2b_width-2pow12_date-0108(?!.*step).*",
+    ],
     "SAE Bench Gemma-2-2B 16K Architecture Series": [
         r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp.*",
     ],
     "SAE Bench Gemma-2-2B 65K Architecture Series": [
         r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
-        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000.*",
     ],
     # "SAE Bench Pythia-70M SAE Type Series": [
     #     r"sae_bench_pythia70m_sweep.*_ctx128_.*blocks\.({layer})\.hook_resid_post__trainer_.*",
@@ -46,8 +56,6 @@ selection = {
 }
 
 for selection_title in selection:
-    sae_regex_patterns = selection[selection_title]
-
     sae_regex_patterns = selection[selection_title]
     for i, pattern in enumerate(sae_regex_patterns):
         sae_regex_patterns[i] = pattern.format(layer=layer)
@@ -60,32 +68,52 @@ for selection_title in selection:
         "core",
         "autointerp",
         "absorption",
+        "sparse_probing",
         "scr",
+        "tpp",
+        "unlearning",
     ]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
     # TODO: Add other ks, try mean over multiple ks
     ks_lookup = {
         "scr": 10,
+        "tpp": 10,
+        "sparse_probing": 1,
     }
 
     baseline_type = "pca_sae"
     include_baseline = True
-
     # # Naming the image save path
     image_path = "./images_paper_2x2"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
-    image_name = f"plot_2x2_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
+    image_name = f"plot_2x4_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
 
-    # %%
+    # Create a 4x2 subplot figure
+    fig = plt.figure(figsize=(20, 24))
 
-    # Create a 2x2 subplot figure
-    fig, axes = plt.subplots(2, 2, figsize=(20, 12))
-    axes = axes.flatten()
+    # Create a special layout for 7 plots and a legend
+    gs = fig.add_gridspec(4, 2)
+    axes = []
+    axes.append(fig.add_subplot(gs[0, 0]))  # row 1, col 1
+    axes.append(fig.add_subplot(gs[0, 1]))  # row 1, col 2
+    axes.append(fig.add_subplot(gs[1, 0]))  # row 2, col 1
+    axes.append(fig.add_subplot(gs[1, 1]))  # row 2, col 2
+    axes.append(fig.add_subplot(gs[2, 0]))  # row 3, col 1
+    axes.append(fig.add_subplot(gs[2, 1]))  # row 3, col 2
+    axes.append(fig.add_subplot(gs[3, 0]))  # row 4, col 1
+    legend_ax = fig.add_subplot(gs[3, 1])  # row 4, col 2 for legend
+    legend_ax.axis("off")  # Hide the axis
+
+    # Store all lines and labels for later
+    all_lines = []
+    all_labels = []
 
     # Loop through eval types and create subplot for each
     for idx, eval_type in tqdm(enumerate(eval_types)):
+        if eval_type == "unlearning" and "gemma" not in selection_title.lower():
+            continue
         if eval_type in ks_lookup:
             k = ks_lookup[eval_type]
         else:
@@ -153,10 +181,9 @@ for selection_title in selection:
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
         title_2var = None
 
-        if idx == 1:
-            legend_mode = "show_outside"
-        else:
-            legend_mode = "hide"
+        # Set legend_mode to "show" only for last plot
+        legend_mode = "show_outside" if idx == 2 else "hide"
+        legend_mode = "hide"
 
         if custom_metric == "mean_absorption_fraction_score":
             for sae_name in eval_results:
@@ -164,7 +191,7 @@ for selection_title in selection:
                 eval_results[sae_name][custom_metric] = 1 - score
             baseline_value = 1 - baseline_value
 
-        ax = graphing_utils.plot_2var_graph(
+        graphing_utils.plot_2var_graph(
             eval_results,
             custom_metric,
             y_label=custom_metric_name,
@@ -175,6 +202,22 @@ for selection_title in selection:
             legend_mode=legend_mode,
             connect_points=True,
         )
+
+        # After plotting, get the lines and labels directly from the axis
+        lines, labels = axes[idx].get_legend_handles_labels()
+
+        new_labels = []
+
+        for label in labels:
+            new_labels.append(graphing_utils.TRAINER_LABELS.get(label, label))
+
+        labels = new_labels
+
+        if idx == 6 and lines and labels:  # Only for the last plot
+            # Create legend in the legend axis
+            legend_ax.legend(
+                lines, labels, loc="center", bbox_to_anchor=(0.5, 0.5), fontsize="large"
+            )
 
     plt.tight_layout()
     plt.savefig(os.path.join(image_path, image_name))

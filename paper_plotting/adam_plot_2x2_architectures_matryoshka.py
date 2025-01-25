@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
-import sae_bench.sae_bench_utils.graphing_utils as graphing_utils
+import sae_bench.sae_bench_utils.matryoshka_graphing_utils as graphing_utils
 
 model_name = "gemma-2-2b"
 layer = 12
@@ -73,12 +73,10 @@ for selection_title in selection:
     include_baseline = True
 
     # # Naming the image save path
-    image_path = "./images_paper_2x2"
+    image_path = "./images_paper_2x2_matryoshka"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
     image_name = f"plot_2x2_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
-
-    # %%
 
     # Create a 2x2 subplot figure
     fig, axes = plt.subplots(2, 2, figsize=(20, 12))
@@ -174,7 +172,12 @@ for selection_title in selection:
             passed_ax=axes[idx],
             legend_mode=legend_mode,
             connect_points=True,
+            max_l0=400.0,
+            highlighted_class="matryoshka_batch_topk",
         )
 
     plt.tight_layout()
     plt.savefig(os.path.join(image_path, image_name))
+    # plt.show()
+
+# %%
