@@ -6,9 +6,10 @@
 import os
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import itertools
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
-import sae_bench.sae_bench_utils.graphing_utils as graphing_utils
+import sae_bench.sae_bench_utils.matryoshka_graphing_utils as graphing_utils
 
 model_name = "gemma-2-2b"
 layer = 12
@@ -34,18 +35,23 @@ selection = {
     # ],
     "SAE Bench Gemma-2-2B 16K Architecture Series": [
         r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp.*",
     ],
     "SAE Bench Gemma-2-2B 65K Architecture Series": [
         r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
-        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000.*",
     ],
     # "SAE Bench Pythia-70M SAE Type Series": [
     #     r"sae_bench_pythia70m_sweep.*_ctx128_.*blocks\.({layer})\.hook_resid_post__trainer_.*",
     # ],
 }
 
-for selection_title in selection:
+highlight_matryoshka_options = [
+    True,
+    False,
+]  # Whether to highlight matryoshka architectures in plots
+
+for selection_title, highlight_matryoshka in itertools.product(
+    selection.keys(), highlight_matryoshka_options
+):
     sae_regex_patterns = selection[selection_title]
 
     sae_regex_patterns = selection[selection_title]
@@ -73,7 +79,10 @@ for selection_title in selection:
     include_baseline = True
 
     # # Naming the image save path
-    image_path = "./images_paper_2x2"
+    if highlight_matryoshka:
+        image_path = "./images_paper_2x2_matryoshka"
+    else:
+        image_path = "./images_paper_2x2"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
     image_name = f"plot_2x2_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
@@ -162,7 +171,15 @@ for selection_title in selection:
             for sae_name in eval_results:
                 score = eval_results[sae_name][custom_metric]
                 eval_results[sae_name][custom_metric] = 1 - score
-            baseline_value = 1 - baseline_value
+            if baseline_value:
+                baseline_value = 1 - baseline_value
+
+        if highlight_matryoshka:
+            max_l0 = 400.0
+            highlighted_class = "matryoshka_batch_topk"
+        else:
+            max_l0 = None
+            highlighted_class = None
 
         ax = graphing_utils.plot_2var_graph(
             eval_results,
@@ -174,7 +191,10 @@ for selection_title in selection:
             passed_ax=axes[idx],
             legend_mode=legend_mode,
             connect_points=True,
+            max_l0=max_l0,
+            highlighted_class=highlighted_class,
         )
 
     plt.tight_layout()
+    print(f"Saving image to {os.path.join(image_path, image_name)}")
     plt.savefig(os.path.join(image_path, image_name))

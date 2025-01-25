@@ -6,32 +6,15 @@
 import os
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import itertools
+
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
 import sae_bench.sae_bench_utils.matryoshka_graphing_utils as graphing_utils
 
-model_name = "gemma-2-2b"
-layer = 12
-
+model_name = "pythia-160m"
+layer = 8
 selection = {
-    # "Gemma-Scope Gemma-2-2B Width Series": [
-    #     r"gemma-scope-2b-pt-res_layer_{layer}_width_(16k|65k|1m)",
-    # ],
-    # "Gemma-Scope Gemma-2-9B Width Series": [
-    #     r"gemma-scope-9b-pt-res_layer_{layer}_width_(16k|131k|1m)",
-    # ],
-    # "SAE Bench Gemma-2-2B Width Series": [
-    #     r"saebench_gemma-2-2b_width-2pow12_date-0108.*(batch|Batch).*(?!.*step)(?!.*Standard).*",
-    #     r"saebench_gemma-2-2b_width-2pow14_date-0108.*(batch|Batch).*(?!.*step)(?!.*Standard).*",
-    #     r"saebench_gemma-2-2b_width-2pow16_date-0108.*(batch|Batch).*(?!.*step)(?!.*Standard).*",
-    # ],
-    # "SAE Bench Gemma-2-2B Matryoshka Width Series": [
-    #     r"matroyshka_gemma-2-2b-16k-v2_MatroyshkaBatchTopKTrainer_notemp.*",
-    #     r"matroyshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000.*",
-    # ],
-    # "SAE Bench Gemma-2-2B 4K Width Series": [
-    #     r"saebench_gemma-2-2b_width-2pow12_date-0108(?!.*step).*",
-    # ],
     "SAE Bench Pythia-160M 4K Architecture Series": [
         r"saebench_pythia-160m-deduped_width-2pow12_date-0108.*",
     ],
@@ -41,28 +24,23 @@ selection = {
     "SAE Bench Pythia-160M 65K Architecture Series": [
         r"saebench_pythia-160m-deduped_width-2pow16_date-0108.*",
     ],
-    "SAE Bench Gemma-2-2B 4K Architecture Series": [
-        r"saebench_gemma-2-2b_width-2pow12_date-0108(?!.*step).*",
-    ],
-    "SAE Bench Gemma-2-2B 16K Architecture Series": [
-        r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-    ],
-    "SAE Bench Gemma-2-2B 65K Architecture Series": [
-        r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
-    ],
-    # "SAE Bench Pythia-70M SAE Type Series": [
-    #     r"sae_bench_pythia70m_sweep.*_ctx128_.*blocks\.({layer})\.hook_resid_post__trainer_.*",
-    # ],
 }
 
-for selection_title in selection:
+highlight_matryoshka_options = [
+    False,
+    True,
+]  # Whether to highlight matryoshka architectures in plots
+
+for selection_title, highlight_matryoshka in itertools.product(
+    selection.keys(), highlight_matryoshka_options
+):
+    assert "pythia" in selection_title.lower(), "This script is only for Pythia models"
+
     sae_regex_patterns = selection[selection_title]
     for i, pattern in enumerate(sae_regex_patterns):
         sae_regex_patterns[i] = pattern.format(layer=layer)
 
-    results_folders = [
-        "./graphing_eval_results_0125",
-    ]
+    results_folders = ["./graphing_eval_results_0125"]
 
     baseline_folder = results_folders[0]
 
@@ -73,7 +51,6 @@ for selection_title in selection:
         "sparse_probing",
         "scr",
         "tpp",
-        "unlearning",
     ]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
@@ -84,10 +61,11 @@ for selection_title in selection:
         "sparse_probing": 1,
     }
 
-    baseline_type = "pca_sae"
-    include_baseline = True
     # # Naming the image save path
-    image_path = "./images_paper_2x2_matryoshka"
+    if highlight_matryoshka:
+        image_path = "./images_paper_2x2_matryoshka"
+    else:
+        image_path = "./images_paper_2x2"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
     image_name = f"plot_2x4_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
@@ -104,8 +82,7 @@ for selection_title in selection:
     axes.append(fig.add_subplot(gs[1, 1]))  # row 2, col 2
     axes.append(fig.add_subplot(gs[2, 0]))  # row 3, col 1
     axes.append(fig.add_subplot(gs[2, 1]))  # row 3, col 2
-    axes.append(fig.add_subplot(gs[3, 0]))  # row 4, col 1
-    legend_ax = fig.add_subplot(gs[3, 1])  # row 4, col 2 for legend
+    legend_ax = fig.add_subplot(gs[3, 0])  # row 4, col 2 for legend
     legend_ax.axis("off")  # Hide the axis
 
     # Store all lines and labels for later
@@ -116,7 +93,6 @@ for selection_title in selection:
     for idx, eval_type in tqdm(enumerate(eval_types)):
         if eval_type == "unlearning" and "gemma" not in selection_title.lower():
             continue
-
         if eval_type in ks_lookup:
             k = ks_lookup[eval_type]
         else:
@@ -150,36 +126,6 @@ for selection_title in selection:
             eval_type, k
         )
 
-        if include_baseline:
-            if model_name == "gemma-2-2b":
-                baseline_sae_path = (
-                    f"{model_name}_layer_{layer}_pca_sae_custom_sae_eval_results.json"
-                )
-                baseline_sae_path = os.path.join(baseline_folder, eval_type, baseline_sae_path)
-                baseline_label = "PCA Baseline"
-        else:
-            baseline_sae_path = None
-            baseline_label = None
-            baseline_sae_path = None
-
-        if baseline_sae_path:
-            baseline_results = graphing_utils.get_eval_results([baseline_sae_path])
-
-            baseline_filename = os.path.basename(baseline_sae_path)
-            baseline_results_key = baseline_filename.replace("_eval_results.json", "")
-
-            core_baseline_filename = baseline_sae_path.replace(eval_type, "core")
-
-            baseline_results[baseline_results_key].update(
-                graphing_utils.get_core_results([core_baseline_filename])[baseline_results_key]
-            )
-
-            baseline_value = baseline_results[baseline_results_key][custom_metric]
-            assert baseline_label, "Please provide a label for the baseline"
-        else:
-            baseline_value = None
-            assert baseline_label is None, "Please do not provide a label for the baseline"
-
         # Plot
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
         title_2var = None
@@ -192,23 +138,24 @@ for selection_title in selection:
             for sae_name in eval_results:
                 score = eval_results[sae_name][custom_metric]
                 eval_results[sae_name][custom_metric] = 1 - score
-            baseline_value = 1 - baseline_value
 
-        if not eval_results:
-            raise ValueError("No eval results found", eval_type, k)
+        if highlight_matryoshka:
+            max_l0 = 400.0
+            highlighted_class = "matryoshka_batch_topk"
+        else:
+            max_l0 = None
+            highlighted_class = None
 
         graphing_utils.plot_2var_graph(
             eval_results,
             custom_metric,
             y_label=custom_metric_name,
             title=title_2var,
-            baseline_value=baseline_value,
-            baseline_label=baseline_label,
             passed_ax=axes[idx],
             legend_mode=legend_mode,
             connect_points=True,
-            max_l0=400.0,
-            highlighted_class="matryoshka_batch_topk",
+            max_l0=max_l0,
+            highlighted_class=highlighted_class,
         )
 
         # After plotting, get the lines and labels directly from the axis
@@ -221,7 +168,7 @@ for selection_title in selection:
 
         labels = new_labels
 
-        if idx == 6 and lines and labels:  # Only for the last plot
+        if idx == 5 and lines and labels:  # Only for the last plot
             # Create legend in the legend axis
             legend_ax.legend(
                 lines, labels, loc="center", bbox_to_anchor=(0.5, 0.5), fontsize="large"

@@ -1,4 +1,0 @@
-python paper_plotting/download_and_format.py
-python paper_plotting/adam_plot_diff_widths_matryoshka.py
-python paper_plotting/adam_plot_2x4_architectures_matryoshka.py
-python paper_plotting/adam_plot_2x2_architectures_matryoshka.py
