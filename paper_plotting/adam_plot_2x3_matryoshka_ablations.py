@@ -16,7 +16,8 @@ model_name = "gemma-2-2b"
 layer = 12
 selections = {
     "65k loss scaling": [
-        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1.*",
+        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1_.*",
+        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000.*",
         r"matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_batch_topk_65k.*",
     ],
     "65k fixed groups": [
@@ -24,6 +25,11 @@ selections = {
         r"matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_batch_topk_65k.*",
         r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_10_fixed_groups.*",
         r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_3_fixed_groups.*",
+    ],
+    "65k stop grads": [
+        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000.*",
+        r"matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_batch_topk_65k.*",
+        r"matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_stop_grads_65k.*",
     ],
     "16k stop_grads": [
         r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_stop_grads_v2.*",
@@ -43,6 +49,11 @@ selections = {
         r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_10_fixed_groups.*",
         r"matryoshka_gemma-2-2b-16k-v2_BatchTopKTrainer_baseline.*",
         r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp.*",
+    ],
+    "16k_group_sizes": [
+        r"matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp.*",
+        r"matryoshka_gemma-2-2b-16k-v2_BatchTopKTrainer_baseline.*",
+        r"matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_sixteenths_16k.*",
     ],
     "16k_random_groups": [
         r"matryoshka_gemma-2-2b-16k-v2-random-10_matryoshka.*",
@@ -78,61 +89,65 @@ def customize_class(sae_dict: dict) -> dict:
             "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_stop_grads_v2_google_gemma"
             in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "16K Stop Grads"
+            sae_dict[sae_name]["sae_class"] = "Stop Gradients"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_temp_1" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "16K Temp 1"
+            sae_dict[sae_name]["sae_class"] = "Weighted Temperature 1"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_temp_2" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "16K Temp 2"
+            sae_dict[sae_name]["sae_class"] = "Weighted Temperature 2"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_temp_3" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "16K Temp 3"
+            sae_dict[sae_name]["sae_class"] = "Weighted Temperature 3"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_3_fixed_groups" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "16K 3 Fixed Groups"
+            sae_dict[sae_name]["sae_class"] = "Three Fixed Groups"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_10_fixed_groups" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "16K 10 Fixed Groups"
+            sae_dict[sae_name]["sae_class"] = "Ten Fixed Groups"
+        elif "matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_sixteenths_16k" in sae_name:
+            sae_dict[sae_name]["sae_class"] = "Sixteenths Groups"
+        elif "matryoshka_0121_MatryoshkaBatchTopKTrainer_gemma_stop_grads_65k" in sae_name:
+            sae_dict[sae_name]["sae_class"] = "Stop Gradients"
         elif (
             "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_3_fixed_groups" in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "65K 3 Fixed Groups"
+            sae_dict[sae_name]["sae_class"] = "Three Fixed Groups"
         elif (
             "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_10_fixed_groups"
             in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "65K 10 Fixed Groups"
+            sae_dict[sae_name]["sae_class"] = "Ten Fixed Groups"
         elif "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1_" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "65K Temp 1"
+            sae_dict[sae_name]["sae_class"] = "Weighted Matryoshka"
         elif (
             "matryoshka_gemma-2-2b-16k-v2-random-3_matryoshka_google_gemma-2-2b_random" in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "16K 3 Random Groups"
+            sae_dict[sae_name]["sae_class"] = "Three Random Groups"
         elif (
             "matryoshka_gemma-2-2b-16k-v2-random-5_matryoshka_google_gemma-2-2b_random" in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "16K 5 Random Groups"
+            sae_dict[sae_name]["sae_class"] = "Five Random Groups"
         elif (
             "matryoshka_gemma-2-2b-16k-v2-random-10_matryoshka_google_gemma-2-2b_random" in sae_name
         ):
-            sae_dict[sae_name]["sae_class"] = "16K 10 Random Groups"
+            sae_dict[sae_name]["sae_class"] = "Ten Random Groups"
         elif "10_fixed" in sae_name:
-            sae_dict[sae_name]["sae_class"] = "10 fixed groups"
+            sae_dict[sae_name]["sae_class"] = "Ten Fixed Groups"
         # else:
         #     raise ValueError(f"Unknown class for {sae_name}")
 
     return sae_dict
 
 
-results_folders = ["./matryoshka_ablations_0125_working"]
+results_folders = ["./matryoshka_ablations_0125"]
 
 
 hf_repo_id = "adamkarvonen/matryoshka_ablation_results_0125"
 local_dir = results_folders[0]
-if not os.path.exists(local_dir):
+if not os.path.exists(local_dir) or True:
     # raise ValueError(f"Local directory {local_dir} does not exist")
     os.makedirs(local_dir, exist_ok=True)
 
     snapshot_download(
         repo_id=hf_repo_id,
         local_dir=local_dir,
-        force_download=True,
+        # force_download=True,
         repo_type="dataset",
         ignore_patterns=[
             "*autointerp_with_generations*",
@@ -150,8 +165,8 @@ eval_types = [
 ]
 # TODO: Add other ks, try mean over multiple ks
 ks_lookup = {
-    "scr": 10,
-    "tpp": 10,
+    "scr": 20,
+    "tpp": 20,
     "sparse_probing": 1,
 }
 
@@ -162,7 +177,7 @@ for selection_title in selections.keys():
     image_path = "./images_paper_2x2_matryoshka_ablations"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
-    image_name = f"plot_2x4_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
+    image_name = f"ablations_plot_2x4_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
 
     # Create a 4x2 subplot figure
     fig = plt.figure(figsize=(20, 24))
@@ -231,7 +246,10 @@ for selection_title in selections.keys():
                 score = eval_results[sae_name][custom_metric]
                 eval_results[sae_name][custom_metric] = 1 - score
 
-        max_l0 = 400.0
+        if selection_title == "16k_random_groups":
+            max_l0 = 200.0
+        else:
+            max_l0 = 400.0
         highlighted_class = None
 
         eval_results = customize_class(eval_results)

@@ -56,8 +56,8 @@ for selection_title, highlight_matryoshka in itertools.product(
 
     # TODO: Add other ks, try mean over multiple ks
     ks_lookup = {
-        "scr": 10,
-        "tpp": 10,
+        "scr": 20,
+        "tpp": 20,
         "sparse_probing": 1,
     }
 

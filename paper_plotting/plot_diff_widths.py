@@ -1,6 +1,6 @@
 # %%
 # Plot 2x2 architectures
-# 
+#
 # for Gemma2-2B, Layer 12, 65k
 
 import os
@@ -14,12 +14,12 @@ layer = 12
 
 sae_regex_patterns_65k = [
     r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
-    r"65k_temp1000.*", #matryoshka 65k
+    r"65k_temp1000.*",  # matryoshka 65k
 ]
 
 sae_regex_patterns_16k = [
     r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-    r".*notemp.*", #matryoshka 16k
+    r".*notemp.*",  # matryoshka 16k
 ]
 selection_title = "SAE Bench Gemma-2-2B Width Diff Series"
 
@@ -30,7 +30,7 @@ baseline_folder = results_folders[0]
 eval_types = [
     "core",
     "autointerp",
-    "absorption", 
+    "absorption",
     "scr",
     "tpp",
     "unlearning",
@@ -40,8 +40,8 @@ title_prefix = f"{selection_title} Layer {layer}\n"
 
 # TODO: Add other ks, try mean over multiple ks
 ks_lookup = {
-    "scr": 10,
-    "tpp": 50,
+    "scr": 20,
+    "tpp": 20,
     "sparse_probing": 1,
 }
 
@@ -57,13 +57,14 @@ def convert_to_1_minus_score(eval_results, custom_metric, baseline_value=None):
         baseline_value = 1 - baseline_value
     return eval_results, baseline_value
 
+
 # # Naming the image save path
 image_path = "./images_paper"
 if not os.path.exists(image_path):
     os.makedirs(image_path)
 image_name = f"plot_diff_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
-       
-#%%
+
+# %%
 
 # Create a 2x2 subplot figure
 # fig, axes = plt.subplots(2, 2, figsize=(20, 12))
@@ -111,8 +112,6 @@ for idx, eval_type in enumerate(eval_types):
     core_results_65k = graphing_utils.get_core_results(filtered_core_filenames_65k)
     eval_results_16k = graphing_utils.get_eval_results(filtered_eval_filenames_16k)
     core_results_16k = graphing_utils.get_core_results(filtered_core_filenames_16k)
-    
-
 
     # Add core results to eval results
     for sae in eval_results_65k:
@@ -124,9 +123,7 @@ for idx, eval_type in enumerate(eval_types):
 
     if include_baseline:
         if model_name != "gemma-2-9b":
-            baseline_sae_path = (
-                f"{model_name}_layer_{layer}_pca_sae_custom_sae_eval_results.json"
-            )
+            baseline_sae_path = f"{model_name}_layer_{layer}_pca_sae_custom_sae_eval_results.json"
             baseline_sae_path = os.path.join(baseline_folder, eval_type, baseline_sae_path)
             baseline_label = "PCA Baseline"
     else:
@@ -152,26 +149,29 @@ for idx, eval_type in enumerate(eval_types):
         baseline_value = None
         assert baseline_label is None, "Please do not provide a label for the baseline"
 
-
     # Plot
     title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
     title_2var = None
 
     if idx == 1:
-        legend_mode = 'show_outside'
+        legend_mode = "show_outside"
     else:
-        legend_mode = 'hide'
+        legend_mode = "hide"
 
     if custom_metric == "mean_absorption_fraction_score":
-        eval_results_65k, baseline_value = convert_to_1_minus_score(eval_results_65k, custom_metric, baseline_value)
-        eval_results_16k, baseline_value = convert_to_1_minus_score(eval_results_16k, custom_metric, baseline_value)
+        eval_results_65k, baseline_value = convert_to_1_minus_score(
+            eval_results_65k, custom_metric, baseline_value
+        )
+        eval_results_16k, baseline_value = convert_to_1_minus_score(
+            eval_results_16k, custom_metric, baseline_value
+        )
 
     map_65k_to_16k = lambda sae_key: sae_key.replace("width-2pow16", "width-2pow14").replace(
         "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000_google_gemma-2-2b_ctx1024_0117_resid_post_layer_12",
-        "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp_google_gemma-2-2b_ctx1024_0114_resid_post_layer_12"
+        "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp_google_gemma-2-2b_ctx1024_0114_resid_post_layer_12",
     )
 
-    print(f'custom_metric: {custom_metric}')
+    print(f"custom_metric: {custom_metric}")
 
     eval_results_diff = {}
     for sae_key_65k in eval_results_65k:
@@ -179,9 +179,14 @@ for idx, eval_type in enumerate(eval_types):
         for metric_key in eval_results_65k[sae_key_65k]:
             if metric_key == custom_metric:
                 sae_key_16k = map_65k_to_16k(sae_key_65k)
-                eval_results_diff[sae_key_65k][metric_key] = eval_results_65k[sae_key_65k][metric_key] - eval_results_16k[sae_key_16k][metric_key]
+                eval_results_diff[sae_key_65k][metric_key] = (
+                    eval_results_65k[sae_key_65k][metric_key]
+                    - eval_results_16k[sae_key_16k][metric_key]
+                )
             else:
-                eval_results_diff[sae_key_65k][metric_key] = eval_results_65k[sae_key_65k][metric_key]
+                eval_results_diff[sae_key_65k][metric_key] = eval_results_65k[sae_key_65k][
+                    metric_key
+                ]
 
     ax = graphing_utils.plot_2var_graph(
         eval_results_diff,

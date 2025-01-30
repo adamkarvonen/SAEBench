@@ -39,8 +39,8 @@ title_prefix = f"{selection_title} Layer {layer}\n"
 
 # TODO: Add other ks, try mean over multiple ks
 ks_lookup = {
-    "scr": 10,
-    "tpp": 10,
+    "scr": 20,
+    "tpp": 20,
     "sparse_probing": 1,
 }
 

@@ -64,7 +64,7 @@ title_prefix = f"{selection_title} Layer {layer}\n"
 
 # TODO: Add other ks, try mean over multiple ks
 ks_lookup = {
-    "scr": 10,
+    "scr": 20,
 }
 
 baseline_type = "pca_sae"
