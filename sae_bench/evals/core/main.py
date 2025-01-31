@@ -24,6 +24,7 @@ from sae_lens.training.activations_store import ActivationsStore
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
 from transformer_lens.hook_points import HookedRootModule
+from transformers import AutoModelForCausalLM
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
 import sae_bench.sae_bench_utils.sae_selection_utils as sae_selection_utils
@@ -980,6 +981,7 @@ def multiple_evals(
     dtype: str = "float32",
     device: str = "cuda",
     force_rerun: bool = False,
+    hf_model_path: str | None = None,
 ) -> list[dict[str, Any]]:
     assert len(selected_saes) > 0, "No SAEs to evaluate"
 
@@ -1030,10 +1032,19 @@ def multiple_evals(
                 max_delay=60.0,
             )
             def load_model():
+                hf_model = None
+                if hf_model_path:
+                    print(f"Loading custom HF model from: {hf_model_path}")
+                    hf_model = AutoModelForCausalLM.from_pretrained(
+                        hf_model_path,
+                        device_map="auto",
+                        torch_dtype=sae.W_enc.dtype,
+                    )
                 return HookedTransformer.from_pretrained_no_processing(
                     sae.cfg.model_name,
                     device=device,
                     dtype=sae.W_enc.dtype,
+                    hf_model=hf_model,
                     **sae.cfg.model_from_pretrained_kwargs,
                 )
 
@@ -1177,6 +1188,7 @@ def run_evaluations(args: argparse.Namespace) -> list[dict[str, Any]]:
         dtype=args.llm_dtype,
         device=device,
         force_rerun=args.force_rerun,
+        hf_model_path=args.hf_model_path,
     )
 
     return eval_results
@@ -1300,6 +1312,12 @@ def arg_parser():
         default="float32",
         choices=["float32", "float64", "float16", "bfloat16"],
         help="Data type for computation",
+    )
+    parser.add_argument(
+        "--hf_model_path",
+        type=str,
+        default=None,
+        help="Path to custom HuggingFace model weights to use instead of default weights",
     )
 
     return parser
