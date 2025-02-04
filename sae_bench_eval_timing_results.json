@@ -1,0 +1,429 @@
+{
+  "absorption": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 3510.6721255779266,
+        "sae_load_time": 1.0101637840270996,
+        "eval_run_time": 3509.661871910095,
+        "timestamp": "2025-01-22T23:06:40.032514"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 1712.4558792114258,
+        "sae_load_time": 0.31162524223327637,
+        "eval_run_time": 1712.1441311836243,
+        "timestamp": "2025-01-22T23:35:12.488419"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 1548.2226874828339,
+        "sae_load_time": 0.41049957275390625,
+        "eval_run_time": 1547.8120713233948,
+        "timestamp": "2025-01-23T00:01:00.711134"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 1329.6161720752716,
+        "sae_load_time": 0.4226665496826172,
+        "eval_run_time": 1329.1933870315552,
+        "timestamp": "2025-01-23T00:23:10.327337"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 1398.5332334041595,
+        "sae_load_time": 0.4298121929168701,
+        "eval_run_time": 1398.103285074234,
+        "timestamp": "2025-01-23T00:46:28.860598"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 1785.3466138839722,
+        "sae_load_time": 0.5055434703826904,
+        "eval_run_time": 1784.8409442901611,
+        "timestamp": "2025-01-23T01:16:14.207239"
+      }
+    ],
+    "total_time": 11284.846882104874,
+    "start_time": "2025-01-22T22:08:09.360375",
+    "end_time": "2025-01-23T01:16:14.207266"
+  },
+  "core": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 536.0591011047363,
+        "sae_load_time": 0.47441959381103516,
+        "eval_run_time": 535.5844159126282,
+        "timestamp": "2025-01-23T01:25:10.269834"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 540.4816262722015,
+        "sae_load_time": 0.4916994571685791,
+        "eval_run_time": 539.9898223876953,
+        "timestamp": "2025-01-23T01:34:10.751475"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 541.3921000957489,
+        "sae_load_time": 0.520972728729248,
+        "eval_run_time": 540.8710217475891,
+        "timestamp": "2025-01-23T01:43:12.143589"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 538.508337020874,
+        "sae_load_time": 0.5010743141174316,
+        "eval_run_time": 538.0071558952332,
+        "timestamp": "2025-01-23T01:52:10.651941"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 541.2515668869019,
+        "sae_load_time": 0.5200223922729492,
+        "eval_run_time": 540.7314400672913,
+        "timestamp": "2025-01-23T02:01:11.903523"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 536.5463275909424,
+        "sae_load_time": 0.4524850845336914,
+        "eval_run_time": 536.0937428474426,
+        "timestamp": "2025-01-23T02:10:08.449864"
+      }
+    ],
+    "total_time": 3234.239148378372,
+    "start_time": "2025-01-23T01:16:14.210726",
+    "end_time": "2025-01-23T02:10:08.449879"
+  },
+  "scr": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 1680.1412315368652,
+        "sae_load_time": 0.42279648780822754,
+        "eval_run_time": 1679.718252658844,
+        "timestamp": "2025-01-23T02:38:08.591750"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 343.1784827709198,
+        "sae_load_time": 0.4540715217590332,
+        "eval_run_time": 342.72429490089417,
+        "timestamp": "2025-01-23T02:43:51.770260"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 348.8891248703003,
+        "sae_load_time": 0.9791684150695801,
+        "eval_run_time": 347.90984559059143,
+        "timestamp": "2025-01-23T02:49:40.659411"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 348.41644191741943,
+        "sae_load_time": 0.48040318489074707,
+        "eval_run_time": 347.9359338283539,
+        "timestamp": "2025-01-23T02:55:29.075878"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 349.5185978412628,
+        "sae_load_time": 0.479079008102417,
+        "eval_run_time": 349.0394117832184,
+        "timestamp": "2025-01-23T03:01:18.594499"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 352.2101135253906,
+        "sae_load_time": 0.547968864440918,
+        "eval_run_time": 351.66204261779785,
+        "timestamp": "2025-01-23T03:07:10.804639"
+      }
+    ],
+    "total_time": 3422.354147672653,
+    "start_time": "2025-01-23T02:10:08.450511",
+    "end_time": "2025-01-23T03:07:10.804664"
+  },
+  "tpp": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 417.1715281009674,
+        "sae_load_time": 0.539715051651001,
+        "eval_run_time": 416.63163781166077,
+        "timestamp": "2025-01-23T03:14:07.978462"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 124.92147064208984,
+        "sae_load_time": 0.46042442321777344,
+        "eval_run_time": 124.46094155311584,
+        "timestamp": "2025-01-23T03:16:12.899959"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 124.09322452545166,
+        "sae_load_time": 0.8394529819488525,
+        "eval_run_time": 123.25365495681763,
+        "timestamp": "2025-01-23T03:18:16.993209"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 123.0923502445221,
+        "sae_load_time": 0.4443323612213135,
+        "eval_run_time": 122.64791536331177,
+        "timestamp": "2025-01-23T03:20:20.085584"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 123.5283784866333,
+        "sae_load_time": 0.4536275863647461,
+        "eval_run_time": 123.0746476650238,
+        "timestamp": "2025-01-23T03:22:23.613988"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 125.41070938110352,
+        "sae_load_time": 0.4972848892211914,
+        "eval_run_time": 124.91332244873047,
+        "timestamp": "2025-01-23T03:24:29.024723"
+      }
+    ],
+    "total_time": 1038.2178151607513,
+    "start_time": "2025-01-23T03:07:10.806926",
+    "end_time": "2025-01-23T03:24:29.024746"
+  },
+  "sparse_probing": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 1067.8011095523834,
+        "sae_load_time": 0.41950345039367676,
+        "eval_run_time": 1067.3814322948456,
+        "timestamp": "2025-01-23T03:42:16.829036"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 209.17527318000793,
+        "sae_load_time": 0.4066436290740967,
+        "eval_run_time": 208.76852655410767,
+        "timestamp": "2025-01-23T03:45:46.004334"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 210.91425585746765,
+        "sae_load_time": 0.4417569637298584,
+        "eval_run_time": 210.47239518165588,
+        "timestamp": "2025-01-23T03:49:16.918617"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 180.78770303726196,
+        "sae_load_time": 0.4727895259857178,
+        "eval_run_time": 180.31480813026428,
+        "timestamp": "2025-01-23T03:52:17.706347"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 178.01485180854797,
+        "sae_load_time": 0.5366232395172119,
+        "eval_run_time": 177.47811627388,
+        "timestamp": "2025-01-23T03:55:15.721225"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 200.1280643939972,
+        "sae_load_time": 1.1284716129302979,
+        "eval_run_time": 198.9994876384735,
+        "timestamp": "2025-01-23T03:58:35.849316"
+      }
+    ],
+    "total_time": 2046.8214161396027,
+    "start_time": "2025-01-23T03:24:29.027917",
+    "end_time": "2025-01-23T03:58:35.849339"
+  },
+  "autointerp": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 510.74765825271606,
+        "sae_load_time": 0.5936729907989502,
+        "eval_run_time": 510.15381360054016,
+        "timestamp": "2025-01-23T04:07:06.600321"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 488.6906542778015,
+        "sae_load_time": 0.5665802955627441,
+        "eval_run_time": 488.12396788597107,
+        "timestamp": "2025-01-23T04:15:15.291002"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 487.59054732322693,
+        "sae_load_time": 0.5614707469940186,
+        "eval_run_time": 487.028963804245,
+        "timestamp": "2025-01-23T04:23:22.881577"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 542.0639152526855,
+        "sae_load_time": 0.4714827537536621,
+        "eval_run_time": 541.5923221111298,
+        "timestamp": "2025-01-23T04:32:24.945521"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 576.46577501297,
+        "sae_load_time": 0.6082954406738281,
+        "eval_run_time": 575.857362985611,
+        "timestamp": "2025-01-23T04:42:01.411321"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 508.99581694602966,
+        "sae_load_time": 0.5779581069946289,
+        "eval_run_time": 508.4177312850952,
+        "timestamp": "2025-01-23T04:50:30.407164"
+      }
+    ],
+    "total_time": 3114.554530143738,
+    "start_time": "2025-01-23T03:58:35.852655",
+    "end_time": "2025-01-23T04:50:30.407190"
+  },
+  "unlearning": {
+    "iterations": [
+      {
+        "iteration": 0,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_8",
+        "total_iteration_time": 2557.6712465286255,
+        "sae_load_time": 0.43860602378845215,
+        "eval_run_time": 2557.232472896576,
+        "timestamp": "2025-01-23T05:33:08.082122"
+      },
+      {
+        "iteration": 1,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_11",
+        "total_iteration_time": 601.4790563583374,
+        "sae_load_time": 0.4681532382965088,
+        "eval_run_time": 601.0107996463776,
+        "timestamp": "2025-01-23T05:43:09.561205"
+      },
+      {
+        "iteration": 2,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_9",
+        "total_iteration_time": 594.1930830478668,
+        "sae_load_time": 0.4823882579803467,
+        "eval_run_time": 593.7105872631073,
+        "timestamp": "2025-01-23T05:53:03.754313"
+      },
+      {
+        "iteration": 3,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_7",
+        "total_iteration_time": 588.3033564090729,
+        "sae_load_time": 0.39676523208618164,
+        "eval_run_time": 587.9064838886261,
+        "timestamp": "2025-01-23T06:02:52.057694"
+      },
+      {
+        "iteration": 4,
+        "is_final": false,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_6",
+        "total_iteration_time": 589.0506706237793,
+        "sae_load_time": 0.3965020179748535,
+        "eval_run_time": 588.6540622711182,
+        "timestamp": "2025-01-23T06:12:41.108391"
+      },
+      {
+        "iteration": 5,
+        "is_final": true,
+        "sae_location": "gemma-2-2b_batch_top_k_width-2pow14_date-0107/resid_post_layer_12/trainer_10",
+        "total_iteration_time": 600.0301976203918,
+        "sae_load_time": 0.43569183349609375,
+        "eval_run_time": 599.5944013595581,
+        "timestamp": "2025-01-23T06:22:41.138616"
+      }
+    ],
+    "total_time": 5530.727768659592,
+    "start_time": "2025-01-23T04:50:30.410866",
+    "end_time": "2025-01-23T06:22:41.138641"
+  }
+}
