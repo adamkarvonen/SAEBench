@@ -324,7 +324,6 @@ for selection_title, highlight_matryoshka in itertools.product(
     baseline_folder = results_folders[0]
 
     eval_types = ["core", "autointerp", "absorption", "scr", "sparse_probing"]
-    eval_types = ["core", "autointerp", "absorption", "tpp", "sparse_probing"]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
     # TODO: Add other ks, try mean over multiple ks
@@ -344,7 +343,7 @@ for selection_title, highlight_matryoshka in itertools.product(
         image_path = "./images_paper_2x2"
     if not os.path.exists(image_path):
         os.makedirs(image_path)
-    image_name = f"plot_2x2_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
+    image_name = f"plot_2x3_{selection_title.replace(' ', '_').lower()}_layer_{layer}"
 
     # %%
 

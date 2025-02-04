@@ -706,7 +706,7 @@ def plot_2var_graph(
 
     # Create the scatter plot with extra width for legend
     if passed_ax is None:
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(12, 12))
     else:
         ax = passed_ax
         assert return_fig is False, "Cannot return fig if ax is provided"

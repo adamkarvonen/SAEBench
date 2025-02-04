@@ -30,6 +30,8 @@ TRAINER_MARKERS = {
     "matryoshka_batch_topk": "d",
     "matroyshka_batch_topk": "d",
     "gated": ">",
+    "Pythia-1B (Trained)": "s",
+    "Pythia-1B Step0 (Random)": "X",
 }
 
 TRAINER_COLORS = {
@@ -42,6 +44,8 @@ TRAINER_COLORS = {
     "matroyshka_batch_topk": "#ff0000",
     "matryoshka_batch_topk": "#ff0000",
     "gated": "#00bf00",
+    "Pythia-1B (Trained)": "#ff7f0e",
+    "Pythia-1B Step0 (Random)": "#00c7ca",
 }
 
 
@@ -55,11 +59,13 @@ TRAINER_LABELS = {
     "matryoshka_batch_topk": "Matryoshka Batch TopK",
     "matroyshka_batch_topk": "Matryoshka Batch TopK",
     "gated": "Gated",
+    "Pythia-1B (Trained)": "Pythia-1B (Trained)",
+    "Pythia-1B Step0 (Random)": "Pythia-1B Step0 (Random)",
 }
 
 
 # default text size
-plt.rcParams.update({"font.size": 20})
+plt.rcParams.update({"font.size": 28})
 
 
 def get_best_results(
@@ -329,7 +335,8 @@ def get_custom_metric_key_and_name(eval_path: str, k: int | None = None) -> tupl
         custom_metric_name = "Unlearning Score"
     elif "core" in eval_path:
         custom_metric = "ce_loss_score"
-        custom_metric_name = "Loss Recovered"
+        custom_metric = "kl_div_score"
+        custom_metric_name = "KL Divergence Score"
     else:
         raise ValueError("Please add the correct key for the custom metric")
 
@@ -677,6 +684,8 @@ def plot_2var_graph(
     legend_mode: str = "show_outside",  # show_outside, show_inside, hide
     show_grid: bool = True,
     bold_x0: bool = False,
+    max_l0: float | None = None,
+    highlighted_class: str | None = None,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
@@ -684,13 +693,27 @@ def plot_2var_graph(
     if not trainer_colors:
         trainer_colors = TRAINER_COLORS
 
+    for k, v in results.items():
+        if v["sae_class"] == "matroyshka_batch_topk":
+            raise ValueError("Matroyshka found in results, please rename to matryoshka_batch_topk")
+
+    # Filter results if max_l0 is provided
+    if max_l0 is not None:
+        results = {k: v for k, v in results.items() if v[x_axis_key] <= max_l0}
+
+    # Verify highlighted_class exists if provided
+    if highlighted_class is not None:
+        assert any(v["sae_class"] == highlighted_class for v in results.values()), (
+            f"Highlighted class {highlighted_class} not found in results {results}"
+        )
+
     trainer_markers, trainer_colors = update_trainer_markers_and_colors(
         results, trainer_markers, trainer_colors
     )
 
     # Create the scatter plot with extra width for legend
     if passed_ax is None:
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(12, 12))
     else:
         ax = passed_ax
         assert return_fig is False, "Cannot return fig if ax is provided"
@@ -713,17 +736,24 @@ def plot_2var_graph(
             l0_values = [p[0] for p in points]
             custom_metric_values = [p[1] for p in points]
 
-            # Add connecting line
+            # Add connecting line with transparency based on highlighted_class
+            # line_alpha = 1.0 if trainer == highlighted_class else 0.2 if highlighted_class else 0.5
+            # line_width = 2.0 if trainer == highlighted_class else 1.0
+            line_alpha = 1.0
+            line_width = 3.0
+
             ax.plot(
                 l0_values,
                 custom_metric_values,
                 color=trainer_colors[trainer],
                 linestyle="-",
-                alpha=0.5,
+                alpha=line_alpha,
+                linewidth=line_width,
                 zorder=1,  # Ensure lines are plotted behind points
             )
 
         # Plot data points
+        point_alpha = 1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
         ax.scatter(
             l0_values,
             custom_metric_values,
@@ -732,6 +762,7 @@ def plot_2var_graph(
             label=trainer,
             color=trainer_colors[trainer],
             edgecolor="black",
+            alpha=point_alpha,
             zorder=2,  # Ensure points are plotted on top of lines
         )
 
@@ -743,6 +774,7 @@ def plot_2var_graph(
             s=100,
             color=trainer_colors[trainer],
             edgecolor="black",
+            alpha=point_alpha,
         )
         handles.append(legend_handle)
 
@@ -757,8 +789,17 @@ def plot_2var_graph(
     ax.set_ylabel(y_label)
     ax.set_title(title)
 
-    # x log
+    # x log scale with custom tick formatting
     ax.set_xscale("log")
+    # Get current x-axis limits if not specified
+    if xlims:
+        ax.set_xlim(*xlims)
+    # Set specific tick positions
+    tick_positions = [20, 40, 80, 160]
+    ax.set_xticks(tick_positions)
+    ax.minorticks_off()  # Add this line
+    # Format ticks as regular numbers
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x)}"))
 
     # Add grid if requested
     if show_grid:
@@ -815,93 +856,101 @@ def plot_2var_graph_dict_size(
     x_axis_key: str = "l0",
     return_fig: bool = False,
     trainer_markers: dict[str, str] | None = None,
+    passed_ax: plt.Axes | None = None,
+    legend_mode: str = "show_outside",
+    connect_points: bool = False,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
 
-    # Extract data
-    l0_values = [data[x_axis_key] for data in results.values()]
-    custom_metric_values = [data[custom_metric] for data in results.values()]
+    if passed_ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+    else:
+        ax = passed_ax
+        assert return_fig is False, "Cannot return fig if ax is provided"
 
-    # Create the scatter plot
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Define possible dict sizes and their markers
     possible_sizes = ["4k", "16k", "65k", "131k", "1M"]
+    colors = [plt.cm.Reds(x) for x in [0.1, 0.5, 0.9]]
 
-    # Create color map with more exaggerated differences for 3 colors
-    colors = [plt.cm.Reds(x) for x in [0.1, 0.5, 0.9]]  # type: ignore # Light, medium, dark red
-
-    # Get unique dict sizes present in the data while preserving order from possible_sizes
     unique_sizes = [
         size for size in possible_sizes if size in set(v["d_sae"] for v in results.values())
     ]
+    unique_sae_classes = sorted(set(v["sae_class"] for v in results.values()))
 
     assert len(unique_sizes) <= len(colors), "Too many unique dictionary sizes for color map"
-
     size_to_color = {size: colors[i] for i, size in enumerate(unique_sizes)}
 
-    # Iterate over each unique dictionary size
-    handles, labels = [], []
-
+    # Plot data points for each dictionary size
     for dict_size in unique_sizes:
-        # Filter data points for the current dictionary size
-        size_data = {k: v for k, v in results.items() if v["d_sae"] == dict_size}
+        for sae_class in unique_sae_classes:
+            data_points = [
+                (v[x_axis_key], v[custom_metric])
+                for v in results.values()
+                if v["d_sae"] == dict_size and v["sae_class"] == sae_class
+            ]
 
-        # Get values for l0 and custom metric for this dictionary size
-        l0_values = [data[x_axis_key] for data in size_data.values()]
-        custom_metric_values = [data[custom_metric] for data in size_data.values()]
-        sae_classes = [data["sae_class"] for data in size_data.values()]
+            if not data_points:
+                continue
 
-        # Plot data points with the assigned marker and color
-        for l0, metric, sae_class in zip(l0_values, custom_metric_values, sae_classes):
-            marker = trainer_markers[sae_class]  # type: ignore
+            l0_values, metric_values = zip(*data_points)
+
+            if connect_points and len(l0_values) > 1:
+                # Sort points for line connection
+                points = sorted(zip(l0_values, metric_values))
+                l0_values, metric_values = zip(*points)
+
+                # Plot connecting line - without label
+                ax.plot(
+                    l0_values,
+                    metric_values,
+                    color=size_to_color[dict_size],
+                    linestyle="-",
+                    alpha=0.5,
+                    linewidth=1.0,
+                    zorder=1,
+                )
+
+            # Plot scatter points with label
             ax.scatter(
-                l0,
-                metric,
-                marker=marker,
+                l0_values,
+                metric_values,
+                marker=trainer_markers[sae_class],  # type: ignore
                 s=100,
                 color=size_to_color[dict_size],
                 edgecolor="black",
+                zorder=2,
+                label=f"{dict_size} Width",  # Label only the scatter points
             )
 
-        # Collect legend handles and labels
-        _handle = plt.scatter(
-            [], [], marker="o", s=100, color=size_to_color[dict_size], edgecolor="black"
-        )
-        handles.append(_handle)
-        labels.append(f"SAE Width: {dict_size}")
-
-    # Set labels and title
     ax.set_xlabel("L0 (Sparsity)")
     ax.set_ylabel(y_label)
     ax.set_title(title)
+    ax.set_xscale("log")
 
-    if baseline_value:
-        ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
-        labels.append(baseline_label)
-        handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
+    if baseline_value is not None:
+        ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label, zorder=0)
 
-    ax.legend(handles, labels, loc=legend_location)
-
-    # Set axis limits
     if xlims:
         ax.set_xlim(*xlims)
     if ylims:
         ax.set_ylim(*ylims)
 
-    # log scale
-    ax.set_xscale("log")
+    if legend_mode == "show_outside":
+        ax.legend(bbox_to_anchor=(1, 0.5), loc="center left")
+    elif legend_mode == "show_inside":
+        ax.legend(loc=legend_location)
+    elif legend_mode != "hide":
+        raise ValueError(
+            f"Invalid legend mode: {legend_mode}. Must be one of: show_outside, show_inside, hide"
+        )
 
-    plt.tight_layout()
-
-    # Save and show the plot
-    if output_filename:
+    if output_filename and not passed_ax:
         plt.savefig(output_filename, bbox_inches="tight")
 
     if return_fig:
         return fig
-    plt.show()
+    elif passed_ax is None:
+        plt.show()
 
 
 def plot_steps_vs_average_diff(
@@ -1236,10 +1285,6 @@ def plot_training_steps(
     # ax2.set_xlim(break_point, 100)
     ax2.set_xscale("log")
 
-    if metric_key == "ce_loss_score":
-        ax1.set_ylim(0.90, 1.0)
-        ax2.set_ylim(0.90, 1.0)
-
     # Hide the spines between ax1 and ax2
     ax1.spines["right"].set_visible(False)
     ax2.spines["left"].set_visible(False)
@@ -1278,11 +1323,7 @@ def plot_training_steps(
     # Add custom legend
     legend_elements = []
     legend_elements.append(Line2D([0], [0], color="black", lw=3, label="Average"))
-    if (
-        "standard" in all_trainers
-        or "Vanilla" in all_trainers
-        or "standard_april_update" in all_trainers
-    ):
+    if "standard" in all_trainers or "Vanilla" in all_trainers:
         legend_elements.append(Line2D([0], [0], color="red", lw=3, label="Standard"))
     if "topk" in all_trainers:
         legend_elements.append(Line2D([0], [0], color="blue", lw=3, label="TopK"))
@@ -1293,7 +1334,7 @@ def plot_training_steps(
     if output_filename:
         plt.savefig(output_filename, bbox_inches="tight")
 
-    # plt.show()
+    plt.show()
 
 
 def get_sae_class_archived(sae_cfg: dict, sae_release) -> str:
