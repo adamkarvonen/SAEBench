@@ -48,91 +48,259 @@ COLUMN2_VALS_LOOKUP = {
 
 @torch.no_grad()
 def get_effects_per_class_precomputed_acts(
-    sae: SAE,
-    probe: probe_training.Probe,
+    sae,
+    probe,
     class_idx: str,
     precomputed_acts: dict[str, torch.Tensor],
     perform_scr: bool,
     sae_batch_size: int,
-) -> torch.Tensor:
+    num_groups: int = 10,
+    subsample_ratio: float = 0.1,
+    random_seed: int = 42,
+    k_values: list[int] = [2, 5, 10, 20, 50, 100, 500],
+):
+    """
+    Single-pass version of the get_effects_per_class_precomputed_acts approach.
+    We subsample the dataset into multiple groups (with overlap), compute effects
+    for each group, and then analyze the results across the groups to get an idea
+    of statistical significance.
+
+    We'll print out overlap statistics and top-K sets for each group, for each K.
+    """
+    # Prep data
     inputs_train_BLD, labels_train_B = probe_training.prepare_probe_data(
         precomputed_acts, class_idx, perform_scr
     )
-
-    assert inputs_train_BLD.shape[0] == len(labels_train_B)
-
+    total_samples = inputs_train_BLD.shape[0]
     device = inputs_train_BLD.device
     dtype = inputs_train_BLD.dtype
+    feature_dim = sae.W_dec.data.shape[0]
 
-    running_sum_pos_F = torch.zeros(
-        sae.W_dec.data.shape[0], dtype=torch.float32, device=device
-    )
-    running_sum_neg_F = torch.zeros(
-        sae.W_dec.data.shape[0], dtype=torch.float32, device=device
-    )
-    count_pos = 0
-    count_neg = 0
+    # Make sure shapes match
+    assert total_samples == len(labels_train_B), "Mismatch in data and label lengths."
 
-    for i in range(0, inputs_train_BLD.shape[0], sae_batch_size):
+    # Create group masks on CPU, then move to device if desired
+    # Each row: mask for one group over the entire dataset
+    # A sample might appear in multiple groups
+    g = torch.Generator()
+    g.manual_seed(random_seed)
+    group_masks = torch.rand((num_groups, total_samples), generator=g)
+    group_masks = (group_masks < subsample_ratio).to(device=device)
+
+    # For each group, track running sums (pos/neg) and counts
+    running_sum_pos_GF = torch.zeros(num_groups, feature_dim, dtype=torch.float32, device=device)
+    running_sum_neg_GF = torch.zeros(num_groups, feature_dim, dtype=torch.float32, device=device)
+    count_pos_G = torch.zeros(num_groups, dtype=torch.long, device=device)
+    count_neg_G = torch.zeros(num_groups, dtype=torch.long, device=device)
+
+    # Single pass through data
+    for i in range(0, total_samples, sae_batch_size):
         activation_batch_BLD = inputs_train_BLD[i : i + sae_batch_size]
         labels_batch_B = labels_train_B[i : i + sae_batch_size]
+        batch_size_actual = activation_batch_BLD.shape[0]
 
+        # We sum across D to get a mask for nonzero tokens
         activations_BL = einops.reduce(activation_batch_BLD, "B L D -> B L", "sum")
         nonzero_acts_BL = (activations_BL != 0.0).to(dtype=dtype)
-        nonzero_acts_B = einops.reduce(nonzero_acts_BL, "B L -> B", "sum").to(
-            torch.float32
-        )
+        nonzero_acts_B = einops.reduce(nonzero_acts_BL, "B L -> B", "sum").to(torch.float32)
 
         f_BLF = sae.encode(activation_batch_BLD)
-        f_BLF = f_BLF * nonzero_acts_BL[:, :, None]  # zero out masked tokens
+        f_BLF = f_BLF * nonzero_acts_BL[:, :, None]
 
-        # Get the average activation per input. We divide by the number of nonzero activations for the attention mask
-        average_sae_acts_BF = (
-            einops.reduce(f_BLF, "B L F -> B F", "sum").to(torch.float32)
-            / nonzero_acts_B[:, None]
-        )
+        average_sae_acts_BF = einops.reduce(f_BLF, "B L F -> B F", "sum").to(torch.float32)
+        average_sae_acts_BF = average_sae_acts_BF / (nonzero_acts_B[:, None] + 1e-12)
 
-        # Separate positive and negative samples
-        pos_mask = labels_batch_B == dataset_info.POSITIVE_CLASS_LABEL
-        neg_mask = labels_batch_B == dataset_info.NEGATIVE_CLASS_LABEL
+        pos_mask_B = labels_batch_B == dataset_info.POSITIVE_CLASS_LABEL
+        neg_mask_B = labels_batch_B == dataset_info.NEGATIVE_CLASS_LABEL
 
-        # Accumulate sums in fp32
-        running_sum_pos_F += einops.reduce(
-            average_sae_acts_BF[pos_mask], "B F -> F", "sum"
-        )
-        running_sum_neg_F += einops.reduce(
-            average_sae_acts_BF[neg_mask], "B F -> F", "sum"
-        )
+        # For each group, see which samples belong
+        # We'll gather the relevant rows, sum them, accumulate
+        for g_idx in range(num_groups):
+            # In the entire dataset, which rows are in group g_idx from [i to i+batch_size_actual]?
+            group_mask_batch_B = group_masks[g_idx, i : i + batch_size_actual]
+            # Boolean condition for final selection
+            group_pos = (group_mask_batch_B > 0) & pos_mask_B
+            group_neg = (group_mask_batch_B > 0) & neg_mask_B
 
-        count_pos += pos_mask.sum().item()
-        count_neg += neg_mask.sum().item()
+            # Sum for positive samples in this group
+            if group_pos.any():
+                running_sum_pos_GF[g_idx] += einops.reduce(
+                    average_sae_acts_BF[group_pos], "B F -> F", "sum"
+                )
+                count_pos_G[g_idx] += group_pos.sum().item()
 
-    # Calculate means in fp32
-    average_pos_sae_acts_F = (
-        running_sum_pos_F / count_pos if count_pos > 0 else running_sum_pos_F
-    )
-    average_neg_sae_acts_F = (
-        running_sum_neg_F / count_neg if count_neg > 0 else running_sum_neg_F
-    )
+            # Sum for negative samples in this group
+            if group_neg.any():
+                running_sum_neg_GF[g_idx] += einops.reduce(
+                    average_sae_acts_BF[group_neg], "B F -> F", "sum"
+                )
+                count_neg_G[g_idx] += group_neg.sum().item()
 
-    # The decoder matrix can be very large, so we move it to the same device as the activations
-    average_acts_F = (average_pos_sae_acts_F - average_neg_sae_acts_F).to(dtype)
+    # Compute final average pos/neg for each group
+    avg_pos_GF = torch.zeros_like(running_sum_pos_GF)
+    avg_neg_GF = torch.zeros_like(running_sum_neg_GF)
+    # Avoid division by zero
+    for g_idx in range(num_groups):
+        if count_pos_G[g_idx] > 0:
+            avg_pos_GF[g_idx] = running_sum_pos_GF[g_idx] / count_pos_G[g_idx]
+        if count_neg_G[g_idx] > 0:
+            avg_neg_GF[g_idx] = running_sum_neg_GF[g_idx] / count_neg_G[g_idx]
+
+    # The difference
+    avg_diff_GF = (avg_pos_GF - avg_neg_GF).to(dtype)
 
     probe_weight_D = probe.net.weight.to(dtype=dtype, device=device)
     decoder_weight_DF = sae.W_dec.data.T.to(dtype=dtype, device=device)
-
     dot_prod_F = (probe_weight_D @ decoder_weight_DF).squeeze()
 
+    # If not perform_scr, we clamp differences to focus on positive class effects
     if not perform_scr:
-        # Only consider activations from the positive class
-        average_acts_F.clamp_(min=0.0)
+        avg_diff_GF.clamp_(min=0.0)
 
-    effects_F = (average_acts_F * dot_prod_F).to(dtype=torch.float32)
-
+    # Final effects for each group
+    # shape: (num_groups, feature_dim)
+    effects_GF = (avg_diff_GF * dot_prod_F).to(torch.float32)
     if perform_scr:
-        effects_F = effects_F.abs()
+        effects_GF = effects_GF.abs()
 
-    return effects_F
+    # Store each group's effect
+    # We'll analyze overlap of top-K indices across groups
+    # Gather top-K sets for each group, for each K
+    group_topk_indices = {}
+    for g_idx in range(num_groups):
+        # We'll store a dict k -> set
+        group_topk_indices[g_idx] = {}
+        # We'll get the sorted indices by descending effect
+        sorted_indices = torch.argsort(effects_GF[g_idx], descending=True)
+        for k in k_values:
+            k = min(k, feature_dim)
+            topk_set = set(sorted_indices[:k].tolist())
+            group_topk_indices[g_idx][k] = topk_set
+
+    # For each k, gather the sets from all groups, measure overlap
+    print("=== Overlap Analysis ===")
+    for k in k_values:
+        if k > feature_dim:
+            continue
+        print(f"\n--- K = {k} ---")
+        # Collect all sets
+        sets_for_k = [group_topk_indices[g_idx][k] for g_idx in range(num_groups)]
+        # Unique sets
+        unique_sets = set()
+        # We'll store them as frozensets to be hashable
+        for s in sets_for_k:
+            unique_sets.add(frozenset(s))
+        print(f"Number of unique sets across {num_groups} groups: {len(unique_sets)}")
+
+        # Compute pairwise overlaps
+        overlaps = []
+        for i in range(num_groups):
+            for j in range(i + 1, num_groups):
+                set_i = sets_for_k[i]
+                set_j = sets_for_k[j]
+                overlap_sz = len(set_i.intersection(set_j))
+                overlap_pct = overlap_sz / float(k) * 100.0
+                overlaps.append(overlap_pct)
+        if overlaps:
+            print(f"Mean overlap: {sum(overlaps) / len(overlaps):.2f}%")
+            print(f"Min overlap: {min(overlaps):.2f}%")
+            print(f"Max overlap: {max(overlaps):.2f}%")
+
+        # Most common features across groups for top-K
+        all_indices = []
+        for s in sets_for_k:
+            all_indices.extend(s)
+        freq_map = {}
+        for idx in all_indices:
+            freq_map[idx] = freq_map.get(idx, 0) + 1
+        sorted_freq = sorted(freq_map.items(), key=lambda x: x[1], reverse=True)
+        print("Most frequent indices in top-K across all groups (index:count):")
+        # Just show the top 5
+        for item_idx, cnt in sorted_freq[:5]:
+            print(f"   {item_idx}: {cnt} occurrences")
+
+    # Optionally return results or just keep them
+    # We'll just print everything, as requested
+    print("\n=== Final Effects for Each Group (shape: G x F) ===")
+    print(effects_GF)
+
+    raise ValueError("stop here")
+
+    return effects_GF[0]
+
+
+# @torch.no_grad()
+# def get_effects_per_class_precomputed_acts(
+#     sae: SAE,
+#     probe: probe_training.Probe,
+#     class_idx: str,
+#     precomputed_acts: dict[str, torch.Tensor],
+#     perform_scr: bool,
+#     sae_batch_size: int,
+# ) -> torch.Tensor:
+#     inputs_train_BLD, labels_train_B = probe_training.prepare_probe_data(
+#         precomputed_acts, class_idx, perform_scr
+#     )
+
+#     assert inputs_train_BLD.shape[0] == len(labels_train_B)
+
+#     device = inputs_train_BLD.device
+#     dtype = inputs_train_BLD.dtype
+
+#     running_sum_pos_F = torch.zeros(sae.W_dec.data.shape[0], dtype=torch.float32, device=device)
+#     running_sum_neg_F = torch.zeros(sae.W_dec.data.shape[0], dtype=torch.float32, device=device)
+#     count_pos = 0
+#     count_neg = 0
+
+#     for i in range(0, inputs_train_BLD.shape[0], sae_batch_size):
+#         activation_batch_BLD = inputs_train_BLD[i : i + sae_batch_size]
+#         labels_batch_B = labels_train_B[i : i + sae_batch_size]
+
+#         activations_BL = einops.reduce(activation_batch_BLD, "B L D -> B L", "sum")
+#         nonzero_acts_BL = (activations_BL != 0.0).to(dtype=dtype)
+#         nonzero_acts_B = einops.reduce(nonzero_acts_BL, "B L -> B", "sum").to(torch.float32)
+
+#         f_BLF = sae.encode(activation_batch_BLD)
+#         f_BLF = f_BLF * nonzero_acts_BL[:, :, None]  # zero out masked tokens
+
+#         # Get the average activation per input. We divide by the number of nonzero activations for the attention mask
+#         average_sae_acts_BF = (
+#             einops.reduce(f_BLF, "B L F -> B F", "sum").to(torch.float32) / nonzero_acts_B[:, None]
+#         )
+
+#         # Separate positive and negative samples
+#         pos_mask = labels_batch_B == dataset_info.POSITIVE_CLASS_LABEL
+#         neg_mask = labels_batch_B == dataset_info.NEGATIVE_CLASS_LABEL
+
+#         # Accumulate sums in fp32
+#         running_sum_pos_F += einops.reduce(average_sae_acts_BF[pos_mask], "B F -> F", "sum")
+#         running_sum_neg_F += einops.reduce(average_sae_acts_BF[neg_mask], "B F -> F", "sum")
+
+#         count_pos += pos_mask.sum().item()
+#         count_neg += neg_mask.sum().item()
+
+#     # Calculate means in fp32
+#     average_pos_sae_acts_F = running_sum_pos_F / count_pos if count_pos > 0 else running_sum_pos_F
+#     average_neg_sae_acts_F = running_sum_neg_F / count_neg if count_neg > 0 else running_sum_neg_F
+
+#     # The decoder matrix can be very large, so we move it to the same device as the activations
+#     average_acts_F = (average_pos_sae_acts_F - average_neg_sae_acts_F).to(dtype)
+
+#     probe_weight_D = probe.net.weight.to(dtype=dtype, device=device)
+#     decoder_weight_DF = sae.W_dec.data.T.to(dtype=dtype, device=device)
+
+#     dot_prod_F = (probe_weight_D @ decoder_weight_DF).squeeze()
+
+#     if not perform_scr:
+#         # Only consider activations from the positive class
+#         average_acts_F.clamp_(min=0.0)
+
+#     effects_F = (average_acts_F * dot_prod_F).to(dtype=torch.float32)
+
+#     if perform_scr:
+#         effects_F = effects_F.abs()
+
+#     return effects_F
 
 
 def get_all_node_effects_for_one_sae(
@@ -157,9 +325,7 @@ def get_all_node_effects_for_one_sae(
     return node_effects
 
 
-def select_top_n_features(
-    effects: torch.Tensor, n: int, class_name: str
-) -> torch.Tensor:
+def select_top_n_features(effects: torch.Tensor, n: int, class_name: str) -> torch.Tensor:
     assert n <= effects.numel(), (
         f"n ({n}) must not be larger than the number of features ({effects.numel()}) for ablation class {class_name}"
     )
@@ -224,8 +390,7 @@ def ablated_precomputed_activations(
 
         # Get the average activation per input. We divide by the number of nonzero activations for the attention mask
         probe_acts_BD = (
-            einops.reduce(modified_acts_BLD, "B L D -> B D", "sum")
-            / nonzero_acts_B[:, None]
+            einops.reduce(modified_acts_BLD, "B L D -> B D", "sum") / nonzero_acts_B[:, None]
         )
         all_acts_list_BD.append(probe_acts_BD)
 
@@ -275,9 +440,7 @@ def get_scr_probe_test_accuracy(
     for class_name in all_class_list:
         if class_name not in dataset_info.PAIRED_CLASS_KEYS:
             continue
-        spurious_class_names = [
-            key for key in dataset_info.PAIRED_CLASS_KEYS if key != class_name
-        ]
+        spurious_class_names = [key for key in dataset_info.PAIRED_CLASS_KEYS if key != class_name]
         test_acts, test_labels = probe_training.prepare_probe_data(
             all_activations, class_name, perform_scr=True
         )
@@ -315,23 +478,19 @@ def perform_feature_ablations(
             )
             test_acts_ablated = {}
             for evaluated_class_name in all_test_acts_BLD.keys():
-                test_acts_ablated[evaluated_class_name] = (
-                    ablated_precomputed_activations(
-                        all_test_acts_BLD[evaluated_class_name],
-                        sae,
-                        selected_features_F,
-                        sae_batch_size,
-                    )
+                test_acts_ablated[evaluated_class_name] = ablated_precomputed_activations(
+                    all_test_acts_BLD[evaluated_class_name],
+                    sae,
+                    selected_features_F,
+                    sae_batch_size,
                 )
 
-            ablated_class_accuracies[ablated_class_name][top_n] = (
-                get_probe_test_accuracy(
-                    probes,
-                    chosen_classes,
-                    test_acts_ablated,
-                    probe_batch_size,
-                    perform_scr,
-                )
+            ablated_class_accuracies[ablated_class_name][top_n] = get_probe_test_accuracy(
+                probes,
+                chosen_classes,
+                test_acts_ablated,
+                probe_batch_size,
+                perform_scr,
             )
     return ablated_class_accuracies
 
@@ -368,15 +527,11 @@ def get_scr_plotting_dict(
         for threshold in class_accuracies[ablated_probe_class_id]:
             clean_acc = llm_clean_accs[eval_data_class_id]
 
-            combined_class_name = (
-                f"{eval_probe_class_id} probe on {eval_data_class_id} data"
-            )
+            combined_class_name = f"{eval_probe_class_id} probe on {eval_data_class_id} data"
 
             original_acc = llm_clean_accs[combined_class_name]
 
-            changed_acc = class_accuracies[ablated_probe_class_id][threshold][
-                combined_class_name
-            ]
+            changed_acc = class_accuracies[ablated_probe_class_id][threshold][combined_class_name]
 
             scr_score = (changed_acc - original_acc) / (clean_acc - original_acc)
 
@@ -436,9 +591,7 @@ def create_tpp_plotting_dict(
                     continue
 
                 unintended_clean_acc = llm_clean_accs[unintended_class]
-                unintended_patched_acc = class_accuracies[class_name][threshold][
-                    unintended_class
-                ]
+                unintended_patched_acc = class_accuracies[class_name][threshold][unintended_class]
                 unintended_diff = unintended_clean_acc - unintended_patched_acc
                 unintended_diffs.append(unintended_diff)
 
@@ -447,12 +600,8 @@ def create_tpp_plotting_dict(
 
             # Store with original key format
             class_metrics[f"tpp_threshold_{threshold}_total_metric"] = avg_diff
-            class_metrics[f"tpp_threshold_{threshold}_intended_diff_only"] = (
-                intended_diff
-            )
-            class_metrics[f"tpp_threshold_{threshold}_unintended_diff_only"] = (
-                avg_unintended
-            )
+            class_metrics[f"tpp_threshold_{threshold}_intended_diff_only"] = intended_diff
+            class_metrics[f"tpp_threshold_{threshold}_unintended_diff_only"] = avg_unintended
 
         per_class_results[class_name] = class_metrics
 
@@ -461,9 +610,7 @@ def create_tpp_plotting_dict(
     metric_keys = next(iter(per_class_results.values())).keys()
 
     for metric_key in metric_keys:
-        values = [
-            class_metrics[metric_key] for class_metrics in per_class_results.values()
-        ]
+        values = [class_metrics[metric_key] for class_metrics in per_class_results.values()]
         overall_results[metric_key] = sum(values) / len(values)
 
     return overall_results, per_class_results
@@ -554,13 +701,13 @@ def run_eval_single_dataset(
         probes_filename = f"{dataset_name}_probes.pkl".replace("/", "_")
     else:
         chosen_classes = list(dataset_info.PAIRED_CLASS_KEYS.keys())
-        activations_filename = f"{dataset_name}_{column1_vals[0]}_{column1_vals[1]}_activations.pt".replace(  # type: ignore
-            "/", "_"
-        )
-        probes_filename = (
-            f"{dataset_name}_{column1_vals[0]}_{column1_vals[1]}_probes.pkl".replace(  # type: ignore
+        activations_filename = (
+            f"{dataset_name}_{column1_vals[0]}_{column1_vals[1]}_activations.pt".replace(  # type: ignore
                 "/", "_"
             )
+        )
+        probes_filename = f"{dataset_name}_{column1_vals[0]}_{column1_vals[1]}_probes.pkl".replace(  # type: ignore
+            "/", "_"
         )
 
     activations_path = os.path.join(artifacts_folder, activations_filename)
@@ -584,8 +731,8 @@ def run_eval_single_dataset(
         if config.lower_vram_usage:
             model = model.to("cpu")  # type: ignore
 
-        all_meaned_train_acts_BD = (
-            activation_collection.create_meaned_model_activations(all_train_acts_BLD)
+        all_meaned_train_acts_BD = activation_collection.create_meaned_model_activations(
+            all_train_acts_BLD
         )
         all_meaned_test_acts_BD = activation_collection.create_meaned_model_activations(
             all_test_acts_BLD
@@ -741,9 +888,7 @@ def run_eval_single_sae(
 
             averaging_names.append(run_name)
 
-    results_dict = general_utils.average_results_dictionaries(
-        dataset_results, averaging_names
-    )
+    results_dict = general_utils.average_results_dictionaries(dataset_results, averaging_names)
     results_dict.update(dataset_results)
 
     if config.lower_vram_usage:
@@ -797,9 +942,7 @@ def run_eval(
         )  # type: ignore
         sae = sae.to(device=device, dtype=llm_dtype)
 
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
+        sae_result_path = general_utils.get_results_filepath(output_path, sae_release, sae_id)
 
         if os.path.exists(sae_result_path) and not force_rerun:
             print(f"Skipping {sae_release}_{sae_id} as results already exist")
@@ -825,11 +968,7 @@ def run_eval(
                 datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
                 eval_result_metrics=ScrMetricCategories(
                     scr_metrics=ScrMetrics(
-                        **{
-                            k: v
-                            for k, v in scr_or_tpp_results.items()
-                            if not isinstance(v, dict)
-                        }
+                        **{k: v for k, v in scr_or_tpp_results.items() if not isinstance(v, dict)}
                     )
                 ),
                 eval_result_details=[
@@ -854,11 +993,7 @@ def run_eval(
                 datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
                 eval_result_metrics=TppMetricCategories(
                     tpp_metrics=TppMetrics(
-                        **{
-                            k: v
-                            for k, v in scr_or_tpp_results.items()
-                            if not isinstance(v, dict)
-                        }
+                        **{k: v for k, v in scr_or_tpp_results.items() if not isinstance(v, dict)}
                     )
                 ),
                 eval_result_details=[
@@ -904,9 +1039,7 @@ def create_config_and_selected_saes(
     if args.llm_batch_size is not None:
         config.llm_batch_size = args.llm_batch_size
     else:
-        config.llm_batch_size = activation_collection.LLM_NAME_TO_BATCH_SIZE[
-            config.model_name
-        ]
+        config.llm_batch_size = activation_collection.LLM_NAME_TO_BATCH_SIZE[config.model_name]
 
     if args.llm_dtype is not None:
         config.llm_dtype = args.llm_dtype
@@ -957,9 +1090,7 @@ def arg_parser():
         default="eval_results",
         help="Output folder",
     )
-    parser.add_argument(
-        "--force_rerun", action="store_true", help="Force rerun of experiments"
-    )
+    parser.add_argument("--force_rerun", action="store_true", help="Force rerun of experiments")
     parser.add_argument(
         "--clean_up_activations",
         action="store_true",
@@ -1013,7 +1144,7 @@ def arg_parser():
 if __name__ == "__main__":
     """
     Example pythia-70m usage:
-    python evals/scr_and_tpp/main.py \
+    python sae_bench/evals/scr_and_tpp/main.py \
     --sae_regex_pattern "sae_bench_pythia70m_sweep_standard_ctx128_0712" \
     --sae_block_pattern "blocks.4.hook_resid_post__trainer_10" \
     --model_name pythia-70m-deduped \

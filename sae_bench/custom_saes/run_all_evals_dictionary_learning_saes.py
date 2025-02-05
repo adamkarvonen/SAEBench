@@ -341,12 +341,12 @@ if __name__ == "__main__":
     # Unlearning will also require requesting permission for the WMDP dataset (see unlearning/README.md)
     # Absorption not recommended for models < 2B parameters
     eval_types = [
-        "absorption",
-        "core",
+        # "absorption",
+        # "core",
         "scr",
-        "tpp",
-        "sparse_probing",
-        "autointerp",
+        # "tpp",
+        # "sparse_probing",
+        # "autointerp",
         # "unlearning",
     ]
 
@@ -365,13 +365,13 @@ if __name__ == "__main__":
 
     repos = [
         (
-            "adamkarvonen/saebench_pythia-160m-deduped_width-2pow14_date-0104",
+            "adamkarvonen/saebench_pythia-160m-deduped_width-2pow14_date-0108",
             "pythia-160m-deduped",
         ),
-        ("adamkarvonen/saebench_gemma-2-2b_width-2pow14_date-0104", "gemma-2-2b"),
+        # ("adamkarvonen/saebench_gemma-2-2b_width-2pow14_date-0104", "gemma-2-2b"),
     ]
     exclude_keywords = ["checkpoints"]
-    include_keywords = []
+    include_keywords = ["TopK_pythia-160m-deduped__0108/resid_post_layer_8/trainer_3"]
 
     for repo_id, model_name in repos:
         print(f"\n\n\nEvaluating {model_name} with {repo_id}\n\n\n")

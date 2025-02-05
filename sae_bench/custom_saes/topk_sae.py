@@ -3,6 +3,7 @@ import json
 import torch
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
+import copy
 
 import sae_bench.custom_saes.base_sae as base_sae
 
@@ -29,24 +30,18 @@ class TopKSAE(base_sae.BaseSAE):
         self.use_threshold = use_threshold
         if use_threshold:
             # Optional global threshold to use during inference. Must be positive.
-            self.register_buffer(
-                "threshold", torch.tensor(-1.0, dtype=dtype, device=device)
-            )
+            self.register_buffer("threshold", torch.tensor(-1.0, dtype=dtype, device=device))
 
     def encode(self, x: torch.Tensor):
         """Note: x can be either shape (B, F) or (B, L, F)"""
-        post_relu_feat_acts_BF = nn.functional.relu(
-            (x - self.b_dec) @ self.W_enc + self.b_enc
-        )
+        post_relu_feat_acts_BF = nn.functional.relu((x - self.b_dec) @ self.W_enc + self.b_enc)
 
         if self.use_threshold:
             if self.threshold < 0:
                 raise ValueError(
                     "Threshold is not set. The threshold must be set to use it during inference"
                 )
-            encoded_acts_BF = post_relu_feat_acts_BF * (
-                post_relu_feat_acts_BF > self.threshold
-            )
+            encoded_acts_BF = post_relu_feat_acts_BF * (post_relu_feat_acts_BF > self.threshold)
             return encoded_acts_BF
 
         post_topk = post_relu_feat_acts_BF.topk(self.k, sorted=False, dim=-1)
@@ -55,9 +50,7 @@ class TopKSAE(base_sae.BaseSAE):
         top_indices_BK = post_topk.indices
 
         buffer_BF = torch.zeros_like(post_relu_feat_acts_BF)
-        encoded_acts_BF = buffer_BF.scatter_(
-            dim=-1, index=top_indices_BK, src=tops_acts_BK
-        )
+        encoded_acts_BF = buffer_BF.scatter_(dim=-1, index=top_indices_BK, src=tops_acts_BK)
         return encoded_acts_BF
 
     def decode(self, feature_acts: torch.Tensor):
@@ -67,6 +60,23 @@ class TopKSAE(base_sae.BaseSAE):
         x = self.encode(x)
         recon = self.decode(x)
         return recon
+
+    @torch.no_grad
+    def get_subset_sae(self, indices: torch.Tensor):
+        """
+        Returns a new TopKSAE with input dimension restricted to `indices`.
+        Indices should be a 1D tensor of the feature indices we want to keep.
+        """
+
+        assert indices.shape[0] == self.cfg.d_sae
+        new_sae = copy.deepcopy(self)
+        new_sae.cfg.d_sae = int(indices.sum().item())
+
+        new_sae.W_enc = nn.Parameter(new_sae.W_enc[:, indices])
+        new_sae.b_enc = nn.Parameter(new_sae.b_enc[indices])
+        new_sae.W_dec = nn.Parameter(new_sae.W_dec[indices, :])
+
+        return new_sae
 
 
 def load_dictionary_learning_topk_sae(
@@ -169,8 +179,8 @@ def load_dictionary_learning_topk_sae(
 
 
 if __name__ == "__main__":
-    repo_id = "adamkarvonen/saebench_pythia-160m-deduped_width-2pow12_date-0104"
-    filename = "TopKTrainer_EleutherAI_pythia-160m-deduped_ctx1024_0104/resid_post_layer_8/trainer_20/ae.pt"
+    repo_id = "adamkarvonen/saebench_pythia-160m-deduped_width-2pow12_date-0108"
+    filename = "TopK_pythia-160m-deduped__0108/resid_post_layer_8/trainer_3/ae.pt"
     layer = 8
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -187,4 +197,12 @@ if __name__ == "__main__":
         dtype,
         layer=layer,
     )
+
     sae.test_sae(model_name)
+
+    selected_indices = torch.tensor([1, 20, 40, 100, 500])
+    indices = torch.zeros(sae.cfg.d_sae, dtype=torch.bool)
+    indices[:2000] = True
+
+    small_sae = sae.get_subset_sae(indices)
+    small_sae.test_sae(model_name)
