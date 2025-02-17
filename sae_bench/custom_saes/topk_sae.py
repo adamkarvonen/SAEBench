@@ -77,6 +77,7 @@ def load_dictionary_learning_topk_sae(
     dtype: torch.dtype,
     layer: int | None = None,
     local_dir: str = "downloaded_saes",
+    use_threshold_at_inference: bool = False,
 ) -> TopKSAE:
     assert "ae.pt" in filename
 
@@ -122,9 +123,9 @@ def load_dictionary_learning_topk_sae(
         "k": "k",
     }
 
-    use_threshold = "threshold" in pt_params
+    threshold_in_state_dict = "threshold" in pt_params
 
-    if use_threshold:
+    if threshold_in_state_dict:
         key_mapping["threshold"] = "threshold"
 
     # Create a new dictionary with renamed keys
@@ -145,7 +146,7 @@ def load_dictionary_learning_topk_sae(
         hook_layer=layer,  # type: ignore
         device=device,
         dtype=dtype,
-        use_threshold=use_threshold,
+        use_threshold=use_threshold_at_inference,
     )
 
     sae.load_state_dict(renamed_params)
