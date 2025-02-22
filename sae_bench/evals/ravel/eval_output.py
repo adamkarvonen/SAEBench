@@ -1,13 +1,13 @@
 from pydantic.dataclasses import dataclass
 from pydantic import ConfigDict, Field
-from evals.base_eval_output import (
+from sae_bench.evals.base_eval_output import (
     DEFAULT_DISPLAY,
     BaseEvalOutput,
     BaseMetricCategories,
     BaseMetrics,
     BaseResultDetail,
 )
-from evals.ravel.eval_config import RAVELEvalConfig
+from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 
 EVAL_TYPE_ID_RAVEL = "RAVEL"
 

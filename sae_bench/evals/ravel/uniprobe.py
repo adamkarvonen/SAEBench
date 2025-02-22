@@ -7,7 +7,63 @@ from tqdm import tqdm
 from sklearn.svm import LinearSVC
 from sklearn.feature_selection import SelectFromModel
 from transformers import BatchEncoding
-from typing import List, Dict
+from typing import List, Dict, Any
+from nnsight import LanguageModel
+from sae_bench.evals.ravel.instance import Prompt
+
+def collect_activations(
+    model: LanguageModel,
+    attr_prompts: List[Prompt],
+    layer: int,
+    device: str,
+    llm_batch_size: int = 512,
+    tracer_kwargs: Dict[str, Any] = {"scan": False, "validate": False},
+):
+    """Collect activations for a batch of prompts at entity positions.
+    
+    Args:
+        model: The transformer model
+        attr_prompts: List of prompts containing entity positions
+        layer: Layer to collect activations from
+        device: Device to run computation on
+        llm_batch_size: Batch size for processing
+        tracer_kwargs: Additional arguments for the tracer
+        
+    Returns:
+        torch.Tensor: Collected activations of shape [num_prompts x hidden_dim]
+    """
+    # Prepare inputs
+    input_ids, attn_masks, entity_pos = [], [], []
+    for p in attr_prompts:
+        input_ids.append(p.input_ids)
+        attn_masks.append(p.attention_mask) 
+        entity_pos.append(p.final_entity_token_pos)
+    input_ids = torch.stack(input_ids).to(device)
+    attn_masks = torch.stack(attn_masks).to(device)
+    entity_positions = torch.tensor(entity_pos)
+
+    batch_activations = []
+    for batch_begin in range(0, len(input_ids), llm_batch_size):
+        input_ids_BL = input_ids[batch_begin : batch_begin + llm_batch_size]
+        attn_masks_BL = attn_masks[batch_begin : batch_begin + llm_batch_size]
+        entity_pos_B = entity_positions[batch_begin : batch_begin + llm_batch_size]
+        encoding_BL = BatchEncoding(
+            {
+                "input_ids": input_ids_BL,
+                "attention_mask": attn_masks_BL,
+            }
+        )
+
+        # Get activations
+        with torch.no_grad():
+            with model.trace(encoding_BL, **tracer_kwargs):
+                llm_act_BLD = model.model.layers[layer].output[0]
+                batch_arange = torch.arange(llm_act_BLD.shape[0])
+                llm_act_BD = llm_act_BLD[batch_arange, entity_pos_B]
+                llm_act_BD = llm_act_BD.save()
+            batch_activations.append(llm_act_BD)
+    
+    return torch.cat(batch_activations, dim=0)
 
 
 def get_attribute_activations_nnsight(
@@ -32,37 +88,16 @@ def get_attribute_activations_nnsight(
         attr_prompts = dataset.get_prompts_by_attribute(attr, n_samples=max_samples_per_attribute)
         print(f"Number of prompts for {attr}: {len(attr_prompts)}")
 
-        # Prepare inputs
-        input_ids, attn_masks, entity_pos = [], [], []
-        for p in attr_prompts:
-            input_ids.append(p.input_ids)
-            attn_masks.append(p.attention_mask)
-            entity_pos.append(p.final_entity_token_pos)
-        input_ids = torch.stack(input_ids).to(device)
-        attn_masks = torch.stack(attn_masks).to(device)
-        entity_positions = torch.tensor(entity_pos)
+        attribute_activations = collect_activations(
+            model=model,
+            attr_prompts=attr_prompts,
+            layer=layer,
+            device=device,
+            llm_batch_size=llm_batch_size,
+            tracer_kwargs=tracer_kwargs
+        )
 
-        batch_activations = []
-        for batch_begin in range(0, len(input_ids), llm_batch_size):
-            input_ids_BL = input_ids[batch_begin : batch_begin + llm_batch_size]
-            attn_masks_BL = attn_masks[batch_begin : batch_begin + llm_batch_size]
-            entity_pos_B = entity_positions[batch_begin : batch_begin + llm_batch_size]
-            encoding_BL = BatchEncoding(
-                {
-                    "input_ids": input_ids_BL,
-                    "attention_mask": attn_masks_BL,
-                }
-            )
-
-            # Get activations
-            with torch.no_grad(), model.trace(encoding_BL, **tracer_kwargs):
-                llm_act_BLD = model.model.layers[layer].output[0]
-                batch_arange = torch.arange(llm_act_BLD.shape[0])
-                llm_act_BD = llm_act_BLD[batch_arange, entity_pos_B]
-                llm_act_BD = llm_act_BD.save()
-            batch_activations.append(llm_act_BD)
-
-        all_attribute_activations_BD[attr] = torch.cat(batch_activations, dim=0)
+        all_attribute_activations_BD[attr] = attribute_activations
     return all_attribute_activations_BD
 
 

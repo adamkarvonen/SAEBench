@@ -11,20 +11,20 @@ from sae_lens import SAE
 from nnsight import LanguageModel
 import matplotlib.pyplot as plt
 
-import sae_bench_utils.activation_collection as activation_collection
-from sae_bench_utils.sae_selection_utils import get_saes_from_regex
-from sae_bench_utils import general_utils as general_utils
-from sae_bench_utils import (
+import sae_bench.sae_bench_utils.activation_collection as activation_collection
+from sae_bench.sae_bench_utils.sae_selection_utils import get_saes_from_regex
+from sae_bench.sae_bench_utils import general_utils as general_utils
+from sae_bench.sae_bench_utils import (
     get_eval_uuid,
     get_sae_lens_version,
     get_sae_bench_version,
 )
 
-from evals.ravel.instance import create_filtered_dataset
-from evals.ravel.eval_config import RAVELEvalConfig
-from evals.ravel.uniprobe import run_feature_selection_probe
-from evals.ravel.intervention import compute_disentanglement
-from evals.ravel.eval_output import (
+from sae_bench.evals.ravel.instance import create_filtered_dataset
+from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
+from sae_bench.evals.ravel.uniprobe import run_feature_selection_probe
+from sae_bench.evals.ravel.intervention import compute_disentanglement
+from sae_bench.evals.ravel.eval_output import (
     RAVELEvalOutput,
     RAVELMetricResults,
     RAVELMetricCategories,
@@ -285,7 +285,7 @@ def arg_parser():
 if __name__ == "__main__":
     """
     Example Gemma-2-2B SAE Bench usage:
-    python evals/ravel/main.py \
+    python sae_bench/evals/ravel/main.py \
     --sae_regex_pattern "sae_bench_gemma-2-2b_sweep_topk_ctx128_ef8_0824" \
     --sae_block_pattern "blocks.19.hook_resid_post__trainer_2" \
     --model_name "gemma-2-2b" \

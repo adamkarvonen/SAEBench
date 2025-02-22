@@ -13,6 +13,7 @@ def generate_batched(
     attention_mask_BL: Int[torch.Tensor, "batch_size seq_len"],
     max_new_tokens,
     llm_batch_size=32,
+    return_first_generated_token: bool = False,
 ):
     num_total_prompts = len(input_ids_BL)
 
@@ -32,6 +33,8 @@ def generate_batched(
         
     generations = torch.cat(generations, dim=0)
     generated_strings = tokenizer.batch_decode(generations)
+    if return_first_generated_token:
+        return generated_strings, generations[:, 0].tolist()
     return generated_strings
 
 

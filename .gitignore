@@ -13,7 +13,6 @@
 */.pytest_cache/
 */.coverage
 *.pyc
-*.sh
 
 Pipfile
 Pipfile.lock
@@ -30,9 +29,8 @@ poetry.lock
 
 auth/*
 
-evals/ravel/data/
-evals/ravel/models/
-evals/ravel/dev/
+sae_bench/evals/ravel/data/
+sae_bench/evals/ravel/models/
 
 # unlearning: the forget dataset cannot be uploaded
 **bio-forget-corpus.jsonl
@@ -40,10 +38,15 @@ evals/ravel/dev/
 
 **/images/
 **/results/
-**/artifacts/
 **/test_results/
 **/eval_results/**
-**/graphing_eval_results/
+*eval_results*
 **/dev/
 openai_api_key.txt
 dist/
+**/artifacts/absorption
+**/artifacts/autointerp
+**/artifacts/tpp
+**/artifacts/scr
+**/artifacts/sparse_probing
+

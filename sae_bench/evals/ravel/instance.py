@@ -17,9 +17,9 @@ from nnsight import LanguageModel
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
-from evals.ravel.validation import evaluate_completion
-from evals.ravel.eval_config import RAVELEvalConfig
-from evals.ravel.generation import generate_batched
+from sae_bench.evals.ravel.validation import evaluate_completion
+from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
+from sae_bench.evals.ravel.generation import generate_batched
 
 
 # Set random seed for reproducibility
@@ -52,6 +52,7 @@ class Prompt:
     )
     attention_mask: Optional[torch.Tensor] = None
     completion: Optional[str] = None
+    first_generated_token_id: Optional[int] = None
     is_correct: Optional[bool] = None
 
 
@@ -169,18 +170,20 @@ class RAVELInstance:
         token_ids = torch.stack([prompt.input_ids for prompt in prompts])
         attention_masks = torch.stack([prompt.attention_mask for prompt in prompts])
 
-        completions = generate_batched(
+        completions, first_token_ids = generate_batched(
             model,
             tokenizer,
             input_ids_BL=token_ids,
             attention_mask_BL=attention_masks,
             max_new_tokens=max_new_tokens,
             llm_batch_size=llm_batch_size,
+            return_first_generated_token=True,
             **kwargs,
         )
 
-        for prompt, completion in zip(prompts, completions):
+        for prompt, completion, first_token_id in zip(prompts, completions, first_token_ids):
             prompt.completion = completion
+            prompt.first_generated_token_id = first_token_id
 
     def evaluate_completion(self, prompt: Prompt, completion: str) -> bool:
         return evaluate_completion(
@@ -303,7 +306,7 @@ def create_filtered_dataset(
     max_prompt_length: int = 64,
     n_samples_per_attribute_class: Optional[int] = None,
     full_dataset_downsample: int = 8192,
-    artifact_dir: str = "evals/ravel/data/",
+    artifact_dir: str = "sae_bench/evals/ravel/data/",
 ):
     """
     Creates and saves filtered dataset of correct model completions.
@@ -323,8 +326,13 @@ def create_filtered_dataset(
         filtered_data: Dataset containing correct completions
         accuracy: Average accuracy of model completions
     """
-    os.makedirs(os.path.join(artifact_dir, model_id), exist_ok=True)
-    filename = os.path.join(artifact_dir, f"{model_id}/{chosen_entity}_instance.pkl")
+    model_name = model_id.replace("/", "_")
+    artifact_model_dir = os.path.join(artifact_dir, model_name)
+    os.makedirs(artifact_model_dir, exist_ok=True)
+    filename = os.path.join(artifact_model_dir, f"{chosen_entity}_instance.pkl")
+    print(f' trying to load {filename}')
+    print(f' file exists: {os.path.exists(filename)}')
+    print(f' force_recompute: {force_recompute}')
 
     if force_recompute or not os.path.exists(filename):
         # Load and sample data
@@ -332,7 +340,7 @@ def create_filtered_dataset(
         full_dataset = RAVELInstance.from_files(
             entity_type=chosen_entity,
             tokenizer=model.tokenizer,
-            data_dir='evals/ravel/data/',
+            data_dir='sae_bench/evals/ravel/data/', #TODO: make this a parameter
             max_prompt_length=max_prompt_length,
             n_samples_per_attribute_class=n_samples_per_attribute_class,
         )

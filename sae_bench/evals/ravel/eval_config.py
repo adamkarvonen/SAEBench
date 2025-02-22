@@ -1,6 +1,6 @@
 from pydantic.dataclasses import dataclass
 from pydantic import Field
-from evals.base_eval_output import BaseEvalConfig
+from sae_bench.evals.base_eval_output import BaseEvalConfig
 from typing import List
 
 CAN_MODE = True
