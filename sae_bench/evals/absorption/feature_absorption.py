@@ -31,11 +31,17 @@ from sae_bench.evals.absorption.vocab import LETTERS, get_alpha_tokens
 
 FEATURE_ABSORPTION_EXPERIMENT_NAME = "feature_absorption"
 
-# the cosine similarity between the top projecting feature and the probe must be at least this high
-ABSORPTION_PROBE_COS_THRESHOLD = 0.025
+# the cosine similarity between the top projecting feature and the probe must be at least this high (full absorption only)
+FULL_ABSORPTION_PROBE_COS_THRESHOLD = 0.025
 
-# the top projecting feature must contribute at least this much to the total probe projection to count as absorption
+# the cosine similarity between potential absorbing latents and the probe must be at least this high (absorption fraction only)
+ABSORPTION_FRACTION_PROBE_COS_THRESHOLD = 0.1
+
+# the total probe projection of the potential absorbing latents must contribute at least this much to the probe projection to count as absorption (both absorption metrics)
 ABSORPTION_PROBE_PROJECTION_PROPORTION_THRESHOLD = 0.4
+
+# the maximum number of latents that can be considered to collectively compensate for the reduced activation of a potentially absorbed latent (absorption fraction only)
+ABSORPTION_FRACTION_MAX_ABSORBING_LATENTS = 3
 
 
 @dataclass
@@ -205,8 +211,10 @@ def run_feature_absortion_experiment(
         base_template=prompt_template,
         answer_formatter=first_letter_formatter(),
         word_token_pos=prompt_token_pos,
-        probe_cos_sim_threshold=ABSORPTION_PROBE_COS_THRESHOLD,
+        full_absorption_probe_cos_sim_threshold=FULL_ABSORPTION_PROBE_COS_THRESHOLD,
+        absorption_fraction_probe_cos_sim_threshold=ABSORPTION_FRACTION_PROBE_COS_THRESHOLD,
         probe_projection_proportion_threshold=ABSORPTION_PROBE_PROJECTION_PROPORTION_THRESHOLD,
+        absorption_fraction_max_absorbing_latents=ABSORPTION_FRACTION_MAX_ABSORBING_LATENTS,
         batch_size=batch_size,
     )
     metrics_df = load_experiment_df(
