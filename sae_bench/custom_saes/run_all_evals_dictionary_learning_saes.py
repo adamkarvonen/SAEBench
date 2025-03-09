@@ -32,6 +32,12 @@ MODEL_CONFIGS = {
         "layers": [8],
         "d_model": 768,
     },
+    "EleutherAI/pythia-1b": {
+        "batch_size": 32,
+        "dtype": "bfloat16",
+        "layers": [10],
+        "d_model": 2048,
+    },
     "gemma-2-2b": {
         "batch_size": 32,
         "dtype": "bfloat16",
@@ -375,15 +381,20 @@ if __name__ == "__main__":
                 "Please download bio-forget-corpus.jsonl for unlearning evaluation"
             )
 
+    # repos = [
+    #     (
+    #         "adamkarvonen/pythia-random-test",
+    #         "pythia-1b",
+    #     ),
+    # ]
     repos = [
         (
-            "adamkarvonen/saebench_pythia-160m-deduped_width-2pow14_date-0108",
-            "pythia-160m-deduped",
+            "adamkarvonen/pythia-random-test",
+            "EleutherAI/pythia-1b",
         ),
-        ("canrager/saebench_gemma-2-2b_width-2pow14_date-0107", "gemma-2-2b"),
     ]
     exclude_keywords = ["checkpoints"]
-    include_keywords = []
+    include_keywords = ["random_EleutherAI"]
 
     for repo_id, model_name in repos:
         print(f"\n\n\nEvaluating {model_name} with {repo_id}\n\n\n")

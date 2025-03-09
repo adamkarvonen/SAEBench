@@ -789,7 +789,10 @@ def run_eval(
     llm_dtype = general_utils.str_to_dtype(config.llm_dtype)
 
     model = HookedTransformer.from_pretrained_no_processing(
-        config.model_name, device=device, dtype=llm_dtype
+        config.model_name,
+        checkpoint_index=0,
+        device=device,
+        dtype=llm_dtype,
     )
 
     for sae_release, sae_object_or_id in tqdm(

@@ -1060,6 +1060,7 @@ def multiple_evals(
             def load_model():
                 return HookedTransformer.from_pretrained_no_processing(
                     sae.cfg.model_name,
+                    checkpoint_index=0,
                     device=device,
                     dtype=sae.W_enc.dtype,
                     **sae.cfg.model_from_pretrained_kwargs,
