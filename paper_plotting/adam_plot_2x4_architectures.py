@@ -168,7 +168,7 @@ for selection_title, highlight_matryoshka in itertools.product(
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
         title_2var = ""
 
-        if custom_metric in ["mean_absorption_fraction_score", "unlearning_score"]:
+        if custom_metric in ["mean_absorption_fraction_score"]:
             for sae_name in eval_results:
                 score = eval_results[sae_name][custom_metric]
                 eval_results[sae_name][custom_metric] = 1 - score
