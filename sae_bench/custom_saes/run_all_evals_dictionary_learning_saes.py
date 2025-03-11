@@ -307,6 +307,8 @@ def run_evals(
         general_utils.str_to_dtype(llm_dtype),
     )
 
+    timing_results = {}
+
     # Run selected evaluations
     for eval_type in tqdm(eval_types, desc="Evaluations"):
         if eval_type == "autointerp" and api_key is None:
@@ -323,30 +325,80 @@ def run_evals(
 
         print(f"\n\n\nRunning {eval_type} evaluation\n\n\n")
 
-        for i, sae_location in enumerate(sae_locations):
-            is_final = False
-            if i == len(sae_locations) - 1:
-                is_final = True
+        timing_results[eval_type] = {
+            "iterations": [],
+            "total_time": 0,
+            "start_time": datetime.now().isoformat(),
+        }
 
-            sae = load_dictionary_learning_sae(
-                repo_id=repo_id,
-                location=sae_location,
-                layer=None,
-                model_name=model_name,
-                device=device,
-                dtype=general_utils.str_to_dtype(llm_dtype),
-            )
-            unique_sae_id = sae_location.replace("/", "_")
-            unique_sae_id = f"{repo_id.split('/')[1]}_{unique_sae_id}"
-            selected_saes = [(unique_sae_id, sae)]
+        try:
+            eval_start_time = time.time()
 
-            os.makedirs(output_folders[eval_type], exist_ok=True)
-            eval_runners[eval_type](selected_saes, is_final)
+            for i, sae_location in enumerate(sae_locations):
+                iteration_start_time = time.time()
 
-            del sae
+                is_final = False
+                if i == len(sae_locations) - 1:
+                    is_final = True
+
+                # Track SAE loading time
+                load_start_time = time.time()
+                sae = load_dictionary_learning_sae(
+                    repo_id=repo_id,
+                    location=sae_location,
+                    layer=None,
+                    model_name=model_name,
+                    device=device,
+                    dtype=general_utils.str_to_dtype(llm_dtype),
+                )
+                load_time = time.time() - load_start_time
+
+                unique_sae_id = sae_location.replace("/", "_")
+                unique_sae_id = f"{repo_id.split('/')[1]}_{unique_sae_id}"
+                selected_saes = [(unique_sae_id, sae)]
+
+                os.makedirs(output_folders[eval_type], exist_ok=True)
+
+                # Track evaluation time
+                eval_run_start_time = time.time()
+                eval_runners[eval_type](selected_saes, is_final)
+                eval_run_time = time.time() - eval_run_start_time
+
+                del sae
+
+                iteration_time = time.time() - iteration_start_time
+
+                # Store timing info for this iteration
+                iteration_info = {
+                    "iteration": i,
+                    "is_final": is_final,
+                    "sae_location": sae_location,
+                    "total_iteration_time": iteration_time,
+                    "sae_load_time": load_time,
+                    "eval_run_time": eval_run_time,
+                    "timestamp": datetime.now().isoformat(),
+                }
+
+                timing_results[eval_type]["iterations"].append(iteration_info)
+
+            timing_results[eval_type]["total_time"] = time.time() - eval_start_time
+            timing_results[eval_type]["end_time"] = datetime.now().isoformat()
+
+        except Exception as e:
+            print(f"Failed to run {eval_type} evaluation: {e}, skipping")
+            timing_results[eval_type]["error"] = str(e)
+            timing_results[eval_type]["end_time"] = datetime.now().isoformat()
+
+        # Save timing results after each eval_type completes
+        with open("eval_timing_results.json", "w") as f:
+            json.dump(timing_results, f, indent=2)
 
 
 if __name__ == "__main__":
+    import time
+    import json
+    from datetime import datetime
+
     """
     This will run all evaluations on all selected dictionary_learning SAEs within the specified HuggingFace repos.
     Set the model_name(s) and repo_id(s) in `repos`.
@@ -371,7 +423,8 @@ if __name__ == "__main__":
         "tpp",
         "sparse_probing",
         "autointerp",
-        # "unlearning",
+        "unlearning",
+        "ravel",
     ]
 
     if "autointerp" in eval_types:
@@ -393,13 +446,13 @@ if __name__ == "__main__":
 
     repos = [
         (
-            "adamkarvonen/saebench_pythia-160m-deduped_width-2pow14_date-0108",
-            "pythia-160m-deduped",
+            "canrager/saebench_gemma-2-2b_width-2pow14_date-0107",
+            "gemma-2-2b",
         ),
-        ("canrager/saebench_gemma-2-2b_width-2pow14_date-0107", "gemma-2-2b"),
+        # ("canrager/saebench_gemma-2-2b_width-2pow14_date-0107", "gemma-2-2b"),
     ]
     exclude_keywords = ["checkpoints"]
-    include_keywords = []
+    include_keywords = ["batch_top_k"]
 
     for repo_id, model_name in repos:
         print(f"\n\n\nEvaluating {model_name} with {repo_id}\n\n\n")
