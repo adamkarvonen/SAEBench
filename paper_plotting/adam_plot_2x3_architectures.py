@@ -45,7 +45,7 @@ selection = {
 }
 
 highlight_matryoshka_options = [
-    True,
+    # True,
     False,
 ]  # Whether to highlight matryoshka architectures in plots
 
@@ -68,6 +68,7 @@ for selection_title, highlight_matryoshka in itertools.product(
         "absorption",
         "scr",
         "sparse_probing",
+        "ravel",
     ]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
@@ -100,8 +101,10 @@ for selection_title, highlight_matryoshka in itertools.product(
     axes.append(fig.add_subplot(gs[0, 2]))  # row 2, col 1
     axes.append(fig.add_subplot(gs[1, 0]))  # row 2, col 2
     axes.append(fig.add_subplot(gs[1, 1]))  # row 3, col 1
-    legend_ax = fig.add_subplot(gs[1, 2])  # row 4, col 2 for legend
-    legend_ax.axis("off")  # Hide the axis
+    axes.append(fig.add_subplot(gs[1, 2]))  # row 3, col 2
+    # Remove the dedicated legend subplot
+    # legend_ax = fig.add_subplot(gs[1, 2])  # row 4, col 2 for legend
+    # legend_ax.axis("off")  # Hide the axis
 
     # Loop through eval types and create subplot for each
     for idx, eval_type in tqdm(enumerate(eval_types)):
@@ -212,12 +215,40 @@ for selection_title, highlight_matryoshka in itertools.product(
 
         labels = new_labels
 
-        if idx == 4 and lines and labels:  # Only for the last plot
-            # Create legend in the legend axis
-            legend_ax.legend(
-                lines, labels, loc="center", bbox_to_anchor=(0.5, 0.5), fontsize="large"
-            )
+        # Remove the legend creation in the last plot's section
+        # if idx == 4 and lines and labels:  # Only for the last plot
+        #     # Create legend in the legend axis
+        #     legend_ax.legend(
+        #         lines, labels, loc="center", bbox_to_anchor=(0.5, 0.5), fontsize="large"
+        #     )
 
-    plt.tight_layout()
+    # Add a new section to create a horizontal legend at the bottom of the figure
+    # Collect all unique lines and labels from all subplots
+    all_lines = []
+    all_labels = []
+    for ax in axes:
+        lines, labels = ax.get_legend_handles_labels()
+        for line, label in zip(lines, labels):
+            # Convert label to display name if available
+            display_label = graphing_utils.TRAINER_LABELS.get(label, label)
+            # Check if this label is already in our collection
+            if display_label not in all_labels:
+                all_lines.append(line)
+                all_labels.append(display_label)
+    
+    # Create a slim horizontal legend at the bottom
+    fig.subplots_adjust(bottom=0.15)  # Make room for the legend at the bottom
+    fig.legend(
+        all_lines, 
+        all_labels, 
+        loc='lower center', 
+        bbox_to_anchor=(0.5, 0.02), 
+        ncol=min(4, len(all_lines)),  # Adjust number of columns as needed
+        fontsize='medium',
+        frameon=True,
+        borderaxespad=0.
+    )
+
+    plt.tight_layout(rect=(0, 0.1, 1, 1))  # Adjust the rect to make room for the legend
     print(f"Saving image to {os.path.join(image_path, image_name)}")
     plt.savefig(os.path.join(image_path, image_name))

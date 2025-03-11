@@ -158,7 +158,7 @@ for highlight_matryoshka in [False, True]:
 
         # Plot
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
-        title_2var = None
+        title_2var = ""  # Empty string instead of None
 
         if idx == 1:
             legend_mode = "show_outside"
@@ -207,12 +207,39 @@ for highlight_matryoshka in [False, True]:
             baseline_value=baseline_value,
             baseline_label=baseline_label,
             passed_ax=axes[idx],
-            legend_mode=legend_mode,
+            legend_mode="hide",  # Always hide individual legends
             connect_points=True,
             bold_x0=True,
             max_l0=max_l0,
             highlighted_class=highlighted_class,
         )
 
-    plt.tight_layout()
+    # Add a new section to create a horizontal legend at the bottom of the figure
+    # Collect all unique lines and labels from all subplots
+    all_lines = []
+    all_labels = []
+    for ax in axes:
+        lines, labels = ax.get_legend_handles_labels()
+        for line, label in zip(lines, labels):
+            # Convert label to display name if available
+            display_label = graphing_utils.TRAINER_LABELS.get(label, label)
+            # Check if this label is already in our collection
+            if display_label not in all_labels:
+                all_lines.append(line)
+                all_labels.append(display_label)
+    
+    # Create a slim horizontal legend at the bottom
+    fig.subplots_adjust(bottom=0.15)  # Make room for the legend at the bottom
+    fig.legend(
+        all_lines, 
+        all_labels, 
+        loc='lower center', 
+        bbox_to_anchor=(0.5, 0.02), 
+        ncol=min(4, len(all_lines)),  # Adjust number of columns as needed
+        fontsize='medium',
+        frameon=True,
+        borderaxespad=0.
+    )
+
+    plt.tight_layout(rect=(0, 0.1, 1, 1))  # Adjust the rect to make room for the legend
     plt.savefig(os.path.join(image_path, image_name))

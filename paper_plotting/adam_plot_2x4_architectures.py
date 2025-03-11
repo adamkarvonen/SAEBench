@@ -52,6 +52,7 @@ for selection_title, highlight_matryoshka in itertools.product(
         "scr",
         "tpp",
         "ravel",
+        "unlearning",
     ]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
@@ -86,9 +87,7 @@ for selection_title, highlight_matryoshka in itertools.product(
     axes.append(fig.add_subplot(gs[2, 0]))  # row 3, col 1
     axes.append(fig.add_subplot(gs[2, 1]))  # row 3, col 2
     axes.append(fig.add_subplot(gs[3, 0]))  # row 4, col 1
-    legend_ax = fig.add_subplot(gs[3, 1])  # row 4, col 2 for legend
-    legend_ax.axis("off")  # Hide the axis
-
+    axes.append(fig.add_subplot(gs[3, 1]))  # row 4, col 2
     # Store all lines and labels for later
     all_lines = []
     all_labels = []
@@ -167,17 +166,14 @@ for selection_title, highlight_matryoshka in itertools.product(
 
         # Plot
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
-        title_2var = None
+        title_2var = ""
 
-        # Set legend_mode to "show" only for last plot
-        legend_mode = "show_outside" if idx == 2 else "hide"
-        legend_mode = "hide"
-
-        if custom_metric == "mean_absorption_fraction_score":
+        if custom_metric in ["mean_absorption_fraction_score", "unlearning_score"]:
             for sae_name in eval_results:
                 score = eval_results[sae_name][custom_metric]
                 eval_results[sae_name][custom_metric] = 1 - score
-            baseline_value = 1 - baseline_value
+            if baseline_value is not None:
+                baseline_value = 1 - baseline_value
 
         if highlight_matryoshka:
             max_l0 = 400.0
@@ -194,7 +190,7 @@ for selection_title, highlight_matryoshka in itertools.product(
             baseline_value=baseline_value,
             baseline_label=baseline_label,
             passed_ax=axes[idx],
-            legend_mode=legend_mode,
+            legend_mode="hide",  # Always hide individual legends
             connect_points=True,
             max_l0=max_l0,
             highlighted_class=highlighted_class,
@@ -210,11 +206,32 @@ for selection_title, highlight_matryoshka in itertools.product(
 
         labels = new_labels
 
-        if idx == 6 and lines and labels:  # Only for the last plot
-            # Create legend in the legend axis
-            legend_ax.legend(
-                lines, labels, loc="center", bbox_to_anchor=(0.5, 0.5), fontsize="large"
-            )
+    # Add a new section to create a horizontal legend at the bottom of the figure
+    # Collect all unique lines and labels from all subplots
+    all_lines = []
+    all_labels = []
+    for ax in axes:
+        lines, labels = ax.get_legend_handles_labels()
+        for line, label in zip(lines, labels):
+            # Convert label to display name if available
+            display_label = graphing_utils.TRAINER_LABELS.get(label, label)
+            # Check if this label is already in our collection
+            if display_label not in all_labels:
+                all_lines.append(line)
+                all_labels.append(display_label)
+    
+    # Create a slim horizontal legend at the bottom
+    fig.subplots_adjust(bottom=0.15)  # Make room for the legend at the bottom
+    fig.legend(
+        all_lines, 
+        all_labels, 
+        loc='lower center', 
+        bbox_to_anchor=(0.5, 0.02), 
+        ncol=min(4, len(all_lines)),  # Adjust number of columns as needed
+        fontsize='medium',
+        frameon=True,
+        borderaxespad=0.
+    )
 
-    plt.tight_layout()
+    plt.tight_layout(rect=(0, 0.1, 1, 1))  # Adjust the rect to make room for the legend
     plt.savefig(os.path.join(image_path, image_name))
