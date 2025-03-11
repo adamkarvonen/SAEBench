@@ -136,7 +136,9 @@ def plot_2var_graph(
 
     for k, v in results.items():
         if v["sae_class"] == "matroyshka_batch_topk":
-            raise ValueError("Matroyshka found in results, please rename to matryoshka_batch_topk")
+            raise ValueError(
+                "Matroyshka found in results, please rename to matryoshka_batch_topk"
+            )
 
     # Filter results if max_l0 is provided
     if max_l0 is not None:
@@ -178,7 +180,13 @@ def plot_2var_graph(
             custom_metric_values = [p[1] for p in points]
 
             # Add connecting line with transparency based on highlighted_class
-            line_alpha = 1.0 if trainer == highlighted_class else 0.2 if highlighted_class else 0.5
+            line_alpha = (
+                1.0
+                if trainer == highlighted_class
+                else 0.2
+                if highlighted_class
+                else 0.5
+            )
             line_width = 2.0 if trainer == highlighted_class else 1.0
 
             ax.plot(
@@ -192,7 +200,9 @@ def plot_2var_graph(
             )
 
         # Plot data points
-        point_alpha = 1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
+        point_alpha = (
+            1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
+        )
         ax.scatter(
             l0_values,
             custom_metric_values,
@@ -242,7 +252,9 @@ def plot_2var_graph(
     if baseline_value is not None:
         ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
         labels.append(baseline_label)
-        handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
+        handles.append(
+            Line2D([0], [0], color="red", linestyle="--", label=baseline_label)
+        )
 
     # Place legend outside the plot on the right
     if legend_mode == "show_outside":
@@ -324,6 +336,7 @@ for selection_title, highlight_matryoshka in itertools.product(
     baseline_folder = results_folders[0]
 
     eval_types = ["core", "autointerp", "absorption", "scr", "sparse_probing"]
+    eval_types = ["core", "autointerp", "absorption", "scr", "ravel"]
     title_prefix = f"{selection_title} Layer {layer}\n"
 
     # TODO: Add other ks, try mean over multiple ks
@@ -390,8 +403,8 @@ for selection_title, highlight_matryoshka in itertools.product(
         for sae in eval_results:
             eval_results[sae].update(core_results[sae])
 
-        custom_metric, custom_metric_name = graphing_utils.get_custom_metric_key_and_name(
-            eval_type, k
+        custom_metric, custom_metric_name = (
+            graphing_utils.get_custom_metric_key_and_name(eval_type, k)
         )
 
         if include_baseline:
@@ -399,7 +412,9 @@ for selection_title, highlight_matryoshka in itertools.product(
                 baseline_sae_path = (
                     f"{model_name}_layer_{layer}_pca_sae_custom_sae_eval_results.json"
                 )
-                baseline_sae_path = os.path.join(baseline_folder, eval_type, baseline_sae_path)
+                baseline_sae_path = os.path.join(
+                    baseline_folder, eval_type, baseline_sae_path
+                )
                 baseline_label = "PCA Baseline"
         else:
             baseline_sae_path = None
@@ -415,14 +430,18 @@ for selection_title, highlight_matryoshka in itertools.product(
             core_baseline_filename = baseline_sae_path.replace(eval_type, "core")
 
             baseline_results[baseline_results_key].update(
-                graphing_utils.get_core_results([core_baseline_filename])[baseline_results_key]
+                graphing_utils.get_core_results([core_baseline_filename])[
+                    baseline_results_key
+                ]
             )
 
             baseline_value = baseline_results[baseline_results_key][custom_metric]
             assert baseline_label, "Please provide a label for the baseline"
         else:
             baseline_value = None
-            assert baseline_label is None, "Please do not provide a label for the baseline"
+            assert baseline_label is None, (
+                "Please do not provide a label for the baseline"
+            )
 
         # Plot
         title_2var = f"{title_prefix}L0 vs {custom_metric_name}"
