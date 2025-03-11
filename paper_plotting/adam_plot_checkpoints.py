@@ -28,6 +28,7 @@ eval_types = [
     "core",
     "autointerp",
     "unlearning",
+    "ravel",
 ]
 
 combinations = list(itertools.product(eval_types, selections.keys()))
@@ -39,8 +40,8 @@ ks_lookup = {
 }
 
 ks_lookup = {
-    "scr": [10],
-    "tpp": [10],
+    "scr": [20],
+    "tpp": [20],
     "sparse_probing": [1],
 }
 
@@ -108,13 +109,14 @@ for eval_type, selection in combinations:
                 print(sae)
                 raise ValueError("Stop here")
 
-        custom_metric, custom_metric_name = graphing_utils.get_custom_metric_key_and_name(
-            eval_type, k
+        custom_metric, custom_metric_name = (
+            graphing_utils.get_custom_metric_key_and_name(eval_type, k)
         )
 
         graphing_utils.plot_training_steps(
             eval_results,
             custom_metric,
             title="",
+            y_label=custom_metric_name,
             output_filename=f"{image_base_name}_tokens_vs_diff.png",
         )

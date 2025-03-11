@@ -33,7 +33,7 @@ def create_two_column_layout(folder_paths, output_path):
         result.paste(images[i], (0, i * height))
 
     # Paste remaining 3 images in right column
-    for i in range(4, 7):
+    for i in range(4, 8):
         result.paste(images[i], (width, (i - 4) * height))
 
     # Save result
@@ -51,6 +51,7 @@ folder_paths = [
     os.path.join(base_folder, "sparse_probing"),
     os.path.join(base_folder, "tpp"),
     os.path.join(base_folder, "unlearning"),
+    os.path.join(base_folder, "ravel"),
 ]
 
 output_path = os.path.join(base_folder, "all_checkpoints.png")

@@ -255,7 +255,9 @@ def plot_best_of_ks_results(
     for sae in eval_results:
         eval_results[sae].update(core_results[sae])
 
-    custom_metric, custom_metric_name = get_custom_metric_key_and_name(results_path, dummy_k)
+    custom_metric, custom_metric_name = get_custom_metric_key_and_name(
+        results_path, dummy_k
+    )
 
     custom_metric = "best_custom_metric"
     custom_metric_name = custom_metric_name.replace(f"Top {dummy_k}", f"Best of {ks}")
@@ -308,7 +310,9 @@ def plot_best_of_ks_results(
     )
 
 
-def get_custom_metric_key_and_name(eval_path: str, k: int | None = None) -> tuple[str, str]:
+def get_custom_metric_key_and_name(
+    eval_path: str, k: int | None = None
+) -> tuple[str, str]:
     if "tpp" in eval_path:
         custom_metric = f"tpp_threshold_{k}_total_metric"
         custom_metric_name = f"TPP Top {k} Metric"
@@ -330,6 +334,9 @@ def get_custom_metric_key_and_name(eval_path: str, k: int | None = None) -> tupl
     elif "core" in eval_path:
         custom_metric = "ce_loss_score"
         custom_metric_name = "Loss Recovered"
+    elif "ravel" in eval_path:
+        custom_metric = "disentanglement_score"
+        custom_metric_name = "RAVEL Score"
     else:
         raise ValueError("Please add the correct key for the custom metric")
 
@@ -384,19 +391,34 @@ def get_eval_results(eval_filenames: list[str]) -> dict[str, dict]:
         filename = os.path.basename(filepath)
         results_key = filename.replace("_eval_results.json", "")
 
-        if "tpp" in filepath:
-            eval_results[results_key] = single_sae_results["eval_result_metrics"]["tpp_metrics"]
-        elif "scr" in filepath:
-            eval_results[results_key] = single_sae_results["eval_result_metrics"]["scr_metrics"]
-        elif "absorption" in filepath:
-            eval_results[results_key] = single_sae_results["eval_result_metrics"]["mean"]
+        if "/tpp/" in filepath:
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "tpp_metrics"
+            ]
+        elif "/scr/" in filepath:
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "scr_metrics"
+            ]
+        elif "/absorption/" in filepath:
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "mean"
+            ]
         elif "autointerp" in filepath:
-            eval_results[results_key] = single_sae_results["eval_result_metrics"]["autointerp"]
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "autointerp"
+            ]
         elif "sparse_probing" in filepath:
             eval_results[results_key] = single_sae_results["eval_result_metrics"]["sae"]
         elif "unlearning" in filepath:
-            eval_results[results_key] = single_sae_results["eval_result_metrics"]["unlearning"]
-        elif "core" in filepath:
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "unlearning"
+            ]
+        elif "/ravel/" in filepath:
+            eval_results[results_key] = single_sae_results["eval_result_metrics"][
+                "ravel"
+            ]
+
+        elif "/core/" in filepath:
             # core has nested evaluation metrics, so we flatten them out here
             core_results = single_sae_results["eval_result_metrics"]
             eval_results[results_key] = {}
@@ -433,9 +455,9 @@ def get_core_results(core_filenames: list[str]) -> dict:
             single_sae_results = json.load(f)
 
         l0 = single_sae_results["eval_result_metrics"]["sparsity"]["l0"]
-        ce_score = single_sae_results["eval_result_metrics"]["model_performance_preservation"][
-            "ce_loss_score"
-        ]
+        ce_score = single_sae_results["eval_result_metrics"][
+            "model_performance_preservation"
+        ]["ce_loss_score"]
 
         filename = os.path.basename(filepath)
         results_key = filename.replace("_eval_results.json", "")
@@ -510,7 +532,9 @@ def plot_3var_graph(
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
 
-    trainer_markers, _ = update_trainer_markers_and_colors(results, trainer_markers, TRAINER_COLORS)
+    trainer_markers, _ = update_trainer_markers_and_colors(
+        results, trainer_markers, TRAINER_COLORS
+    )
 
     # Extract data from results
     l0_values = [data[x_axis_key] for data in results.values()]
@@ -688,7 +712,9 @@ def plot_2var_graph(
 
     for k, v in results.items():
         if v["sae_class"] == "matroyshka_batch_topk":
-            raise ValueError("Matroyshka found in results, please rename to matryoshka_batch_topk")
+            raise ValueError(
+                "Matroyshka found in results, please rename to matryoshka_batch_topk"
+            )
 
     # Filter results if max_l0 is provided
     if max_l0 is not None:
@@ -730,7 +756,13 @@ def plot_2var_graph(
             custom_metric_values = [p[1] for p in points]
 
             # Add connecting line with transparency based on highlighted_class
-            line_alpha = 1.0 if trainer == highlighted_class else 0.2 if highlighted_class else 0.5
+            line_alpha = (
+                1.0
+                if trainer == highlighted_class
+                else 0.2
+                if highlighted_class
+                else 0.5
+            )
             line_width = 2.0 if trainer == highlighted_class else 1.0
 
             ax.plot(
@@ -744,7 +776,9 @@ def plot_2var_graph(
             )
 
         # Plot data points
-        point_alpha = 1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
+        point_alpha = (
+            1.0 if trainer == highlighted_class else 0.5 if highlighted_class else 1.0
+        )
         ax.scatter(
             l0_values,
             custom_metric_values,
@@ -790,7 +824,9 @@ def plot_2var_graph(
     if baseline_value is not None:
         ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
         labels.append(baseline_label)
-        handles.append(Line2D([0], [0], color="red", linestyle="--", label=baseline_label))
+        handles.append(
+            Line2D([0], [0], color="red", linestyle="--", label=baseline_label)
+        )
 
     # Place legend outside the plot on the right
     if legend_mode == "show_outside":
@@ -855,11 +891,15 @@ def plot_2var_graph_dict_size(
     colors = [plt.cm.Reds(x) for x in [0.1, 0.5, 0.9]]
 
     unique_sizes = [
-        size for size in possible_sizes if size in set(v["d_sae"] for v in results.values())
+        size
+        for size in possible_sizes
+        if size in set(v["d_sae"] for v in results.values())
     ]
     unique_sae_classes = sorted(set(v["sae_class"] for v in results.values()))
 
-    assert len(unique_sizes) <= len(colors), "Too many unique dictionary sizes for color map"
+    assert len(unique_sizes) <= len(colors), (
+        "Too many unique dictionary sizes for color map"
+    )
     size_to_color = {size: colors[i] for i, size in enumerate(unique_sizes)}
 
     # Plot data points for each dictionary size
@@ -910,7 +950,9 @@ def plot_2var_graph_dict_size(
     ax.set_xscale("log")
 
     if baseline_value is not None:
-        ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label, zorder=0)
+        ax.axhline(
+            baseline_value, color="red", linestyle="--", label=baseline_label, zorder=0
+        )
 
     if xlims:
         ax.set_xlim(*xlims)
@@ -951,7 +993,9 @@ def plot_steps_vs_average_diff(
     # Extract data from the dictionary
     for key, value in results_dict.items():
         # Extract trainer number from the key
-        trainer = key.split("/")[-1].split("_")[1]  # Assuming format like "trainer_1_..."
+        trainer = key.split("/")[-1].split("_")[
+            1
+        ]  # Assuming format like "trainer_1_..."
         layer = key.split("/")[-2].split("_")[-2]
 
         if "topk_ctx128" in key:
@@ -1148,7 +1192,9 @@ def plot_correlation_scatter(
     plt.title(title)
 
     # Add a trend line
-    sns.regplot(x=x_values, y=y_values, scatter=False, color="red", label=f"r = {r:.4f}")
+    sns.regplot(
+        x=x_values, y=y_values, scatter=False, color="red", label=f"r = {r:.4f}"
+    )
 
     plt.legend()
 
