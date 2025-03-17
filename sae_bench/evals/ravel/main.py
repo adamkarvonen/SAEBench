@@ -144,6 +144,9 @@ def create_dataloader_from_pairs(formatted_pairs, model, eval_config):
 
     tokenizer = AutoTokenizer.from_pretrained(eval_config.model_name)
 
+    max_base_len = max(len(pair[0]) for pair in formatted_pairs)
+    max_source_len = max(len(pair[1]) for pair in formatted_pairs)
+
     for batch_idx in range(num_batches):
         batch_start = batch_idx * eval_config.llm_batch_size
         batch_end = batch_start + eval_config.llm_batch_size
@@ -184,10 +187,10 @@ def create_dataloader_from_pairs(formatted_pairs, model, eval_config):
             base_label_str.append(base_label)
 
         base_tokens_BL, base_attn_mask_BL = custom_left_padding(
-            tokenizer, base_tokens_BL
+            tokenizer, base_tokens_BL, max_base_len
         )
         source_tokens_BL, source_attn_mask_BL = custom_left_padding(
-            tokenizer, source_tokens_BL
+            tokenizer, source_tokens_BL, max_source_len
         )
 
         base_tokens_BL = base_tokens_BL.to(model.device)
@@ -292,7 +295,7 @@ def run_eval_single_cause_attribute(
         sae,
         train_loader=train_loader,
         val_loader=val_loader,
-        verbose=True,
+        verbose=False,
         train_mdas=config.train_mdas,
     )
 
@@ -306,9 +309,6 @@ def run_eval_single_cause_attribute(
         val_loader,
         max_new_tokens=config.n_generated_tokens,
     )
-
-    torch.cuda.empty_cache()
-    gc.collect()
 
     return {
         "cause_score": cause_score,
@@ -339,7 +339,7 @@ def run_eval_single_dataset(
     if not os.path.exists(filtered_dataset_path):
         orig_batch_size = config.llm_batch_size
         # Generations use much less memory than training the MDBM
-        config.llm_batch_size = orig_batch_size * 5
+        config.llm_batch_size = orig_batch_size * 8
         full_dataset = RAVELInstance.create_from_files(
             config=config,
             entity_type=entity_class,
@@ -369,6 +369,9 @@ def run_eval_single_dataset(
 
     for cause_attribute in attributes:
         iso_attributes = [attr for attr in attributes if attr != cause_attribute]
+
+        gc.collect()
+        torch.cuda.empty_cache()
 
         mdbm_results = run_eval_single_cause_attribute(
             dataset,
@@ -447,6 +450,9 @@ def run_eval(
     eval_instance_id = get_eval_uuid()
     sae_lens_version = get_sae_lens_version()
     sae_bench_commit_hash = get_sae_bench_version()
+
+    gc.collect()
+    torch.cuda.empty_cache()
 
     artifacts_folder = None
     os.makedirs(output_path, exist_ok=True)
@@ -545,9 +551,11 @@ def create_config_and_selected_saes(
     else:
         # ctx len here is usually around 32, so we can use a larger batch size
         # However, we do have backward passes for training the MDBM
-        config.llm_batch_size = activation_collection.LLM_NAME_TO_BATCH_SIZE[
-            config.model_name
-        ]
+        # The divide by 4 shouldn't be necessary, but there's some memory fragmentation issue
+        # that causes intermittent OOM errors.
+        config.llm_batch_size = (
+            activation_collection.LLM_NAME_TO_BATCH_SIZE[config.model_name] // 4
+        )
 
     if args.llm_dtype is not None:
         config.llm_dtype = args.llm_dtype

@@ -66,7 +66,7 @@ def get_layer_activations(
 
     assert acts_BLD is not None
 
-    acts_BD = acts_BLD[list(range(acts_BLD.shape[0])), source_pos_B, :]
+    acts_BD = acts_BLD[list(range(acts_BLD.shape[0])), source_pos_B, :].clone()
 
     return acts_BD
 

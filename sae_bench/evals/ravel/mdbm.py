@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sae_lens
 from transformers import AutoModelForCausalLM, BatchEncoding, AutoTokenizer
+import gc
 
 from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 from sae_bench.evals.ravel.mdas import MDAS
@@ -118,24 +119,24 @@ class MDBM(nn.Module):
             self.model, self.layer_intervened
         ).register_forward_hook(intervention_hook)
 
-        logits = self.model(
+        logits_BV = self.model(
             input_ids=base_encoding_BL["input_ids"].to(self.model.device),
             attention_mask=base_encoding_BL.get("attention_mask", None),
-        ).logits
+        ).logits[:, -1, :]
 
         handle.remove()
 
-        predicted = logits.argmax(dim=-1)
+        predicted_B = logits_BV.argmax(dim=-1)
 
         # Format outputs
         predicted_text = []
-        for i in range(logits.shape[0]):
-            predicted_text.append(self.tokenizer.decode(predicted[i]).split()[-1])
+        for i in range(logits_BV.shape[0]):
+            predicted_text.append(self.tokenizer.decode(predicted_B[i]))
 
-        return logits, predicted_text
+        return logits_BV, predicted_text
 
 
-def compute_loss(intervened_logits_BLV, target_attr_B):
+def compute_loss(intervened_logits_BV, target_attr_B):
     """
     Compute multi-task loss combining:
     - Cause loss: Target attribute should match source
@@ -150,28 +151,30 @@ def compute_loss(intervened_logits_BLV, target_attr_B):
         Tuple of (loss, accuracy) where accuracy is the raw prediction accuracy
         for the final token
     """
-    loss = F.cross_entropy(intervened_logits_BLV[:, -1, :], target_attr_B)
+    loss = F.cross_entropy(intervened_logits_BV, target_attr_B)
 
     # Calculate accuracy
-    predictions = intervened_logits_BLV[:, -1, :].argmax(dim=-1)
-    accuracy = (predictions == target_attr_B).float().mean()
+    predictions_B = intervened_logits_BV.argmax(dim=-1)
+    accuracy = (predictions_B == target_attr_B).float().mean()
 
     return loss, accuracy
 
 
-def get_cause_isolation_scores(intervened_logits_BLV, source_pred_B, base_pred_B):
+def get_cause_isolation_score_estimates(
+    intervened_logits_BV, source_pred_B, base_pred_B
+):
     """
     Calculate cause and isolation scores based on predictions.
 
     Args:
-        intervened_logits_BLV: Logits from the intervened model
+        intervened_logits_BV: Logits from the intervened model
         source_pred_B: Target predictions from source examples
         base_pred_B: Target predictions from base examples
 
     Returns:
         Tuple of (cause_score, isolation_score, cause_count, isolation_count)
     """
-    predictions = intervened_logits_BLV[:, -1, :].argmax(dim=-1)
+    predictions_B = intervened_logits_BV.argmax(dim=-1)
 
     # Identify cause and isolation examples
     is_isolation = base_pred_B == source_pred_B
@@ -182,8 +185,8 @@ def get_cause_isolation_scores(intervened_logits_BLV, source_pred_B, base_pred_B
     isolation_count = is_isolation.sum().item()
 
     # Calculate accuracy for each category
-    cause_correct = ((predictions == source_pred_B) & is_cause).sum().item()
-    isolation_correct = ((predictions == base_pred_B) & is_isolation).sum().item()
+    cause_correct = ((predictions_B == source_pred_B) & is_cause).sum().item()
+    isolation_correct = ((predictions_B == base_pred_B) & is_isolation).sum().item()
 
     # Calculate scores (handle division by zero)
     cause_score = cause_correct / cause_count if cause_count > 0 else 0.0
@@ -218,15 +221,15 @@ def get_validation_loss(mdbm: MDBM, val_loader: torch.utils.data.DataLoader):
                 base_text_str,
                 base_label_str,
             ) = batch
-            intervened_logits_BLV, _ = mdbm(
+            intervened_logits_BV, _ = mdbm(
                 base_encodings_BL, source_encodings_BL, base_pos_B, source_pos_B
             )
-            loss, accuracy = compute_loss(intervened_logits_BLV, source_pred_B)
+            loss, accuracy = compute_loss(intervened_logits_BV, source_pred_B)
 
             # Calculate cause and isolation scores
             cause_score, isolation_score, cause_count, isolation_count = (
-                get_cause_isolation_scores(
-                    intervened_logits_BLV, source_pred_B, base_pred_B
+                get_cause_isolation_score_estimates(
+                    intervened_logits_BV, source_pred_B, base_pred_B
                 )
             )
 
@@ -302,8 +305,7 @@ def train_mdbm(
         print(
             f"Initial validation loss: {initial_val_loss:.4f}, accuracy: {initial_val_accuracy:.4f}, cause score: {initial_val_cause_score:.4f}, isolation score: {initial_val_isolation_score:.4f}"
         )
-
-    best_val_loss = initial_val_loss
+        best_val_loss = initial_val_loss
     patience_counter = 0
 
     for epoch in range(config.num_epochs):
@@ -312,6 +314,9 @@ def train_mdbm(
         train_accuracy = 0
         batch_count = 0
         log_count = 0
+
+        gc.collect()
+        torch.cuda.empty_cache()
 
         for batch in train_loader:
             mdbm.temperature = temperature_schedule[
@@ -330,16 +335,14 @@ def train_mdbm(
 
             optimizer.zero_grad()
 
-            intervened_logits_BLV, _ = mdbm(
+            intervened_logits_BV, _ = mdbm(
                 base_encodings_BL,
                 source_encodings_BL,
                 base_pos_B,
                 source_pos_B,
                 training_mode=True,
             )
-            loss, accuracy = compute_loss(
-                intervened_logits_BLV, source_pred_B
-            )  # TODO: only caus score currently used, add iso score
+            loss, accuracy = compute_loss(intervened_logits_BV, source_pred_B)
 
             loss.backward()
             optimizer.step()
@@ -367,6 +370,12 @@ def train_mdbm(
                 train_loss = 0
                 train_accuracy = 0
                 log_count = 0
+
+            # del intervened_logits_BV
+            # del loss
+            # del accuracy
+
+            # gc.collect()
 
         avg_train_loss = train_loss / batch_count if batch_count > 0 else 0
         avg_train_accuracy = train_accuracy / batch_count if batch_count > 0 else 0
@@ -407,7 +416,7 @@ def train_mdbm(
         #     print(f"Early stopping at epoch {epoch + 1}")
         #     break
 
-    if verbose:
-        print(f"Training complete. Best validation loss: {best_val_loss:.4f}")
+    # if verbose:
+    #     print(f"Training complete. Best validation loss: {best_val_loss:.4f}")
 
     return mdbm

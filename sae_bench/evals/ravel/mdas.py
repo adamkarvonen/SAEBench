@@ -128,18 +128,18 @@ class MDAS(nn.Module):
             self.model, self.layer_intervened
         ).register_forward_hook(intervention_hook)
 
-        logits = self.model(
+        logits_BV = self.model(
             input_ids=base_encoding_BL["input_ids"].to(self.model.device),
             attention_mask=base_encoding_BL.get("attention_mask", None),
-        ).logits
+        ).logits[:, -1, :]
 
         handle.remove()
 
-        predicted = logits.argmax(dim=-1)
+        predicted_B = logits_BV.argmax(dim=-1)
 
         # Format outputs
         predicted_text = []
-        for i in range(logits.shape[0]):
-            predicted_text.append(self.tokenizer.decode(predicted[i]).split()[-1])
+        for i in range(logits_BV.shape[0]):
+            predicted_text.append(self.tokenizer.decode(predicted_B[i]))
 
-        return logits, predicted_text
+        return logits_BV, predicted_text

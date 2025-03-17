@@ -9,7 +9,9 @@ import sae_bench.evals.ravel.mdbm as mdbm
 
 
 def custom_left_padding(
-    tokenizer: AutoTokenizer, input_ids: list[list[int]]
+    tokenizer: AutoTokenizer,
+    input_ids: list[list[int]],
+    pad_to_length: Optional[int] = None,
 ) -> tuple[
     Int[torch.Tensor, "batch_size seq_len"], Int[torch.Tensor, "batch_size seq_len"]
 ]:
@@ -17,6 +19,9 @@ def custom_left_padding(
     Left pad the input ids with the pad token.
     """
     max_length = max(len(ids) for ids in input_ids)
+    if pad_to_length is not None:
+        max_length = pad_to_length
+
     if hasattr(tokenizer, "pad_token_id"):
         pad_token_id = tokenizer.pad_token_id
     else:
