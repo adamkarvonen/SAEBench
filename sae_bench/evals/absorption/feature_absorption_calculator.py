@@ -68,10 +68,14 @@ class FeatureAbsorptionCalculator:
     batch_size: int = 10
     topk_feats: int = 10
 
-    # the cosine similarity between the top projecting feature and the probe must be at least this high to count as absorption
-    probe_cos_sim_threshold: float = 0.025
-    # the probe projection of the top projecting feature must contribute at least this much to the total probe projection to count as absorption
+    # the cosine similarity between the top projecting feature and the probe must be at least this high to count as absorption (full absorption only)
+    full_absorption_probe_cos_sim_threshold: float = 0.025
+    # the cosine similarity between each potential absorbing latent and the probe must be at least this high to count as absorption (absorption fraction only)
+    absorption_fraction_probe_cos_sim_threshold: float = 0.1
+    # the total probe projection of the potential absorbing latents must contribute at least this much to the probe projection to count as absorption (both absorption metrics)
     probe_projection_proportion_threshold: float = 0.4
+    # the maximum number of latents that can be considered to collectively compensate for the reduced activation of a potentially absorbed latent (absorption fraction only)
+    absorption_fraction_max_absorbing_latents: int = 3
 
     def _build_prompts(self, words: list[str]) -> list[SpellingPrompt]:
         return [
@@ -99,7 +103,7 @@ class FeatureAbsorptionCalculator:
         # If the top firing feature isn't aligned with the probe, this isn't absorption
         if (
             top_projection_feature_scores[0].probe_cos_sim
-            < self.probe_cos_sim_threshold
+            < self.full_absorption_probe_cos_sim_threshold
         ):
             return False
         # If the probe isn't even activated, this can't be absorption
@@ -156,22 +160,63 @@ class FeatureAbsorptionCalculator:
             for i, prompt in enumerate(tqdm(batch_prompts, disable=not show_progress)):
                 sae_acts = batch_sae_acts[i]
                 act_probe_proj = batch_probe_projections[i].cpu().item()
-                sae_act_probe_proj = batch_sae_probe_projections[i]
+                sae_act_probe_proj = batch_sae_probe_projections[i].cpu()
 
-                # calculate absorption_fraction
+                ### calculate absorption_fraction ###
+
+                # GT probe proj of main feats
                 main_feats_probe_proj = (
                     torch.sum(sae_act_probe_proj[main_feature_ids]).cpu().item()
                 )
-                all_feats_probe_proj = torch.sum(sae_act_probe_proj).cpu().item()
-                if main_feats_probe_proj >= act_probe_proj or all_feats_probe_proj <= 0:
+
+                # GT probe proj of other feats
+                potential_absorbers_mask = torch.ones(
+                    sae_act_probe_proj.size(0), dtype=torch.bool
+                )
+                potential_absorbers_mask[main_feature_ids] = False
+                potential_absorbers_mask &= (
+                    cos_sims >= self.absorption_fraction_probe_cos_sim_threshold
+                )
+                potential_absorbers_mask &= sae_act_probe_proj > 0
+                potential_absorbers_probe_proj = sae_act_probe_proj[
+                    potential_absorbers_mask
+                ]
+                top_potential_absorbers_probe_proj = (
+                    potential_absorbers_probe_proj.topk(
+                        k=min(
+                            self.absorption_fraction_max_absorbing_latents,
+                            potential_absorbers_probe_proj.numel(),
+                        )
+                    ).values
+                )
+                top_potential_absorbers_total_probe_proj = (
+                    torch.sum(top_potential_absorbers_probe_proj).cpu().item()
+                )
+
+                # final absorption_fraction calculation
+                top_potential_absorbers_probe_proj_proportion = (
+                    top_potential_absorbers_total_probe_proj / act_probe_proj
+                )
+                if (
+                    main_feats_probe_proj >= act_probe_proj
+                    or top_potential_absorbers_probe_proj_proportion
+                    < self.probe_projection_proportion_threshold
+                ):
                     absorption_fraction = 0.0
+                elif main_feats_probe_proj <= 0.0:
+                    absorption_fraction = 1.0
                 else:
-                    absorption_fraction = (
-                        all_feats_probe_proj - main_feats_probe_proj
-                    ) / all_feats_probe_proj
+                    unaccounted_probe_proj = act_probe_proj - main_feats_probe_proj
+                    absorption_probe_proj = min(
+                        top_potential_absorbers_total_probe_proj, unaccounted_probe_proj
+                    )
+                    absorption_fraction = absorption_probe_proj / (
+                        absorption_probe_proj + main_feats_probe_proj
+                    )
                     absorption_fraction = np.clip(absorption_fraction, 0.0, 1.0)
 
-                # determine whether this is full absorption with a single absorbing latent
+                ### determine whether this is full absorption with a single absorbing latent ###
+
                 with torch.inference_mode():
                     # sort by negative ig score
                     top_proj_feats = sae_act_probe_proj.topk(
