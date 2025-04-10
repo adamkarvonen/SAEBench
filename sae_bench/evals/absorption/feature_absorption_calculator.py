@@ -63,6 +63,8 @@ class FeatureAbsorptionCalculator:
     answer_formatter: Formatter = first_letter_formatter()
     example_separator: str = "\n"
     shuffle_examples: bool = True
+    # Mistral tokenizer handles the first token incorrectly if we don't do this
+    prepend_separator_to_first_example: bool = True
     # the position to read activations from (depends on the template)
     word_token_pos: int = -2
     batch_size: int = 10
@@ -87,6 +89,7 @@ class FeatureAbsorptionCalculator:
                 example_separator=self.example_separator,
                 max_icl_examples=self.max_icl_examples,
                 shuffle_examples=self.shuffle_examples,
+                prepend_separator_to_first_example=self.prepend_separator_to_first_example,
             )
             for word in words
         ]

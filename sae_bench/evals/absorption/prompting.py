@@ -79,6 +79,7 @@ def create_icl_prompt(
     shuffle_examples: bool = True,
     check_contamination: bool = True,
     max_attempts: int = 1000,
+    prepend_separator_to_first_example: bool = False,
 ) -> SpellingPrompt:
     """
     Create a prompt with ICL examples in the base, optionally checking for contamination.
@@ -93,6 +94,7 @@ def create_icl_prompt(
         shuffle_examples: whether to shuffle the examples before selecting the first `max_icl_examples`. default is True
         check_contamination: whether to check and prevent the current word from appearing in ICL examples. default is True
         max_attempts: maximum number of attempts to avoid contamination before raising an exception. default is 1000
+        prepend_separator_to_first_example: whether to prepend the example separator to the first example. default is False
     """
     if max_icl_examples is None:
         max_icl_examples = len(examples)
@@ -129,8 +131,12 @@ def create_icl_prompt(
     word_answer = answer_formatter(word)
     word_base = base_template.format(word=word)
 
+    base = example_separator.join(icl_prompts) + example_separator + word_base
+    if prepend_separator_to_first_example:
+        base = example_separator + base
+
     return SpellingPrompt(
-        base=example_separator.join(icl_prompts) + example_separator + word_base,
+        base=base,
         answer=word_answer,
         word=word,
     )
@@ -142,6 +148,7 @@ def random_icl_prompt(
     example_separator: str = "\n",
     answer_formatter: Formatter = first_letter_formatter(),
     max_icl_examples: int = 10,
+    prepend_separator_to_first_example: bool = False,
 ) -> SpellingPrompt:
     return create_icl_prompt(
         word=random.choice(vocab),
@@ -150,4 +157,5 @@ def random_icl_prompt(
         example_separator=example_separator,
         answer_formatter=answer_formatter,
         max_icl_examples=max_icl_examples,
+        prepend_separator_to_first_example=prepend_separator_to_first_example,
     )

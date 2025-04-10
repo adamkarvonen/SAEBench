@@ -14,10 +14,23 @@ def get_tokens(
 ) -> list[str]:
     result = []
     for token in tokenizer.vocab.keys():
-        word = tokenizer.convert_tokens_to_string([token])
+        word = convert_tokens_to_string(token, tokenizer)
         if filter(word):
             result.append(word if replace_special_chars else token)
     return result
+
+
+def convert_tokens_to_string(token: str, tokenizer: PreTrainedTokenizerFast) -> str:
+    converted = tokenizer.convert_tokens_to_string([token])
+    # special case for mistral tokenizer's broken handling of leading space tokens
+    # see: https://github.com/adamkarvonen/SAEBench/issues/68#issuecomment-2794621999
+    if (
+        len(token) > 0
+        and token[0] == "▁"
+        and (len(converted) == 0 or converted[0] != " ")
+    ):
+        converted = " " + converted
+    return converted
 
 
 def get_alpha_tokens(

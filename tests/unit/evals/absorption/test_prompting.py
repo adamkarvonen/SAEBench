@@ -115,3 +115,50 @@ def test_create_icl_prompt_avoids_contamination():
         f"Expected {max_icl_examples} examples, "
         f"but found {len(icl_examples_in_prompt)}."
     )
+
+
+def test_create_icl_prompt_with_prepended_separator():
+    prompt = create_icl_prompt(
+        "cat",
+        examples=["dog", "bird"],
+        shuffle_examples=False,
+        prepend_separator_to_first_example=True,
+    )
+
+    expected_base = """
+        dog: D
+        bird: B
+        cat:"""
+    assert prompt.base == "\n" + dedent(expected_base).strip()
+    assert prompt.word == "cat"
+    assert prompt.answer == " C"
+
+
+def test_create_icl_prompt_with_custom_separator_prepended():
+    prompt = create_icl_prompt(
+        "cat",
+        examples=["dog", "bird"],
+        shuffle_examples=False,
+        example_separator=" | ",
+        prepend_separator_to_first_example=True,
+    )
+
+    expected_base = " | dog: D | bird: B | cat:"
+    assert prompt.base == expected_base
+    assert prompt.word == "cat"
+    assert prompt.answer == " C"
+
+
+def test_create_icl_prompt_no_separator_prepending_by_default():
+    prompt = create_icl_prompt(
+        "cat",
+        examples=["dog", "bird"],
+        shuffle_examples=False,
+    )
+
+    expected_base = """dog: D
+        bird: B
+        cat:"""
+    assert prompt.base.replace(" ", "") == expected_base.replace(" ", "")
+    assert prompt.word == "cat"
+    assert prompt.answer == " C"

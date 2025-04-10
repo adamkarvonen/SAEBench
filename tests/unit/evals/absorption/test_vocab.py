@@ -1,8 +1,9 @@
-from transformers import GPT2TokenizerFast
+from transformers import GPT2TokenizerFast, LlamaTokenizerFast
 
 from sae_bench.evals.absorption.vocab import (
     LETTERS,
     LETTERS_UPPER,
+    convert_tokens_to_string,
     get_alpha_tokens,
     get_tokens,
 )
@@ -58,3 +59,11 @@ def test_get_alpha_tokens_can_remove_leading_spaces(
         gpt2_tokenizer, allow_leading_space=False, replace_special_chars=True
     )
     assert all(token.isalpha() for token in alpha_tokens)
+
+
+def test_convert_tokens_to_string_works_with_mistral_tokenizer(
+    fake_mistral_tokenizer: LlamaTokenizerFast,
+):
+    token = "▁hello"
+    converted = convert_tokens_to_string(token, fake_mistral_tokenizer)
+    assert converted == " hello"

@@ -254,6 +254,8 @@ def create_dataset_probe_training(
     answer_class_fn: Callable[[str], int] = lambda answer: LETTERS.index(
         answer.strip().lower()
     ),
+    # Mistral tokenizer handles the first token incorrectly if we don't do this
+    prepend_separator_to_first_example: bool = True,
 ) -> tuple[list[tuple[SpellingPrompt, int]], list[tuple[SpellingPrompt, int]]]:
     """
     Create train and test datasets for probe training by generating prompts for each token in the given vocabulary.
@@ -292,6 +294,7 @@ def create_dataset_probe_training(
                     answer_formatter=formatter,
                     base_template=base_template,
                     max_icl_examples=max_icl_examples,
+                    prepend_separator_to_first_example=prepend_separator_to_first_example,
                 )
                 answer_class = answer_class_fn(prompt.answer)
                 prompts_list.append((prompt, answer_class))
