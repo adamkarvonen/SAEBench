@@ -1,17 +1,17 @@
-import torch
-import numpy as np
-from transformers import BatchEncoding, AutoModelForCausalLM, AutoTokenizer
-from sae_lens import SAE
 import random
-from tqdm import tqdm
 
-from sae_bench.evals.ravel.instance import (
-    Prompt,
-    evaluate_completion,
-    RAVELFilteredDataset,
-)
+import numpy as np
+import torch
+from tqdm import tqdm
+from transformers import PreTrainedModel, PreTrainedTokenizerBase
+
 import sae_bench.evals.ravel.mdbm as mdbm
 import sae_bench.sae_bench_utils.activation_collection as activation_collection
+from sae_bench.evals.ravel.instance import (
+    Prompt,
+    RAVELFilteredDataset,
+    evaluate_completion,
+)
 
 
 def get_different_attribute_prompt(
@@ -77,9 +77,9 @@ def get_prompt_pairs(
 
 @torch.no_grad()
 def generate_batched_interventions(
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
     mdbm: mdbm.MDBM,
-    tokenizer: AutoTokenizer,
+    tokenizer: PreTrainedTokenizerBase,
     val_loader: torch.utils.data.DataLoader,
     max_new_tokens: int = 8,
 ) -> tuple[float, float]:

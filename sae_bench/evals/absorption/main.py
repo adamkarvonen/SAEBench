@@ -107,8 +107,12 @@ def run_eval(
         )
 
         # check we have enough first-letter features to evaluate absorption
-        if (k_sparse_probing_results['f1_probe'] > config.min_GT_probe_f1).sum() < config.min_feats_for_eval:
-            print(f"\n\n\nCannot evaluate absorption due to insufficent first-letter features detected in model: {config.model_name}\n\n\n")
+        if (
+            k_sparse_probing_results["f1_probe"] > config.min_GT_probe_f1
+        ).sum() < config.min_feats_for_eval:
+            print(
+                f"\n\n\nCannot evaluate absorption due to insufficent first-letter features detected in model: {config.model_name}\n\n\n"
+            )
             break
 
         raw_df = run_feature_absortion_experiment(
@@ -133,7 +137,12 @@ def run_eval(
         eval_result_details = []
         for _, row in agg_df.iterrows():
             letter = row["letter"]
-            if k_sparse_probing_results[k_sparse_probing_results['letter'] == row['letter']]['f1_probe'].item() > config.min_GT_probe_f1:
+            if (
+                k_sparse_probing_results[
+                    k_sparse_probing_results["letter"] == row["letter"]
+                ]["f1_probe"].item()
+                > config.min_GT_probe_f1
+            ):
                 mean_absorption_fractions.append(row["mean_absorption_fraction"])
                 full_absorption_rates.append(row["full_absorption_rate"])
                 num_split_features.append(row["num_split_feats"])

@@ -8,24 +8,22 @@ for the RAVEL evaluation benchmark.
 import json
 import os
 import random
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
-import pickle as pkl
+from copy import deepcopy
+from dataclasses import dataclass
+
 from huggingface_hub import snapshot_download
+from tqdm import tqdm
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
+    PreTrainedModel,
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
-from copy import deepcopy
 
-import torch
-from tqdm import tqdm
-
-from sae_bench.evals.ravel.validation import evaluate_completion
 from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 from sae_bench.evals.ravel.generation import generate_batched
+from sae_bench.evals.ravel.validation import evaluate_completion
 
 
 @dataclass
@@ -33,7 +31,7 @@ class AttributePrompt:
     """Represents an attribute_type with its associated prompt templates."""
 
     attribute_type: str
-    templates: List[str]
+    templates: list[str]
 
 
 @dataclass
@@ -47,18 +45,18 @@ class Prompt:
     entity_label: str  # The entity label, eg. "Helsinki".
     context_split: str  # The context split, "train"/"val".
     entity_split: str  # The entity split, "train"/"val".
-    input_ids: Optional[List[int]] = None  # Tokenized text.
-    final_entity_token_pos: Optional[int] = (
+    input_ids: list[int] | None = None  # Tokenized text.
+    final_entity_token_pos: int | None = (
         None  # Position of the final entity token in the input_ids, as counted from the end (negative index)
     )
-    attention_mask: Optional[List[int]] = None
-    attribute_generation: Optional[str] = (
+    attention_mask: list[int] | None = None
+    attribute_generation: str | None = (
         None  # Given the text, the generated next tokens which may contain the attribute label, decoded to string.
     )
-    first_generated_token_id: Optional[int] = (
+    first_generated_token_id: int | None = (
         None  # The first generated token id from attribute_generation.
     )
-    is_correct: Optional[bool] = (
+    is_correct: bool | None = (
         None  # Whether the attribute generation contains the attribute label.
     )
 
@@ -66,8 +64,8 @@ class Prompt:
 def get_instance_name(
     entity_type: str,
     model_name: str,
-    downsample: Optional[int] = None,
-    top_n_entities: Optional[int] = None,
+    downsample: int | None = None,
+    top_n_entities: int | None = None,
 ) -> str:
     model_name_str = model_name.replace("/", "--")
     instance_name = f"{entity_type}_{model_name_str}_downsampled-{downsample}"
@@ -101,7 +99,7 @@ class RAVELInstance:
         self.config = {}
 
         # If this exists, we only tokenize prompts for these attribute types.
-        self.attribute_types: Optional[list[str]] = None
+        self.attribute_types: list[str] | None = None
 
     @classmethod
     def create_from_files(
@@ -110,10 +108,10 @@ class RAVELInstance:
         entity_type: str,
         data_dir: str,
         tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast,
-        model: AutoModelForCausalLM,
+        model: PreTrainedModel,
         model_name: str,
-        attribute_types: Optional[list[str]] = None,
-        downsample: Optional[int] = None,
+        attribute_types: list[str] | None = None,
+        downsample: int | None = None,
     ) -> "RAVELInstance":
         instance = cls()
         instance.attribute_types = attribute_types
@@ -128,10 +126,10 @@ class RAVELInstance:
             print(f"Loading instance from {save_path}.")
             return instance.load(save_path)
 
-        print(f"Loading files.")
-        instance.load_files(entity_type, data_dir, tokenizer)
+        print("Loading files.")
+        instance.load_files(entity_type, data_dir)
 
-        print(f"Tokenizing prompts.")
+        print("Tokenizing prompts.")
         instance.build_and_tokenize_prompts(tokenizer)
 
         # Optional: Downsample to fewer prompts.
@@ -139,7 +137,7 @@ class RAVELInstance:
             print(f"Downsample to {downsample} prompts.")
             instance.downsample_(downsample)
 
-        print(f"Generate completions.")
+        print("Generate completions.")
         instance.generate_completions(
             model,
             tokenizer,
@@ -147,18 +145,18 @@ class RAVELInstance:
             llm_batch_size=config.llm_batch_size,
         )
 
-        print(f"Evaluate correctness.")
+        print("Evaluate correctness.")
         instance.evaluate_correctness()
 
-        print(f"Filter correct completions.")
+        print("Filter correct completions.")
         instance.filter_correct_()
 
-        print(f"Save filtered dataset.")
+        print("Save filtered dataset.")
         instance.save_as_instance(save_path)
         return instance
 
     def initialize_config(
-        self, entity_type: str, model_name: str, downsample: Optional[int] = None
+        self, entity_type: str, model_name: str, downsample: int | None = None
     ):
         instance_name = get_instance_name(entity_type, model_name, downsample)
         self.config = {
@@ -172,7 +170,7 @@ class RAVELInstance:
     def build_and_tokenize_prompts(
         self,
         tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast,
-    ) -> List[Prompt]:
+    ) -> list[Prompt]:
         """
         Load the full RAVEL dataset from files.
         """
@@ -220,7 +218,6 @@ class RAVELInstance:
         self,
         entity_type: str,
         data_dir: str,
-        tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast,
     ) -> None:
         # Define file paths and names
         base_dir = os.path.join(data_dir, "base")
@@ -274,13 +271,13 @@ class RAVELInstance:
     def __len__(self) -> int:
         return len(self.prompts)
 
-    def get_prompts_by_split(self, context_split: str) -> List[Prompt]:
+    def get_prompts_by_split(self, context_split: str) -> list[Prompt]:
         """Return all prompts with the given context split."""
         return [
             prompt for prompt in self.prompts if prompt.context_split == context_split
         ]
 
-    def get_entities(self, split: Optional[str] = None) -> List[str]:
+    def get_entities(self, split: str | None = None) -> list[str]:
         """Return all entities with the given split."""
         if split is None:
             return list(self.entity_splits.keys())
@@ -290,7 +287,7 @@ class RAVELInstance:
             if entity_split == split
         ]
 
-    def get_attributes(self) -> List[str]:
+    def get_attributes(self) -> list[str]:
         """Return all attribute types."""
         return list(self.attribute_type_to_templates.keys())
 
@@ -298,13 +295,13 @@ class RAVELInstance:
         """Return the unique prompt with the given text, if available."""
         return next((p for p in self.prompts if p.text == text), None)
 
-    def get_prompts_by_template(self, template: str) -> List[Prompt]:
+    def get_prompts_by_template(self, template: str) -> list[Prompt]:
         """Return all prompts with the given template."""
         return [p for p in self.prompts if p.template == template]
 
     def get_prompts_by_attribute(
-        self, attribute: str, n_samples: Optional[int] = None
-    ) -> List[Prompt]:
+        self, attribute: str, n_samples: int | None = None
+    ) -> list[Prompt]:
         """Return all prompts with the given attribute type."""
         prompts = [p for p in self.prompts if p.attribute_type == attribute]
         if n_samples:
@@ -315,13 +312,13 @@ class RAVELInstance:
             return prompts[:n_samples]
         return prompts
 
-    def get_prompts_by_entity(self, entity_label: str) -> List[Prompt]:
+    def get_prompts_by_entity(self, entity_label: str) -> list[Prompt]:
         """Return all prompts with the given entity label."""
         return [p for p in self.prompts if p.entity_label == entity_label]
 
     def generate_completions(
         self,
-        model: AutoModelForCausalLM,
+        model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast,
         max_new_tokens: int,
         llm_batch_size: int = 32,
@@ -335,7 +332,7 @@ class RAVELInstance:
             generate_batched(  # TODO: Add tokenization to this function.
                 model,
                 tokenizer,
-                input_ids_BL=token_ids,
+                input_ids_BL=token_ids,  # type: ignore
                 attention_mask_BL=attention_masks,
                 max_new_tokens=max_new_tokens,
                 llm_batch_size=llm_batch_size,
@@ -348,9 +345,9 @@ class RAVELInstance:
             self.prompts, completions, first_token_ids
         ):
             prompt.attribute_generation = completion
-            prompt.first_generated_token_id = first_token_id
+            prompt.first_generated_token_id = first_token_id  # type: ignore
 
-    def _filter_data_(self, filtered_prompts: List[Prompt]) -> None:
+    def _filter_data_(self, filtered_prompts: list[Prompt]) -> None:
         """Filter the data based on the filtered prompts."""
         filtered_entity_labels = set(p.entity_label for p in filtered_prompts)
         filtered_attribute_types = set(p.attribute_type for p in filtered_prompts)
@@ -420,7 +417,9 @@ class RAVELInstance:
 
     def filter_prompts_by_template_format(self):
         return {
-            text: p for text, p in self.prompts.items() if p.template.count("%s") == 1
+            text: p
+            for text, p in self.prompts.items()  # type: ignore
+            if p.template.count("%s") == 1
         }
 
     def filter_top_entities(self, top_n_entities=400):
@@ -437,16 +436,6 @@ class RAVELInstance:
         )
 
         filtered_prompts = [p for p in self.prompts if p.entity_label in kept_entities]
-        return self._filter_data_(filtered_prompts)
-
-    def filter_top_templates(self, top_n_templates: int):
-        stats = self.get_accuracy_stats()
-        template_scores = {}
-        for (_, template), stat in stats.items():
-            template_scores[template] = (
-                template_scores.get(template, 0) + stat["correct"]
-            )
-        filtered_prompts = [p for p in self.prompts if p.template in template_scores]
         return self._filter_data_(filtered_prompts)
 
     def save_as_instance(self, save_path: str):
@@ -466,7 +455,7 @@ class RAVELInstance:
     @classmethod
     def load(cls, load_path: str):
         """Load the RAVELInstance object from a json file."""
-        with open(load_path, "r") as f:
+        with open(load_path) as f:
             ravel_instance_dict = json.load(f)
         fresh_instance = cls()
         fresh_instance.prompts = [Prompt(**p) for p in ravel_instance_dict["prompts"]]
@@ -509,23 +498,23 @@ class RAVELInstance:
 
 
 class RAVELFilteredDataset:
-    def __init__(self, prompts: List[Prompt], config: Dict):
+    def __init__(self, prompts: list[Prompt], config: dict):
         self.prompts = prompts
         self.config = config
 
-    def get_prompts_by_attribute(self, attribute: str) -> List[Prompt]:
+    def get_prompts_by_attribute(self, attribute: str) -> list[Prompt]:
         return [p for p in self.prompts if p.attribute_type == attribute]
 
-    def get_prompts_by_entity(self, entity: str) -> List[Prompt]:
+    def get_prompts_by_entity(self, entity: str) -> list[Prompt]:
         return [p for p in self.prompts if p.entity_label == entity]
 
-    def get_prompts_by_template(self, template: str) -> List[Prompt]:
+    def get_prompts_by_template(self, template: str) -> list[Prompt]:
         return [p for p in self.prompts if p.template == template]
 
-    def get_prompts_by_context_split(self, split: str) -> List[Prompt]:
+    def get_prompts_by_context_split(self, split: str) -> list[Prompt]:
         return [p for p in self.prompts if p.context_split == split]
 
-    def get_prompts_by_entity_split(self, split: str) -> List[Prompt]:
+    def get_prompts_by_entity_split(self, split: str) -> list[Prompt]:
         return [p for p in self.prompts if p.entity_split == split]
 
     def __len__(self):
@@ -559,7 +548,7 @@ class RAVELFilteredDataset:
             json.dump(prompt_dict, f)
 
     @classmethod
-    def from_dict(cls, prompt_dict: Dict):
+    def from_dict(cls, prompt_dict: dict):
         return cls(
             prompts=[Prompt(**p) for p in prompt_dict["prompts"]],
             config=prompt_dict["config"],
@@ -567,7 +556,7 @@ class RAVELFilteredDataset:
 
     @classmethod
     def load(cls, load_path: str):
-        with open(load_path, "r") as f:
+        with open(load_path) as f:
             prompt_dict = json.load(f)
         return cls.from_dict(prompt_dict)
 

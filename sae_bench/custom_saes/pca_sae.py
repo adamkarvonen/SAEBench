@@ -5,10 +5,10 @@ import time
 import einops
 import torch
 import torch.nn as nn
+from huggingface_hub import hf_hub_download
 from sklearn.decomposition import IncrementalPCA
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
-from huggingface_hub import hf_hub_download
 
 import sae_bench.custom_saes.base_sae as base_sae
 import sae_bench.sae_bench_utils.activation_collection as activation_collection

@@ -1,17 +1,20 @@
+import sae_lens
 import torch
 import torch.nn as nn
-from transformers import AutoModelForCausalLM, AutoTokenizer, BatchEncoding
-import sae_lens
+from transformers import (
+    PreTrainedModel,
+    PreTrainedTokenizerBase,
+)
 
-from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 import sae_bench.sae_bench_utils.activation_collection as activation_collection
+from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 
 
 class MDAS(nn.Module):
     def __init__(
         self,
-        model: AutoModelForCausalLM,
-        tokenizer: AutoTokenizer,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
         config: RAVELEvalConfig,
         sae: sae_lens.SAE,  # Kept for API compatibility
     ):

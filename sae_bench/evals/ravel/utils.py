@@ -51,12 +51,10 @@ def inspect_dataloader(dataloader, tokenizer, n=2, view_strs: bool = False):
 
                 # Get base sequence
                 base_ids = base_encoding_BL["input_ids"][i].tolist()
-                base_mask = base_encoding_BL["attention_mask"][i].tolist()
                 base_text = tokenizer.decode(base_ids)
 
                 # Get source sequence
                 source_ids = source_encoding_BL["input_ids"][i].tolist()
-                source_mask = source_encoding_BL["attention_mask"][i].tolist()
                 source_text = tokenizer.decode(source_ids)
 
                 # Get positions and predictions

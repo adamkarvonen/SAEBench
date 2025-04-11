@@ -2,7 +2,6 @@ import argparse
 import gc
 import os
 import random
-import shutil
 import time
 from dataclasses import asdict
 from datetime import datetime
@@ -10,29 +9,31 @@ from datetime import datetime
 import torch
 from sae_lens import SAE
 from tqdm import tqdm
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BatchEncoding,
+    PreTrainedModel,
+)
 
-import torch
-from transformers import BatchEncoding, AutoTokenizer, AutoModelForCausalLM
-import sae_lens
-import random
-
+import sae_bench.evals.ravel.intervention as intervention
 import sae_bench.evals.ravel.mdbm as mdbm
+import sae_bench.sae_bench_utils.activation_collection as activation_collection
+import sae_bench.sae_bench_utils.general_utils as general_utils
 from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
+from sae_bench.evals.ravel.eval_output import (
+    EVAL_TYPE_ID_RAVEL,
+    RAVELEvalOutput,
+    RAVELMetricCategories,
+    RAVELMetricResults,
+)
+from sae_bench.evals.ravel.generation import custom_left_padding
 from sae_bench.evals.ravel.instance import (
-    RAVELInstance,
     RAVELFilteredDataset,
+    RAVELInstance,
     get_instance_name,
 )
 from sae_bench.evals.ravel.intervention import get_prompt_pairs
-from sae_bench.evals.ravel.eval_output import (
-    RAVELMetricCategories,
-    RAVELMetricResults,
-    RAVELEvalOutput,
-    EVAL_TYPE_ID_RAVEL,
-)
-from sae_bench.evals.ravel.generation import custom_left_padding
-
-import sae_bench.sae_bench_utils.general_utils as general_utils
 from sae_bench.sae_bench_utils import (
     get_eval_uuid,
     get_sae_bench_version,
@@ -41,8 +42,6 @@ from sae_bench.sae_bench_utils import (
 from sae_bench.sae_bench_utils.sae_selection_utils import (
     get_saes_from_regex,
 )
-import sae_bench.sae_bench_utils.activation_collection as activation_collection
-import sae_bench.evals.ravel.intervention as intervention
 
 # For our initial experiments, we only used transformer_lens and the shorter LLM names
 # For RAVEL, we use HF transformers, which requires the full model name
@@ -58,7 +57,7 @@ def create_dataloaders(
     cause_source_prompts,
     iso_base_prompts,
     iso_source_prompts,
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
     eval_config: RAVELEvalConfig,
     train_test_split: float,
 ):
@@ -245,7 +244,7 @@ def run_eval_single_cause_attribute(
     iso_attributes: list[str],
     config: RAVELEvalConfig,
     sae: SAE,
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
 ) -> dict[str, float]:
     tokenizer = AutoTokenizer.from_pretrained(config.model_name)
 
@@ -312,7 +311,7 @@ def run_eval_single_cause_attribute(
         model,
         trained_mdbm,
         tokenizer,
-        val_loader,
+        val_loader,  # type: ignore
         max_new_tokens=config.n_generated_tokens,
     )
 
@@ -327,7 +326,7 @@ def run_eval_single_dataset(
     entity_class: str,
     config: RAVELEvalConfig,
     sae: SAE,
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
 ) -> tuple[dict[str, float], dict]:
     """config: eval_config.EvalConfig contains all hyperparameters to reproduce the evaluation.
     It is saved in the results_dict for reproducibility."""
@@ -359,7 +358,7 @@ def run_eval_single_dataset(
         config.llm_batch_size = orig_batch_size
 
         # Create filtered dataset.
-        filtered_dataset = full_dataset.create_and_save_filtered_dataset(
+        full_dataset.create_and_save_filtered_dataset(
             artifact_dir=config.artifact_dir,
             top_n_entities=config.top_n_entities,
         )
@@ -397,15 +396,15 @@ def run_eval_single_dataset(
         per_class_results_dict[f"{entity_class}_{cause_attribute}"] = mdbm_results
 
     for key in results_dict.keys():
-        results_dict[key] = sum(results_dict[key]) / len(results_dict[key])
+        results_dict[key] = sum(results_dict[key]) / len(results_dict[key])  # type: ignore
 
-    return results_dict, per_class_results_dict
+    return results_dict, per_class_results_dict  # type: ignore
 
 
 def run_eval_single_sae(
     config: RAVELEvalConfig,
     sae: SAE,
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
     device: str,
     artifacts_folder: str,
 ) -> tuple[dict[str, float | dict[str, float]], dict]:
@@ -521,9 +520,9 @@ def run_eval(
             datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
             eval_result_metrics=RAVELMetricCategories(
                 ravel=RAVELMetricResults(
-                    disentanglement_score=eval_results["disentangle_score"],
-                    cause_score=eval_results["cause_score"],
-                    isolation_score=eval_results["isolation_score"],
+                    disentanglement_score=eval_results["disentangle_score"],  # type: ignore
+                    cause_score=eval_results["cause_score"],  # type: ignore
+                    isolation_score=eval_results["isolation_score"],  # type: ignore
                 )
             ),
             eval_result_details=[],

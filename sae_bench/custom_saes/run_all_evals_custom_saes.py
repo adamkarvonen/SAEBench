@@ -215,7 +215,6 @@ def run_evals(
 
 if __name__ == "__main__":
     import sae_bench.custom_saes.identity_sae as identity_sae
-    import sae_bench.custom_saes.pca_sae as pca_sae
 
     device = general_utils.setup_environment()
 

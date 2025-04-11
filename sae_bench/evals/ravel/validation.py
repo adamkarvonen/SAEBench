@@ -1,10 +1,9 @@
 import datetime
 import re
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 
-def _timezone_name_to_utc_offset(name: str) -> Optional[str]:
+def _timezone_name_to_utc_offset(name: str) -> str | None:
     """
     Convert a timezone name to its UTC offset.
 
@@ -15,7 +14,7 @@ def _timezone_name_to_utc_offset(name: str) -> Optional[str]:
         Optional[str]: UTC offset as a string, or None if conversion fails.
     """
     try:
-        offset = ZoneInfo(name).utcoffset(datetime.datetime.now()).seconds
+        offset = ZoneInfo(name).utcoffset(datetime.datetime.now()).seconds  # type: ignore
         sign = "+" if offset < 12 * 3600 else "-"
         if offset >= 12 * 3600:
             offset = 24 * 3600 - offset
@@ -26,12 +25,13 @@ def _timezone_name_to_utc_offset(name: str) -> Optional[str]:
     except Exception:
         return None
 
+
 def _is_summer_dst_case(norm_label: str, label: str) -> bool:
     """Check if the case is a summer daylight saving time scenario."""
     return (re.search(r"\-[5-8]", norm_label) and label.startswith("America")) or (
         re.search(r"\+[0-3]", norm_label)
         and (label.startswith("Europe") or label.startswith("Africa"))
-    )
+    )  # type: ignore
 
 
 def _evaluate_utc_completion(label: str, norm_out: str) -> bool:
@@ -59,9 +59,9 @@ def _evaluate_utc_completion(label: str, norm_out: str) -> bool:
     if (
         not correct
         and re.search(r"[+\-](\d+)", norm_out)
-        and int(re.search(r"[+\-](\d+)", norm_out).group(1)) > 11
+        and int(re.search(r"[+\-](\d+)", norm_out).group(1)) > 11  # type: ignore
     ):
-        offset = 24 - int(re.search(r"[+\-](\d+)", norm_out).group(1))
+        offset = 24 - int(re.search(r"[+\-](\d+)", norm_out).group(1))  # type: ignore
         correct = str(offset) in norm_label
 
     return correct
@@ -95,18 +95,26 @@ def evaluate_completion(
     if "coord" in text or "latitude" in text or "longitude" in text:
         try:
             correct = (
-                abs(float(norm_label.strip("-−")) - float(re.findall(r"\d+", norm_out)[0])) <= 2
+                abs(
+                    float(norm_label.strip("-−"))
+                    - float(re.findall(r"\d+", norm_out)[0])
+                )
+                <= 2
             )
-        except:
+        except Exception:
             correct = False
-    elif any(country in expected_label for country in ["United States", "United Kingdom"]):
+    elif any(
+        country in expected_label for country in ["United States", "United Kingdom"]
+    ):
         norm_label = expected_label.strip().replace("the ", "")
         norm_out = completion.strip().replace("the ", "")
         correct = norm_out.startswith(norm_label) or norm_out.startswith("England")
     elif "South Korea" in expected_label:
         correct = norm_out.startswith("korea") or norm_out.startswith("south korea")
     elif "North America" in expected_label:
-        correct = norm_label in norm_out or norm_out == "na" or norm_out.startswith("america")
+        correct = (
+            norm_label in norm_out or norm_out == "na" or norm_out.startswith("america")
+        )
     elif "Mandarin" in expected_label:
         correct = norm_out in norm_label or norm_out == "chinese"
     elif "language" in text and "," in norm_label:

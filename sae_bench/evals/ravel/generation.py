@@ -1,17 +1,14 @@
-from tqdm import tqdm
-from jaxtyping import Int
-from typing import Optional, Union, List
 import torch
-from transformers import AutoTokenizer, BatchEncoding, AutoModelForCausalLM
-
-import sae_bench.sae_bench_utils.activation_collection as activation_collection
-import sae_bench.evals.ravel.mdbm as mdbm
+from jaxtyping import Int
+from nnsight import LanguageModel
+from tqdm import tqdm
+from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
 
 def custom_left_padding(
-    tokenizer: AutoTokenizer,
+    tokenizer: PreTrainedTokenizerBase,
     input_ids: list[list[int]],
-    pad_to_length: Optional[int] = None,
+    pad_to_length: int | None = None,
 ) -> tuple[
     Int[torch.Tensor, "batch_size seq_len"], Int[torch.Tensor, "batch_size seq_len"]
 ]:
@@ -22,23 +19,23 @@ def custom_left_padding(
     if pad_to_length is not None:
         max_length = pad_to_length
 
-    if hasattr(tokenizer, "pad_token_id") and tokenizer.pad_token_id is not None:
-        pad_token_id = tokenizer.pad_token_id
+    if hasattr(tokenizer, "pad_token_id") and tokenizer.pad_token_id is not None:  # type: ignore
+        pad_token_id = tokenizer.pad_token_id  # type: ignore
     else:
-        pad_token_id = tokenizer.eos_token_id
+        pad_token_id = tokenizer.eos_token_id  # type: ignore
     padded_input_ids = [
         [pad_token_id] * (max_length - len(ids)) + ids for ids in input_ids
     ]
     padded_input_ids = torch.tensor(padded_input_ids)
-    attention_mask = (padded_input_ids != pad_token_id).long()
+    attention_mask = (padded_input_ids != pad_token_id).long()  # type: ignore
     return padded_input_ids, attention_mask
 
 
 def generate_batched(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
-    input_ids_BL: Union[Int[torch.Tensor, "batch_size seq_len"], List[List[int]]],
-    attention_mask_BL: Optional[Int[torch.Tensor, "batch_size seq_len"]] = None,
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizerBase,
+    input_ids_BL: Int[torch.Tensor, "batch_size seq_len"] | list[list[int]],
+    attention_mask_BL: Int[torch.Tensor, "batch_size seq_len"] | None = None,
     max_new_tokens: int = 8,
     llm_batch_size: int = 32,
     return_first_generated_token: bool = False,
@@ -93,7 +90,7 @@ def generate_batched(
 
 if __name__ == "__main__":
     # Test the generation
-    from transformers import AutoTokenizer, AutoModelForCausalLM
+    from transformers import AutoTokenizer
 
     device = torch.device("cuda:0")
     model = LanguageModel(
@@ -104,14 +101,18 @@ if __name__ == "__main__":
 
     encoded = model.tokenizer.batch_encode_plus(
         ["Hello, world!", "Moin "],
-        return_tensors="pt",
-        padding="max_length",
-        max_length=20,
+        return_tensors="pt",  # type: ignore
+        padding="max_length",  # type: ignore
+        max_length=20,  # type: ignore
     ).to(device)
     input_ids_BL = encoded["input_ids"]
     attention_mask_BL = encoded["attention_mask"]
 
     generated_strings = generate_batched(
-        model, tokenizer, input_ids_BL, attention_mask_BL, max_new_tokens=10
+        model,  # type: ignore
+        tokenizer,
+        input_ids_BL,  # type: ignore
+        attention_mask_BL,  # type: ignore
+        max_new_tokens=10,
     )
     print(generated_strings)

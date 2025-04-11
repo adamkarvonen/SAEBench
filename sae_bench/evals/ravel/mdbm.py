@@ -1,20 +1,24 @@
+import gc
+
+import sae_lens
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import sae_lens
-from transformers import AutoModelForCausalLM, BatchEncoding, AutoTokenizer
-import gc
+from transformers import (
+    PreTrainedModel,
+    PreTrainedTokenizerBase,
+)
 
+import sae_bench.sae_bench_utils.activation_collection as activation_collection
 from sae_bench.evals.ravel.eval_config import RAVELEvalConfig
 from sae_bench.evals.ravel.mdas import MDAS
-import sae_bench.sae_bench_utils.activation_collection as activation_collection
 
 
 class MDBM(nn.Module):
     def __init__(
         self,
-        model: AutoModelForCausalLM,
-        tokenizer: AutoTokenizer,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
         config: RAVELEvalConfig,
         sae: sae_lens.SAE,
     ):
@@ -254,8 +258,8 @@ def get_validation_loss(mdbm: MDBM, val_loader: torch.utils.data.DataLoader):
 
 
 def train_mdbm(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizerBase,
     config: RAVELEvalConfig,
     sae: sae_lens.SAE,
     train_loader,
@@ -301,12 +305,10 @@ def train_mdbm(
             initial_val_accuracy,
             initial_val_cause_score,
             initial_val_isolation_score,
-        ) = get_validation_loss(mdbm, val_loader)
+        ) = get_validation_loss(mdbm, val_loader)  # type: ignore
         print(
             f"Initial validation loss: {initial_val_loss:.4f}, accuracy: {initial_val_accuracy:.4f}, cause score: {initial_val_cause_score:.4f}, isolation score: {initial_val_isolation_score:.4f}"
         )
-        best_val_loss = initial_val_loss
-    patience_counter = 0
 
     for epoch in range(config.num_epochs):
         mdbm.train()
@@ -354,7 +356,7 @@ def train_mdbm(
                     if det < 0:
                         # Flip the sign of one column to make det=+1
                         Q[:, 0] = -Q[:, 0]
-                    mdbm.transform_matrix[...] = Q
+                    mdbm.transform_matrix[...] = Q  # type: ignore
 
             train_loss += loss.item()
             train_accuracy += accuracy.item()
@@ -382,7 +384,7 @@ def train_mdbm(
                 avg_val_accuracy,
                 avg_val_cause_score,
                 avg_val_isolation_score,
-            ) = get_validation_loss(mdbm, val_loader)
+            ) = get_validation_loss(mdbm, val_loader)  # type: ignore
             percent_above_zero = (mdbm.binary_mask > 0).float().mean().item()
             print(
                 f"Epoch {epoch + 1}/{config.num_epochs} - "
@@ -413,4 +415,4 @@ def train_mdbm(
     # if verbose:
     #     print(f"Training complete. Best validation loss: {best_val_loss:.4f}")
 
-    return mdbm
+    return mdbm  # type: ignore

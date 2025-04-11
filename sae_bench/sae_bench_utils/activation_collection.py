@@ -8,7 +8,11 @@ from jaxtyping import Bool, Float, Int, jaxtyped
 from sae_lens import SAE
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
-from transformers import AutoTokenizer, AutoModelForCausalLM, BatchEncoding
+from transformers import (
+    AutoTokenizer,
+    BatchEncoding,
+    PreTrainedModel,
+)
 
 # Relevant at ctx len 128
 LLM_NAME_TO_BATCH_SIZE = {
@@ -30,12 +34,12 @@ LLM_NAME_TO_DTYPE = {
 }
 
 
-def get_module(model: AutoModelForCausalLM, layer_num: int) -> torch.nn.Module:
+def get_module(model: PreTrainedModel, layer_num: int) -> torch.nn.Module:
     """If missing, refer to sae_bench/sae_bench_utils/misc_notebooks/test_submodule.ipynb for an example of how to get the module for a given model."""
     if model.config.architectures[0] == "Gemma2ForCausalLM":
-        return model.model.layers[layer_num]
+        return model.model.layers[layer_num]  # type: ignore
     elif model.config.architectures[0] == "GPTNeoXForCausalLM":
-        return model.gpt_neox.layers[layer_num]
+        return model.gpt_neox.layers[layer_num]  # type: ignore
     else:
         raise ValueError(
             f"Model {model.config.architectures[0]} not supported, please add the appropriate module. See docstring for get_module()"
@@ -44,7 +48,7 @@ def get_module(model: AutoModelForCausalLM, layer_num: int) -> torch.nn.Module:
 
 @torch.no_grad()
 def get_layer_activations(
-    model: AutoModelForCausalLM,
+    model: PreTrainedModel,
     target_layer: int,
     inputs: BatchEncoding,
     source_pos_B: torch.Tensor,
@@ -61,7 +65,7 @@ def get_layer_activations(
     )
 
     _ = model(
-        input_ids=inputs["input_ids"].to(model.device),
+        input_ids=inputs["input_ids"].to(model.device),  # type: ignore
         attention_mask=inputs.get("attention_mask", None),
     )
 
