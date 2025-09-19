@@ -37,6 +37,18 @@ TRAINER_MARKERS = {
     "KL Finetune": "X",
     "MSE Checkpoint": "o",
     "E2E": "^",
+    "TopK, MSE, Not Shuffled": "s",
+    "TopK, MSE, Shuffled": "o",
+    "TopK w/ KL Finetune, Batch Size 32": "s",
+    "TopK w/ KL Finetune, Batch Size 2": "o",
+    "16K Width TopK": "s",
+    "16K Width ReLU": "s",
+    "65K Width TopK": "X",
+    "65K Width ReLU": "X",
+    "16K Width ReLU w/ KL Finetune": "s",
+    "16K Width TopK w/ KL Finetune": "s",
+    "65K Width ReLU w/ KL Finetune": "X",
+    "65K Width TopK w/ KL Finetune": "X",
 }
 
 TRAINER_COLORS = {
@@ -56,6 +68,18 @@ TRAINER_COLORS = {
     "KL Finetune": "#002eff",
     "MSE Checkpoint": "#ff0000",
     "E2E": "#00ca00",
+    "TopK, MSE, Not Shuffled": "#00c7ca",
+    "TopK, MSE, Shuffled": "#ff0000",
+    "TopK w/ KL Finetune, Batch Size 32": "#00c7ca",
+    "TopK w/ KL Finetune, Batch Size 2": "#ff0000",
+    "16K Width TopK": "#00c7ca",
+    "16K Width ReLU": "#00c7ca",
+    "65K Width TopK": "#00c7ca",
+    "65K Width ReLU": "#00c7ca",
+    "16K Width ReLU w/ KL Finetune": "#ff0000",
+    "16K Width TopK w/ KL Finetune": "#ff0000",
+    "65K Width ReLU w/ KL Finetune": "#ff0000",
+    "65K Width TopK w/ KL Finetune": "#ff0000",
 }
 
 
@@ -76,6 +100,17 @@ TRAINER_LABELS = {
     "KL Finetune": "KL Finetune",
     "MSE Checkpoint": "MSE Checkpoint",
     "E2E": "E2E",
+    "TopK, MSE, Not Shuffled": "TopK, MSE, Not Shuffled",
+    "TopK, MSE, Shuffled": "TopK, MSE, Shuffled",
+    "TopK w/ KL Finetune, Batch Size 32": "TopK w/ KL Finetune, Batch Size 32",
+    "TopK w/ KL Finetune, Batch Size 2": "TopK w/ KL Finetune, Batch Size 2",
+    "16K Width TopK": "16K Width TopK",
+    "16K Width ReLU": "16K Width ReLU",
+    "65K Width TopK": "65K Width TopK",
+    "65K Width ReLU": "65K Width ReLU",
+    "16K Width ReLU w/ KL Finetune": "16K Width ReLU w/ KL Finetune",
+    "16K Width TopK w/ KL Finetune": "16K Width TopK w/ KL Finetune",
+    "65K Width ReLU w/ KL Finetune": "65K Width ReLU w/ KL Finetune",
 }
 
 
@@ -343,6 +378,50 @@ def get_custom_metric_key_and_name(
     elif "sparse_probing" in eval_path:
         custom_metric = f"sae_top_{k}_test_accuracy"
         custom_metric_name = f"Sparse Probing Top {k} Test Accuracy"
+    elif "absorption" in eval_path:
+        custom_metric = "mean_absorption_fraction_score"
+        custom_metric_name = "Mean Absorption Fraction Score"
+    elif "autointerp" in eval_path:
+        custom_metric = "autointerp_score"
+        custom_metric_name = "Autointerp Score"
+    elif "unlearning" in eval_path:
+        custom_metric = "unlearning_score"
+        custom_metric_name = "Unlearning Score"
+    elif "core" in eval_path:
+        # custom_metric = "relative_reconstruction_bias"
+        # custom_metric = "normalized_freq_over_10_percent"
+        # custom_metric_name = "Normalized Freq Over 10%"
+        # custom_metric = "freq_over_1_percent"
+        # custom_metric_name = "Freq Over 1%"
+        # custom_metric = "freq_over_10_percent"
+        # custom_metric_name = "Freq Over 10%"
+        # custom_metric = "frac_alive"
+        # custom_metric_name = "Frac Alive"
+        # custom_metric = "kl_div_score"
+        # custom_metric_name = "KL Divergence Score"
+        custom_metric = "ce_loss_score"
+        custom_metric_name = "Cross Entropy Loss Score"
+    elif "ravel" in eval_path:
+        custom_metric = "disentanglement_score"
+        custom_metric_name = "RAVEL Score"
+    else:
+        raise ValueError("Please add the correct key for the custom metric")
+
+    return custom_metric, custom_metric_name
+
+
+def get_best_custom_metric_key_and_name(
+    eval_path: str, k: int | None = None
+) -> tuple[str, str]:
+    if "tpp" in eval_path:
+        custom_metric = f"tpp_best_k_total_metric"
+        custom_metric_name = f"TPP Best of K Metric"
+    elif "scr" in eval_path:
+        custom_metric = f"scr_best_k_metric"
+        custom_metric_name = f"SCR Best of K Metric"
+    elif "sparse_probing" in eval_path:
+        custom_metric = f"sae_best_k_test_accuracy"
+        custom_metric_name = f"Sparse Probing Best of K Test Accuracy"
     elif "absorption" in eval_path:
         custom_metric = "mean_absorption_fraction_score"
         custom_metric_name = "Mean Absorption Fraction Score"
@@ -735,6 +814,7 @@ def plot_2var_graph(
     bold_x0: bool = False,
     max_l0: float | None = None,
     highlighted_class: str | None = None,
+    legend_location: str | None = None,
 ):
     if not trainer_markers:
         trainer_markers = TRAINER_MARKERS
@@ -867,7 +947,21 @@ def plot_2var_graph(
 
     # Place legend outside the plot on the right
     if legend_mode == "show_outside":
-        ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1, 0.5))
+        if legend_location is None:
+            legend_location = "center left"
+            ax.legend(handles, labels, loc=legend_location, bbox_to_anchor=(1, 0.5))
+        elif legend_location == "upper center":
+            ax.legend(
+                handles,
+                labels,
+                loc=legend_location,
+                bbox_to_anchor=(0.5, -0.15),
+                ncol=1,
+            )
+        else:
+            raise ValueError(
+                f"Invalid legend location: {legend_location}. Must be one of: None, upper center"
+            )
     elif legend_mode == "show_inside":
         ax.legend(handles, labels)
     elif legend_mode == "hide":

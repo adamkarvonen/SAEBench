@@ -324,6 +324,7 @@ def get_custom_metric_key_and_name(
         custom_metric_name = f"Sparse Probing Top {k} Test Accuracy"
     elif "absorption" in eval_path:
         custom_metric = "mean_absorption_fraction_score"
+        custom_metric = "mean_full_absorption_score"
         custom_metric_name = "Mean Absorption Fraction Score"
     elif "autointerp" in eval_path:
         custom_metric = "autointerp_score"

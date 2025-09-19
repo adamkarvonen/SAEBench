@@ -10,16 +10,14 @@ layer = 12
 
 sae_regex_patterns_65k = [
     r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
-    r"65k_temp1000.*",  # matryoshka 65k
 ]
 
 sae_regex_patterns_16k = [
     r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-    r".*notemp.*",  # matryoshka 16k
 ]
 selection_title = "SAE Bench Gemma-2-2B Width Diff Series"
 
-results_folders = ["./graphing_eval_results_0119", "./matroyshka_eval_results_0117"]
+results_folders = ["./graphing_eval_results_0125"]
 
 baseline_folder = results_folders[0]
 
@@ -102,8 +100,8 @@ for eval_type in tqdm(eval_types):
         eval_results_16k[sae].update(core_results_16k[sae])
 
     for k in ks:
-        custom_metric, custom_metric_name = graphing_utils.get_custom_metric_key_and_name(
-            eval_type, k
+        custom_metric, custom_metric_name = (
+            graphing_utils.get_custom_metric_key_and_name(eval_type, k)
         )
 
         if include_baseline:
@@ -111,7 +109,9 @@ for eval_type in tqdm(eval_types):
                 baseline_sae_path = (
                     f"{model_name}_layer_{layer}_pca_sae_custom_sae_eval_results.json"
                 )
-                baseline_sae_path = os.path.join(baseline_folder, eval_type, baseline_sae_path)
+                baseline_sae_path = os.path.join(
+                    baseline_folder, eval_type, baseline_sae_path
+                )
                 baseline_label = "PCA Baseline"
         else:
             baseline_sae_path = None
@@ -124,7 +124,9 @@ for eval_type in tqdm(eval_types):
             core_baseline_filename = baseline_sae_path.replace(eval_type, "core")
 
             baseline_results[baseline_results_key].update(
-                graphing_utils.get_core_results([core_baseline_filename])[baseline_results_key]
+                graphing_utils.get_core_results([core_baseline_filename])[
+                    baseline_results_key
+                ]
             )
             baseline_value = baseline_results[baseline_results_key][custom_metric]
         else:
@@ -140,7 +142,9 @@ for eval_type in tqdm(eval_types):
             )
 
         # Map 65k to 16k keys
-        map_65k_to_16k = lambda sae_key: sae_key.replace("width-2pow16", "width-2pow14").replace(
+        map_65k_to_16k = lambda sae_key: sae_key.replace(
+            "width-2pow16", "width-2pow14"
+        ).replace(
             "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_65k_temp1000_google_gemma-2-2b_ctx1024_0117_resid_post_layer_12",
             "matryoshka_gemma-2-2b-16k-v2_MatryoshkaBatchTopKTrainer_notemp_google_gemma-2-2b_ctx1024_0114_resid_post_layer_12",
         )
@@ -157,9 +161,9 @@ for eval_type in tqdm(eval_types):
                         - eval_results_16k[sae_key_16k][metric_key]
                     )
                 else:
-                    eval_results_diff[sae_key_65k][metric_key] = eval_results_65k[sae_key_65k][
-                        metric_key
-                    ]
+                    eval_results_diff[sae_key_65k][metric_key] = eval_results_65k[
+                        sae_key_65k
+                    ][metric_key]
 
         # Create individual plot
         plt.figure(figsize=(10, 6))

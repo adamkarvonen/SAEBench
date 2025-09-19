@@ -13,11 +13,17 @@ import sae_bench.sae_bench_utils.general_utils as general_utils
 import sae_bench.sae_bench_utils.random_graphing_utils as graphing_utils
 
 selections = {
-    # "SAE Bench Gemma-2-2B 16K Architecture Series": [
-    #     r"saebench_gemma-2-2b_width-2pow14_date-0108(?!.*step).*",
-    # ],
+    "SAE Bench Gemma-2-2B 16K Architecture Series": [
+        r"saebench_gemma-2-2b_width-2pow14_date-0108_Standard(?!.*step).*",
+        r"saebench_gemma-2-2b_width-2pow14_date-0108_TopK(?!.*step).*",
+        r"kl_finetunes_gemma-2-2b_standard_new_width-2pow14.*",
+        r"kl_finetunes_gemma-2-2b_top_k_width-2pow14.*",
+    ],
     "SAE Bench Gemma-2-2B 65K Architecture Series": [
-        r"saebench_gemma-2-2b_width-2pow16_date-0108(?!.*step).*",
+        r"saebench_gemma-2-2b_width-2pow16_date-0108_Standard(?!.*step).*",
+        r"saebench_gemma-2-2b_width-2pow16_date-0108_TopK(?!.*step).*",
+        r"kl_finetunes_gemma-2-2b_standard_new_width-2pow16.*",
+        r"kl_finetunes_gemma-2-2b_top_k_width-2pow16.*",
     ],
 }
 
@@ -92,6 +98,10 @@ def customize_class(sae_dict: dict) -> dict:
             sae_dict[sae_name]["sae_class"] = "E2E"
         elif "475000" in sae_name:
             sae_dict[sae_name]["sae_class"] = "MSE Checkpoint"
+        elif "kl_finetunes_gemma-2-2b_standard_new_width-2pow1" in sae_name:
+            sae_dict[sae_name]["sae_class"] = "ReLU w/ KL Finetune"
+        elif "kl_finetunes_gemma-2-2b_top_k_width-2pow1" in sae_name:
+            sae_dict[sae_name]["sae_class"] = "TopK w/ KL Finetune"
 
     return sae_dict
 
@@ -101,6 +111,7 @@ results_folders = [
     # "./eval_results_gemma_topk_finetune",
     # "./eval_results_from_scratch",
     "./graphing_eval_results_0125",
+    "./eval_results_new_finetunes_0306",
     # "./eval_results_2pow16",
 ]
 
@@ -108,16 +119,16 @@ eval_types = [
     "core",
     # "autointerp",
     # "absorption",
-    # "sparse_probing",
-    # "scr",
-    # "tpp",
+    "sparse_probing",
+    "scr",
+    "tpp",
     # "unlearning",
     # "ravel",
 ]
 # TODO: Add other ks, try mean over multiple ks
 ks_lookup = {
-    "scr": [5, 10, 20, 50, 100],
-    "tpp": [5, 10, 20, 50, 100],
+    "scr": [5, 10, 20, 50, 100, 500],
+    "tpp": [5, 10, 20, 50, 100, 500],
     "sparse_probing": [1, 2, 5],
 }
 
@@ -176,7 +187,7 @@ for selection_title in selections.keys():
             fig = plt.figure(figsize=(16, 8))
             ax = fig.add_subplot(111)
 
-            ax.set_yscale("log")
+            # ax.set_yscale("log")
 
             # Plot
             title_2var = f""

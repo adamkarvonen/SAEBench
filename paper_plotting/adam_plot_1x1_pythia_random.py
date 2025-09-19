@@ -92,12 +92,12 @@ def customize_class(sae_dict: dict) -> dict:
 
 
 results_folders = [
-    "./random_pythia-1b_eval_results",
-    "./trained_pythia-1b_eval_results",
-    # "./residual_pythia-1b_eval_results",
+    "./random_results/random_pythia-1b_eval_results",
+    "./random_results/trained_pythia-1b_eval_results",
+    # "./residual_results/residual_pythia-1b_eval_results",
 ]
 
-baseline_folder = "./residual_pythia-1b_eval_results"
+baseline_folder = "./random_results/residual_pythia-1b_eval_results"
 baseline_type = "residual_stream"
 
 # hf_repo_id = "adamkarvonen/matryoshka_ablation_results_0125"
@@ -176,8 +176,8 @@ for selection_title in selections.keys():
             for sae in eval_results:
                 eval_results[sae].update(core_results[sae])
 
-            custom_metric, custom_metric_name = graphing_utils.get_custom_metric_key_and_name(
-                eval_type, k
+            custom_metric, custom_metric_name = (
+                graphing_utils.get_custom_metric_key_and_name(eval_type, k)
             )
 
             # Create new figure for each plot
@@ -187,7 +187,9 @@ for selection_title in selections.keys():
             baseline_sae_path = (
                 f"{model_name}_layer_{layer}_identity_sae_custom_sae_eval_results.json"
             )
-            baseline_sae_path = os.path.join(baseline_folder, eval_type, baseline_sae_path)
+            baseline_sae_path = os.path.join(
+                baseline_folder, eval_type, baseline_sae_path
+            )
             baseline_label = "Residual Stream Baseline"
 
             baseline_results = graphing_utils.get_eval_results([baseline_sae_path])
@@ -198,7 +200,9 @@ for selection_title in selections.keys():
             core_baseline_filename = baseline_sae_path.replace(eval_type, "core")
 
             baseline_results[baseline_results_key].update(
-                graphing_utils.get_core_results([core_baseline_filename])[baseline_results_key]
+                graphing_utils.get_core_results([core_baseline_filename])[
+                    baseline_results_key
+                ]
             )
 
             baseline_value = baseline_results[baseline_results_key][custom_metric]
@@ -234,9 +238,7 @@ for selection_title in selections.keys():
             )
 
             # Save individual plot
-            image_name = (
-                f"plot_1x1_{selection_title.replace(' ', '_').lower()}_layer_{layer}_{eval_type}"
-            )
+            image_name = f"plot_1x1_{selection_title.replace(' ', '_').lower()}_layer_{layer}_{eval_type}"
             if k != -1:
                 image_name += f"_k{k}"
             plt.tight_layout()
@@ -257,16 +259,14 @@ def create_combined_plot(image_path, selection_title, layer):
         ("core", None),
         ("autointerp", None),
         ("sparse_probing", "k1"),
-        ("sparse_probing", "k5"),
-        ("scr", "k10"),
+        ("tpp", "k20"),
+        ("scr", "k20"),
     ]
 
     # Generate file names based on the pattern from your plot generation code
     image_files = []
     for eval_type, k_suffix in plot_types:
-        base_name = (
-            f"plot_1x1_{selection_title.replace(' ', '_').lower()}_layer_{layer}_{eval_type}"
-        )
+        base_name = f"plot_1x1_{selection_title.replace(' ', '_').lower()}_layer_{layer}_{eval_type}"
         if k_suffix:
             base_name += f"_{k_suffix}"
         base_name += ".png"
@@ -279,7 +279,9 @@ def create_combined_plot(image_path, selection_title, layer):
         return
 
     # Open images and legend
-    images = [Image.open(os.path.join(image_path, f)).convert("RGB") for f in image_files[:5]]
+    images = [
+        Image.open(os.path.join(image_path, f)).convert("RGB") for f in image_files[:5]
+    ]
     legend = Image.open(os.path.join(image_path, "legend.png")).convert("RGB")
 
     # Get dimensions from the first image
@@ -302,7 +304,9 @@ def create_combined_plot(image_path, selection_title, layer):
     grid_image.paste(legend, (2 * img_width, vertical_offset))
 
     # Save the combined plot
-    output_name = f"combined_plot_{selection_title.replace(' ', '_').lower()}_layer_{layer}.png"
+    output_name = (
+        f"combined_plot_{selection_title.replace(' ', '_').lower()}_layer_{layer}.png"
+    )
     grid_image.save(os.path.join(image_path, output_name))
     print(f"Created combined plot: {output_name}")
 
@@ -310,3 +314,5 @@ def create_combined_plot(image_path, selection_title, layer):
 # Add this at the end of your main script, after the plot generation loops:
 for selection_title in selections.keys():
     create_combined_plot(image_path, selection_title, layer)
+
+# %%
