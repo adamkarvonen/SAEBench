@@ -17,6 +17,7 @@ import sae_bench.evals.core.main as core
 import sae_bench.evals.ravel.main as ravel
 import sae_bench.evals.scr_and_tpp.main as scr_and_tpp
 import sae_bench.evals.sparse_probing.main as sparse_probing
+import sae_bench.evals.sparse_probing_sae_probes.main as sparse_probing_sae_probes
 import sae_bench.evals.unlearning.main as unlearning
 import sae_bench.sae_bench_utils.general_utils as general_utils
 
@@ -48,6 +49,7 @@ output_folders = {
     "scr": "eval_results/scr",
     "tpp": "eval_results/tpp",
     "sparse_probing": "eval_results/sparse_probing",
+    "sparse_probing_sae_probes": "eval_results/sparse_probing_sae_probes",
     "unlearning": "eval_results/unlearning",
     "ravel": "eval_results/ravel",
 }
@@ -278,6 +280,17 @@ def run_evals(
                 save_activations=True,
             )
         ),
+        "sparse_probing_sae_probes": (
+            lambda selected_saes, is_final: sparse_probing_sae_probes.run_eval(
+                sparse_probing_sae_probes.SparseProbingSaeProbesEvalConfig(
+                    model_name=model_name,
+                ),
+                selected_saes,
+                device,
+                "eval_results/sparse_probing_sae_probes",
+                force_rerun,
+            )
+        ),
         "unlearning": (
             lambda selected_saes, is_final: unlearning.run_eval(
                 unlearning.UnlearningEvalConfig(
@@ -375,6 +388,7 @@ if __name__ == "__main__":
         "scr",
         "tpp",
         "sparse_probing",
+        "sparse_probing_sae_probes",
         "autointerp",
         # "unlearning",
         "ravel",

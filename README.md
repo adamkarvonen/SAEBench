@@ -9,7 +9,6 @@
 - [Training Your Own SAEs](#training-your-own-saes)
 - [Graphing Results](#graphing-results)
 
-
 ## Overview
 
 SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE) models:
@@ -21,6 +20,7 @@ SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE)
 - **[Spurious Correlation Removal (SCR)](https://arxiv.org/abs/2411.18895)**
 - **[Targeted Probe Pertubation (TPP)](https://arxiv.org/abs/2411.18895)**
 - **Sparse Probing**
+- **[Sparse Probing (SAE Probes version)](https://arxiv.org/pdf/2502.16681)**
 - **[Unlearning](https://arxiv.org/abs/2410.19278)**
 
 For more information, refer to our [blog post](https://www.neuronpedia.org/sae-bench/info).
@@ -135,7 +135,6 @@ The total evaluation time for a single SAE across all benchmarks is approximatel
 | Unlearning      | 10                     | 33               |
 | RAVEL           | 45                     | 45               |
 | **Total**       | **110**                | **152**          |
-
 
 # SAE Bench Baseline Suite
 
