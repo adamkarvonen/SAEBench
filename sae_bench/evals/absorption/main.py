@@ -93,6 +93,8 @@ def run_eval(
             k_sparse_probe_l1_decay=config.k_sparse_probe_l1_decay,
             k_sparse_probe_batch_size=config.k_sparse_probe_batch_size,
             k_sparse_probe_num_epochs=config.k_sparse_probe_num_epochs,
+            eval_batch_size=config.eval_k_sparse_probe_batch_size,
+            precalc_k_sparse_probe_sae_acts=config.precalc_k_sparse_probe_sae_acts,
         )
 
         # Save k_sparse_probing_results as a separate JSON
