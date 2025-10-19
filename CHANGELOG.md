@@ -1,6 +1,52 @@
 # CHANGELOG
 
+## v0.5.0 (2025-10-19)
 
+### Chore
+
+* chore: update semantic-release action version ([`b899b37`](https://github.com/adamkarvonen/SAEBench/commit/b899b3784346c996517dab6022b4f34850bda1f0))
+
+### Feature
+
+* feat: adding options to absorption eval to improve running speed ([`485ef87`](https://github.com/adamkarvonen/SAEBench/commit/485ef87d76eb04b38d4f637e3da6f47d6c47729d))
+
+### Unknown
+
+* Merge pull request #82 from chanind/update-semantic-release-action
+
+chore: update semantic-release action version ([`03f24ee`](https://github.com/adamkarvonen/SAEBench/commit/03f24ee0e1d7315470602d6f1a9b0cffa4cf0117))
+
+* Merge pull request #81 from chanind/absorption-perf
+
+feat: adding options to absorption eval to improve running speed ([`2058518`](https://github.com/adamkarvonen/SAEBench/commit/20585181bfe829f379521a51540fdd9ee3be36b0))
+
+* bust venv cache ([`d752dd8`](https://github.com/adamkarvonen/SAEBench/commit/d752dd885aea2d73ff93fbca43acc56f4460b3b7))
+
+* Merge pull request #80 from chanind/saelens-v6-compat
+
+feat: updating to SAELens v6 ([`5de6c00`](https://github.com/adamkarvonen/SAEBench/commit/5de6c001dffc0d56c65cd4f888224c04e809c20d))
+
+* adding a  method to custom SAE cfg to mimic SAELens ([`f837256`](https://github.com/adamkarvonen/SAEBench/commit/f8372565aad1ff4df99d619181c22ccee4d11bcb))
+
+* use a helper method to smooth over differences in converting custom SAE cfg and SAELens cfg to dict ([`1b21c23`](https://github.com/adamkarvonen/SAEBench/commit/1b21c2327051fbbbb950dc943a60455df0cf6da6))
+
+* remove metadata from sae cfg just in case ([`fa79666`](https://github.com/adamkarvonen/SAEBench/commit/fa79666bd31e1b255714a66ed3fe0892035a9298))
+
+* revert acceptance test, it was right the first time ([`52e1040`](https://github.com/adamkarvonen/SAEBench/commit/52e10406f6c87856623e60ba3bcff5db61020a6a))
+
+* fixes ([`5f1cf98`](https://github.com/adamkarvonen/SAEBench/commit/5f1cf98112ff789ecee185121ad6d3cf68679466))
+
+* update core e2e test path ([`2951c7d`](https://github.com/adamkarvonen/SAEBench/commit/2951c7d056bfe9e6b76a7f4b8d95950c714fa8af))
+
+* more fixes ([`a22cb8b`](https://github.com/adamkarvonen/SAEBench/commit/a22cb8b732403780fa5300e479b60e244820aa72))
+
+* gracefully handle failure to fold decoder ([`40f65da`](https://github.com/adamkarvonen/SAEBench/commit/40f65da766d11b8d14fad5fde856f054c2f17045))
+
+* standardize SAE configs when loading rather than when calling ([`fd12811`](https://github.com/adamkarvonen/SAEBench/commit/fd12811a2ccbc4d263375e1f99914d8d9ee1c777))
+
+* updating to SAELens v6 ([`1fad11f`](https://github.com/adamkarvonen/SAEBench/commit/1fad11f0b802e64fcb5bdbfe846f0a07d24ef9b8))
+
+* Pin dependencies ([`7f61449`](https://github.com/adamkarvonen/SAEBench/commit/7f61449e015a0fade7a88d4d3cc3790edd550efc))
 
 ## v0.4.2 (2025-07-15)
 
@@ -23,7 +69,6 @@ Change autointerp reference from the old blogpost to the new article. ([`1a6641b
 * Update README.md
 
 Change autointerp reference from the old blogpost to the new article. ([`7247b1c`](https://github.com/adamkarvonen/SAEBench/commit/7247b1cd2efd818f77044dd596d89262e2dbf226))
-
 
 ## v0.4.1 (2025-04-11)
 
@@ -59,6 +104,10 @@ GT probe f1 score threshold to check valid features for absorption calculation (
 
 Support for using thresholds with the absorption fraction metric ([`2c574e5`](https://github.com/adamkarvonen/SAEBench/commit/2c574e54ef3885635db667f7f85066c98a4dd047))
 
+* updated variable name ([`8271ab0`](https://github.com/adamkarvonen/SAEBench/commit/8271ab08d8850aeb99ae8d0e1dbdb9215485a813))
+
+* added support for using thresholds with the absorption fraction metric ([`ca9d806`](https://github.com/adamkarvonen/SAEBench/commit/ca9d806aac04e7e54f44cef92401eb4771e0581a))
+
 * Merge pull request #66 from tatsuropfgt/fix/typos
 
 Fix error messages ([`c5c90a1`](https://github.com/adamkarvonen/SAEBench/commit/c5c90a136c8db8e704e401328a49b19932ad56c9))
@@ -66,10 +115,6 @@ Fix error messages ([`c5c90a1`](https://github.com/adamkarvonen/SAEBench/commit/
 * Fix error messages ([`eb0e21e`](https://github.com/adamkarvonen/SAEBench/commit/eb0e21e6483af451275d6a407ff7013ae5790c41))
 
 * Proceed to next evaluation if exception encountered ([`c320790`](https://github.com/adamkarvonen/SAEBench/commit/c320790319a3ae278f86ee666341fad18abbc6a1))
-
-* updated variable name ([`8271ab0`](https://github.com/adamkarvonen/SAEBench/commit/8271ab08d8850aeb99ae8d0e1dbdb9215485a813))
-
-* added support for using thresholds with the absorption fraction metric ([`ca9d806`](https://github.com/adamkarvonen/SAEBench/commit/ca9d806aac04e7e54f44cef92401eb4771e0581a))
 
 * Various improvements to reduce RAVEL memory fragmentation ([`07c9238`](https://github.com/adamkarvonen/SAEBench/commit/07c9238f7343cbafaf2de442c15de6506e018941))
 
@@ -96,16 +141,6 @@ Implement RAVEL ([`ccd7bfb`](https://github.com/adamkarvonen/SAEBench/commit/ccd
 * Remove old das ([`6574cbe`](https://github.com/adamkarvonen/SAEBench/commit/6574cbede2ffe4502d9f3b0dcbb9eb8bbb11f005))
 
 * Add end to end test for RAVEL ([`fc4ebf1`](https://github.com/adamkarvonen/SAEBench/commit/fc4ebf1734fb665f1774333eda283a4484f004da))
-
-* Merge pull request #61 from Stefan-Heimersheim/fix/correct_explained_variance
-
-Fix explained variance calculation ([`52fe993`](https://github.com/adamkarvonen/SAEBench/commit/52fe993418100c457ae4fba2d92dfa79bc64eb64))
-
-* Batched version of the variance computation ([`3b58c67`](https://github.com/adamkarvonen/SAEBench/commit/3b58c672e74678642859d9cc1baff004b4fce1d4))
-
-* Use conventional explained variance definition ([`7fb3ed3`](https://github.com/adamkarvonen/SAEBench/commit/7fb3ed3556e77d56bc81d0e314c769f1b75bc9f7))
-
-* Comparing explained variance definitions ([`baadb26`](https://github.com/adamkarvonen/SAEBench/commit/baadb26618c8beb50770aa47695159c7784fc5b0))
 
 * Various Ravel improvements ([`2875b66`](https://github.com/adamkarvonen/SAEBench/commit/2875b668fbe1f23ca83977e7461798fc7395e6b8))
 
@@ -151,6 +186,15 @@ Fix explained variance calculation ([`52fe993`](https://github.com/adamkarvonen/
 
 * Temp nnsight commit ([`10b86a7`](https://github.com/adamkarvonen/SAEBench/commit/10b86a73c801f318877c92d387669200c8b6c96a))
 
+* Merge pull request #61 from Stefan-Heimersheim/fix/correct_explained_variance
+
+Fix explained variance calculation ([`52fe993`](https://github.com/adamkarvonen/SAEBench/commit/52fe993418100c457ae4fba2d92dfa79bc64eb64))
+
+* Batched version of the variance computation ([`3b58c67`](https://github.com/adamkarvonen/SAEBench/commit/3b58c672e74678642859d9cc1baff004b4fce1d4))
+
+* Use conventional explained variance definition ([`7fb3ed3`](https://github.com/adamkarvonen/SAEBench/commit/7fb3ed3556e77d56bc81d0e314c769f1b75bc9f7))
+
+* Comparing explained variance definitions ([`baadb26`](https://github.com/adamkarvonen/SAEBench/commit/baadb26618c8beb50770aa47695159c7784fc5b0))
 
 ## v0.4.0 (2025-02-22)
 
@@ -190,6 +234,8 @@ chore: making test less flaky ([`963f2e8`](https://github.com/adamkarvonen/SAEBe
 
 feat: allow setting the artifacts path ([`53901a2`](https://github.com/adamkarvonen/SAEBench/commit/53901a215035840a642fd2b29dc619140757e27f))
 
+* adding artifacts_path to unlearning eval ([`ce1de32`](https://github.com/adamkarvonen/SAEBench/commit/ce1de32470187be0228e8fc83a5098c61048b0be))
+
 * Merge pull request #58 from chanind/fixing-types
 
 chore: fix updated torch types ([`849018f`](https://github.com/adamkarvonen/SAEBench/commit/849018fb584946762b201cbbf155b87132880325))
@@ -197,8 +243,6 @@ chore: fix updated torch types ([`849018f`](https://github.com/adamkarvonen/SAEB
 * Merge pull request #57 from chanind/fix-slash-in-model-name-autointerp
 
 fix: gracefully handle slashes in model filename for autointerp ([`11b2e38`](https://github.com/adamkarvonen/SAEBench/commit/11b2e3851c9212996a2d9994f0315e33d4cc53d5))
-
-* adding artifacts_path to unlearning eval ([`ce1de32`](https://github.com/adamkarvonen/SAEBench/commit/ce1de32470187be0228e8fc83a5098c61048b0be))
 
 * By default we don&#39;t use a threshold for custom topk SAEs ([`60579ed`](https://github.com/adamkarvonen/SAEBench/commit/60579ed19a6281956621283bada7be2e76a7b583))
 
@@ -262,7 +306,6 @@ chore: Adding formatting, linting and type checking ([`a0fb5e9`](https://github.
 
 * Use GPU probing in correct location ([`ec5efa8`](https://github.com/adamkarvonen/SAEBench/commit/ec5efa820ceb6e88d53667f247bb2a09efca609f))
 
-
 ## v0.3.2 (2025-01-14)
 
 ### Fix
@@ -275,7 +318,6 @@ chore: Adding formatting, linting and type checking ([`a0fb5e9`](https://github.
 
 * Update unlearning data path ([`443761d`](https://github.com/adamkarvonen/SAEBench/commit/443761dcac34aa50201f2edc2564c622ff861eaa))
 
-
 ## v0.3.1 (2025-01-14)
 
 ### Fix
@@ -287,7 +329,6 @@ chore: Adding formatting, linting and type checking ([`a0fb5e9`](https://github.
 * fold W_dec norm when loading SAE Lens SAEs ([`511d51a`](https://github.com/adamkarvonen/SAEBench/commit/511d51a5ef58997796a4769dff5a13f21f5e934b))
 
 * Change default sparse probing k values ([`271a9d4`](https://github.com/adamkarvonen/SAEBench/commit/271a9d4a61b35d4f4d11570ae01a70ec5c2b649d))
-
 
 ## v0.3.0 (2025-01-13)
 
@@ -313,7 +354,6 @@ Co-authored-by: Demian Till &lt;demian.till@cambridgeconsultants.com&gt; ([`7545
 
 * Calculate featurewise statistics by default ([`bca84ca`](https://github.com/adamkarvonen/SAEBench/commit/bca84cabc8cd60f8b15f37668faece7bbd9adc23))
 
-
 ## v0.2.0 (2025-01-09)
 
 ### Feature
@@ -323,7 +363,6 @@ Co-authored-by: Demian Till &lt;demian.till@cambridgeconsultants.com&gt; ([`7545
 ### Unknown
 
 * Make sure grad is enabled for absorption tests ([`bd25ca0`](https://github.com/adamkarvonen/SAEBench/commit/bd25ca01c92b8fc231bbc5a12f509720e00efd43))
-
 
 ## v0.1.0 (2025-01-09)
 
@@ -347,11 +386,9 @@ feat: Setting up Python packaging and autodeploy with Semantic Release ([`e52a41
 
 * Merge branch &#39;main&#39; into packaging ([`9bc22a4`](https://github.com/adamkarvonen/SAEBench/commit/9bc22a402d7691a3a6f809be174c7fdf90d003e6))
 
-* Merge branch &#39;main&#39; into packaging ([`bb10234`](https://github.com/adamkarvonen/SAEBench/commit/bb10234445d096c4be364cf0183733a86693d9b5))
-
 * Update SAE Bench demo to use new graphing functions ([`9bbfdc5`](https://github.com/adamkarvonen/SAEBench/commit/9bbfdc5d4bb4836a9f4bc58a99b7b6d00a12214d))
 
-* switching to poetry and setting up CI ([`a9af271`](https://github.com/adamkarvonen/SAEBench/commit/a9af2713f1a90c4b15ab6ba577b1f2242f88e21b))
+* Merge branch &#39;main&#39; into packaging ([`bb10234`](https://github.com/adamkarvonen/SAEBench/commit/bb10234445d096c4be364cf0183733a86693d9b5))
 
 * Add option to pass in arbitrary sae_class ([`e450661`](https://github.com/adamkarvonen/SAEBench/commit/e450661e430979f8437d59d2324d1eee72a4f4fd))
 
@@ -361,9 +398,11 @@ feat: Setting up Python packaging and autodeploy with Semantic Release ([`e52a41
 
 * deprecate graphing notebook ([`67118ee`](https://github.com/adamkarvonen/SAEBench/commit/67118ee6785b1830782ddf994a4349276e1bf080))
 
-* migrating to sae_bench base dir ([`bb8e145`](https://github.com/adamkarvonen/SAEBench/commit/bb8e145dec79af603dbb0a56d37f5f63153cff25))
-
 * Use a smaller batch size for unlearning ([`3a099d2`](https://github.com/adamkarvonen/SAEBench/commit/3a099d28607f73d3b816ded300591b86ae42d1b6))
+
+* switching to poetry and setting up CI ([`a9af271`](https://github.com/adamkarvonen/SAEBench/commit/a9af2713f1a90c4b15ab6ba577b1f2242f88e21b))
+
+* migrating to sae_bench base dir ([`bb8e145`](https://github.com/adamkarvonen/SAEBench/commit/bb8e145dec79af603dbb0a56d37f5f63153cff25))
 
 * Reduce memory usage by only caching required activations ([`f026998`](https://github.com/adamkarvonen/SAEBench/commit/f026998294e0e7e231aea599bdfde0a278f1d08c))
 
@@ -473,13 +512,13 @@ update jsonschemas ([`879c7ca`](https://github.com/adamkarvonen/SAEBench/commit/
 
 improving memory usage of k-sparse probing ([`6ae8235`](https://github.com/adamkarvonen/SAEBench/commit/6ae8235696eab99c1bf81e7ef1413ceafcb29699))
 
+* improving memory usage of k-sparse probing ([`841842a`](https://github.com/adamkarvonen/SAEBench/commit/841842aaccbb8a086e3d090cffa58ab1d13db2c9))
+
 * Merge pull request #43 from adamkarvonen/fake_branch
 
 single line update ([`7984d50`](https://github.com/adamkarvonen/SAEBench/commit/7984d508b0023b73061961d091f28a97928aaa8f))
 
 * single line update ([`d9637e1`](https://github.com/adamkarvonen/SAEBench/commit/d9637e12306d0a7e9c0a0d1a732712080360ec90))
-
-* improving memory usage of k-sparse probing ([`841842a`](https://github.com/adamkarvonen/SAEBench/commit/841842aaccbb8a086e3d090cffa58ab1d13db2c9))
 
 * Add documentation to demo notebook ([`2e170e1`](https://github.com/adamkarvonen/SAEBench/commit/2e170e1f4d5bcb8e531518e32289bfac771b32d9))
 
@@ -693,15 +732,15 @@ Add baselines ([`20c2a40`](https://github.com/adamkarvonen/SAEBench/commit/20c2a
 
 * Use baseline SAEs on the sparse probing eval ([`d3e5e07`](https://github.com/adamkarvonen/SAEBench/commit/d3e5e0742f4522cf12e476c46bd97995651b18a0))
 
+* Example jumprelu implementation ([`0ca103e`](https://github.com/adamkarvonen/SAEBench/commit/0ca103e5308c63a56e4760727d0460ceb63f4c26))
+
+* identity sae baseline ([`5f65ace`](https://github.com/adamkarvonen/SAEBench/commit/5f65acead2625ce6ee5e34755377138fee03d349))
+
 * Merge pull request #32 from adamkarvonen/core_evals_ignore_special
 
 Added option to exclude special tokens from SAE reconstruction ([`186bdb4`](https://github.com/adamkarvonen/SAEBench/commit/186bdb4b20118cc8798fb50ef9172bde808c668f))
 
 * Added option to exclude special tokens from SAE reconstruction ([`54a55f7`](https://github.com/adamkarvonen/SAEBench/commit/54a55f7f316a51be2640e2d162370465f3b49df2))
-
-* Example jumprelu implementation ([`0ca103e`](https://github.com/adamkarvonen/SAEBench/commit/0ca103e5308c63a56e4760727d0460ceb63f4c26))
-
-* identity sae baseline ([`5f65ace`](https://github.com/adamkarvonen/SAEBench/commit/5f65acead2625ce6ee5e34755377138fee03d349))
 
 * Merge pull request #31 from adamkarvonen/activation_consolidation
 
@@ -749,15 +788,25 @@ Activation consolidation ([`3ddcceb`](https://github.com/adamkarvonen/SAEBench/c
 
 * Merge remote-tracking branch &#39;origin/main&#39; into activation_consolidation ([`777e9d4`](https://github.com/adamkarvonen/SAEBench/commit/777e9d4de41c5eb7a77002c9ea32ff7046d70921))
 
-* Move the get_sparsity function to general utils folder, mask bos, pad, and eos tokens for unlearning ([`f679f0f`](https://github.com/adamkarvonen/SAEBench/commit/f679f0fd6944bef1edc048c01cefaeccaaee7458))
-
-* Make it easier to use get_llm_activations() with other evals ([`1ed9a29`](https://github.com/adamkarvonen/SAEBench/commit/1ed9a297f974a4916881fb82026835e3ce1c2102))
-
 * Merge pull request #8 from callummcdougall/callum/autointerp
 
 Autointerp eval ([`6f81495`](https://github.com/adamkarvonen/SAEBench/commit/6f814954cb39be1ac3f54ca14e4a79876e23eaf0))
 
 * Merge branch &#39;main&#39; into callum/autointerp ([`466a37d`](https://github.com/adamkarvonen/SAEBench/commit/466a37d742bfa8adfe8e79284e3ca1d005463aba))
+
+* fix device bug, resolve test utils conflicts ([`9b2e909`](https://github.com/adamkarvonen/SAEBench/commit/9b2e9091adfd3e1b8f3e933e0ab2717ee0fb67f6))
+
+* fix ctx len bug, handle dead features better ([`63c2561`](https://github.com/adamkarvonen/SAEBench/commit/63c256119f6fc1f555c385a18977a031347e78ed))
+
+* fix topk error ([`e39a9ab`](https://github.com/adamkarvonen/SAEBench/commit/e39a9aba072298e16cf309f4efca22c2bf3cbedb))
+
+* add sae encode function ([`b247f91`](https://github.com/adamkarvonen/SAEBench/commit/b247f91234929bffa5ee79a08e265f57f5222095))
+
+* first commit ([`4b23575`](https://github.com/adamkarvonen/SAEBench/commit/4b23575cca0f9422c7cdbefac093c6dead6a55eb))
+
+* Move the get_sparsity function to general utils folder, mask bos, pad, and eos tokens for unlearning ([`f679f0f`](https://github.com/adamkarvonen/SAEBench/commit/f679f0fd6944bef1edc048c01cefaeccaaee7458))
+
+* Make it easier to use get_llm_activations() with other evals ([`1ed9a29`](https://github.com/adamkarvonen/SAEBench/commit/1ed9a297f974a4916881fb82026835e3ce1c2102))
 
 * Improve graphing notebook for current output format ([`36fb3ba`](https://github.com/adamkarvonen/SAEBench/commit/36fb3ba97fe1b31ccd9c8233e7c4e5b99b548f60))
 
@@ -774,6 +823,16 @@ Mdl fixes ([`65c3c98`](https://github.com/adamkarvonen/SAEBench/commit/65c3c9873
 * Use torch instead of t for consistency ([`903324f`](https://github.com/adamkarvonen/SAEBench/commit/903324f60b87ee6210ab5c63c8cf45bcc329a2b1))
 
 * Move calculations to float32 to avoid dtype errors ([`099a94f`](https://github.com/adamkarvonen/SAEBench/commit/099a94f4bbefa96e5d7848de5c434b3fe57747c3))
+
+* Further general cleanup of mdl eval ([`51e9b60`](https://github.com/adamkarvonen/SAEBench/commit/51e9b6025b59034b63e239011955a19d8d8570a7))
+
+* Save sae results per sae ([`7045ad2`](https://github.com/adamkarvonen/SAEBench/commit/7045ad23e671f457e961a52e8a888cec5dd3d5b1))
+
+* Fix variable name bug ([`d5ec2d2`](https://github.com/adamkarvonen/SAEBench/commit/d5ec2d294d38a0db636623c7d02969d80cbd7b99))
+
+* MDL is running ([`c486454`](https://github.com/adamkarvonen/SAEBench/commit/c4864547028a9e0f267c9f9e52d2bc7bd9e036cf))
+
+* Format with ruff ([`04b14b7`](https://github.com/adamkarvonen/SAEBench/commit/04b14b76cf11e7b10e9b94898804bd5f3ed468a9))
 
 * Add descriptions to unlearning hyperparameters and descriptions of shift, tpp, and sparse probing evals. ([`6c141c1`](https://github.com/adamkarvonen/SAEBench/commit/6c141c10ff501c52512304c38fb46ff154c6905b))
 
@@ -825,21 +884,11 @@ added tests for core eval output ([`92bc76a`](https://github.com/adamkarvonen/SA
 
 * clean up activations always defaults to false ([`5d545d1`](https://github.com/adamkarvonen/SAEBench/commit/5d545d199309334ac9985c036cbfb3b2f1a4638d))
 
-* Further general cleanup of mdl eval ([`51e9b60`](https://github.com/adamkarvonen/SAEBench/commit/51e9b6025b59034b63e239011955a19d8d8570a7))
-
 * Merge pull request #24 from adamkarvonen/core_update
 
 New Core output format, plus converter ([`b01be8a`](https://github.com/adamkarvonen/SAEBench/commit/b01be8a150e69e95beecf5b781f1ed8d2183b248))
 
 * New Core output format, plus converter ([`192e92b`](https://github.com/adamkarvonen/SAEBench/commit/192e92b12678c2784a6a33b498072a90eb94c6a6))
-
-* Save sae results per sae ([`7045ad2`](https://github.com/adamkarvonen/SAEBench/commit/7045ad23e671f457e961a52e8a888cec5dd3d5b1))
-
-* Fix variable name bug ([`d5ec2d2`](https://github.com/adamkarvonen/SAEBench/commit/d5ec2d294d38a0db636623c7d02969d80cbd7b99))
-
-* MDL is running ([`c486454`](https://github.com/adamkarvonen/SAEBench/commit/c4864547028a9e0f267c9f9e52d2bc7bd9e036cf))
-
-* Format with ruff ([`04b14b7`](https://github.com/adamkarvonen/SAEBench/commit/04b14b76cf11e7b10e9b94898804bd5f3ed468a9))
 
 * Merge pull request #6 from koayon/mdl-eval
 
@@ -869,13 +918,7 @@ Shift sparse probing descriptions ([`3e9555a`](https://github.com/adamkarvonen/S
 
 * Remove unnecessary test keys, add note to README ([`12f324d`](https://github.com/adamkarvonen/SAEBench/commit/12f324d66ba3667d055c788436e4c92d2d79c3cb))
 
-* Merge pull request #22 from adamkarvonen/fix/handle_gated_in_core
-
-handle case where gated SAEs don&#39;t have b_enc ([`586597b`](https://github.com/adamkarvonen/SAEBench/commit/586597b61697da55142844b9658977d7b14fbf32))
-
 * Finish rename of the spurious_corr variable ([`b28aab6`](https://github.com/adamkarvonen/SAEBench/commit/b28aab68045466594cd8328312371b9b8c8f02e4))
-
-* handle case where gated SAEs don&#39;t have b_enc ([`355aaf4`](https://github.com/adamkarvonen/SAEBench/commit/355aaf4d666705d6a377d5872a75e4748f2bad5b))
 
 * update doc about how to update json schemas files. add json schema files. ([`95fda67`](https://github.com/adamkarvonen/SAEBench/commit/95fda67f02899e53a4d43aa62d1e611b3b0f5f58))
 
@@ -884,6 +927,12 @@ handle case where gated SAEs don&#39;t have b_enc ([`586597b`](https://github.co
 * Improve titles and descriptions for sparse probing ([`177be38`](https://github.com/adamkarvonen/SAEBench/commit/177be38c320cec0cf2e5ceb66d94e6e5c80427c6))
 
 * Improve descriptions, titles, and variable names in SHIFT and TPP ([`29e1ecc`](https://github.com/adamkarvonen/SAEBench/commit/29e1ecc5675487aa8d027c563ad0fce7ed93aaf0))
+
+* Merge pull request #22 from adamkarvonen/fix/handle_gated_in_core
+
+handle case where gated SAEs don&#39;t have b_enc ([`586597b`](https://github.com/adamkarvonen/SAEBench/commit/586597b61697da55142844b9658977d7b14fbf32))
+
+* handle case where gated SAEs don&#39;t have b_enc ([`355aaf4`](https://github.com/adamkarvonen/SAEBench/commit/355aaf4d666705d6a377d5872a75e4748f2bad5b))
 
 * Merge pull request #20 from adamkarvonen/make_unstructured_optional
 
@@ -897,8 +946,6 @@ Core eval incremental saving ([`7ddd55a`](https://github.com/adamkarvonen/SAEBen
 
 * added code to produce intermediate json output between SAEs ([`b15a2e2`](https://github.com/adamkarvonen/SAEBench/commit/b15a2e2297a9d574cbd87b5bde62d1ad7c443aef))
 
-* fix device bug, resolve test utils conflicts ([`9b2e909`](https://github.com/adamkarvonen/SAEBench/commit/9b2e9091adfd3e1b8f3e933e0ab2717ee0fb67f6))
-
 * Merge pull request #18 from adamkarvonen/set_sparse_probing_default_display
 
 set k = 1, 2, 5 default display = true for sparse probing ([`db93af6`](https://github.com/adamkarvonen/SAEBench/commit/db93af64d208b6ff309f3d7b3b288742ac5b8248))
@@ -909,11 +956,11 @@ set k = 1, 2, 5 default display = true for sparse probing ([`db93af6`](https://g
 
 Feature: Support unstructured eval output ([`3b17927`](https://github.com/adamkarvonen/SAEBench/commit/3b179275f1419f71a924b60609dea29b83e44f7a))
 
+* Support unstructured eval output ([`adf028a`](https://github.com/adamkarvonen/SAEBench/commit/adf028a0352867e4aaebcc2e8a76c137fd21f9bd))
+
 * Merge pull request #16 from adamkarvonen/basic-evals
 
 Added core evals to repo ([`c55f48f`](https://github.com/adamkarvonen/SAEBench/commit/c55f48ffa4dc45c677f8c133a2f9638ee40dd444))
-
-* Support unstructured eval output ([`adf028a`](https://github.com/adamkarvonen/SAEBench/commit/adf028a0352867e4aaebcc2e8a76c137fd21f9bd))
 
 * Added core evals to repo ([`9b1dd45`](https://github.com/adamkarvonen/SAEBench/commit/9b1dd45af4ae0b67e69a73e4e1d87d64976dd0cc))
 
@@ -930,10 +977,6 @@ Use Pydantic for eval configs and outputs for annotations and portability ([`e75
 * confirm shift_and_tpp to new output format ([`153c713`](https://github.com/adamkarvonen/SAEBench/commit/153c713d8fa8c68e188e52f6b04b67d01f6c3931))
 
 * Merge remote-tracking branch &#39;origin/main&#39; into json_schema_absorption ([`b337d5f`](https://github.com/adamkarvonen/SAEBench/commit/b337d5f762ab5ea729f7e151e4b9e6b5d42a1a32))
-
-* test pre-commit hook ([`648046f`](https://github.com/adamkarvonen/SAEBench/commit/648046ff40cc66b9e471512de339cc7d963ea0a6))
-
-* produce the JSON schema files and add as a pre-commit hook ([`6683e17`](https://github.com/adamkarvonen/SAEBench/commit/6683e17cc21c85edc088126ef57ebd2d80129a5c))
 
 * Add example regexes for gemma 2 2b ([`aea66aa`](https://github.com/adamkarvonen/SAEBench/commit/aea66aa3cb9b1cee84e85a050fca7fbc341aca3b))
 
@@ -965,8 +1008,6 @@ Shift sparse probing updates ([`14b5025`](https://github.com/adamkarvonen/SAEBen
 
 * Make sparse probing test backwards compatible with old results ([`782a080`](https://github.com/adamkarvonen/SAEBench/commit/782a0806b800fc71e1c030fbc7c62fca2d85b9e3))
 
-* fix absorption test ([`d62b752`](https://github.com/adamkarvonen/SAEBench/commit/d62b752360ad4d0957234066566744b472241390))
-
 * Create a new graphing notebook for regex based selection ([`65ef605`](https://github.com/adamkarvonen/SAEBench/commit/65ef605551e00773095680bb956994c306ec146c))
 
 * Improve artifacts and results storage locations, add a utility to select saes using multiple regex patterns ([`1cdfdb7`](https://github.com/adamkarvonen/SAEBench/commit/1cdfdb712f3a7a8c51d21611817652889b9cb33a))
@@ -974,10 +1015,6 @@ Shift sparse probing updates ([`14b5025`](https://github.com/adamkarvonen/SAEBen
 * No longer aggregate over saes in a dict ([`0e5bccb`](https://github.com/adamkarvonen/SAEBench/commit/0e5bccb4fa57a34c6c92294312a8764257993f56))
 
 * Rename old graphing file ([`df72d30`](https://github.com/adamkarvonen/SAEBench/commit/df72d30497834a8f1ea259e2118f9c1a0845a749))
-
-* fix ctx len bug, handle dead features better ([`63c2561`](https://github.com/adamkarvonen/SAEBench/commit/63c256119f6fc1f555c385a18977a031347e78ed))
-
-* don&#39;t commit artifact file ([`2c5691a`](https://github.com/adamkarvonen/SAEBench/commit/2c5691a97f698454bc50ce8d97712231426fbe54))
 
 * Add openai and tabulate to requirements.txt ([`f626447`](https://github.com/adamkarvonen/SAEBench/commit/f626447452d4e0e9bb9286959b73cbd8fa138e83))
 
@@ -999,9 +1036,15 @@ Shift sparse probing updates ([`14b5025`](https://github.com/adamkarvonen/SAEBen
 
 * Ignore images and results folders ([`e07e65f`](https://github.com/adamkarvonen/SAEBench/commit/e07e65fad7c7373489326b1df10f01e55d6c1a1e))
 
-* Merge branch &#39;main&#39; into mdl-eval ([`922fb14`](https://github.com/adamkarvonen/SAEBench/commit/922fb142aa262ffca815f92cc59651f7624acf2c))
+* test pre-commit hook ([`648046f`](https://github.com/adamkarvonen/SAEBench/commit/648046ff40cc66b9e471512de339cc7d963ea0a6))
 
-* Update mdl_eval ([`bdefc02`](https://github.com/adamkarvonen/SAEBench/commit/bdefc022abf3ba4ce05ddd1624f078b4748fb371))
+* produce the JSON schema files and add as a pre-commit hook ([`6683e17`](https://github.com/adamkarvonen/SAEBench/commit/6683e17cc21c85edc088126ef57ebd2d80129a5c))
+
+* fix absorption test ([`d62b752`](https://github.com/adamkarvonen/SAEBench/commit/d62b752360ad4d0957234066566744b472241390))
+
+* don&#39;t commit artifact file ([`2c5691a`](https://github.com/adamkarvonen/SAEBench/commit/2c5691a97f698454bc50ce8d97712231426fbe54))
+
+* Merge branch &#39;main&#39; into mdl-eval ([`922fb14`](https://github.com/adamkarvonen/SAEBench/commit/922fb142aa262ffca815f92cc59651f7624acf2c))
 
 * Merge pull request #12 from jbloomAus/demo-format-and-command-changes-absorption
 
@@ -1009,19 +1052,11 @@ Demo of Changes to enable easy running of evals at scale (using absorption) ([`a
 
 * Merge branch &#39;main&#39; into demo-format-and-command-changes-absorption ([`9a9d4b1`](https://github.com/adamkarvonen/SAEBench/commit/9a9d4b1197c33c4f22c224e0469b524127a331f9))
 
-* delete old template ([`0092a1f`](https://github.com/adamkarvonen/SAEBench/commit/0092a1fc49fd18ac1315b18b3a99d778be02d8a5))
-
-* add re-usable testing utils for the config, cli and output format. ([`03aee86`](https://github.com/adamkarvonen/SAEBench/commit/03aee86846ea7e83c7f885ebe7ec0f33ce908960))
-
-* delete old template ([`8d66a49`](https://github.com/adamkarvonen/SAEBench/commit/8d66a4978360545d69a907e680dbd3fd1a5fa9a8))
-
 * Merge pull request #13 from adamkarvonen/minor_shift_improvements
 
 Minor shift improvements ([`1b318d5`](https://github.com/adamkarvonen/SAEBench/commit/1b318d5d30ad1c3a9748a000062daaf431689a54))
 
 * Notebook used to test different datasets ([`d4d4fb5`](https://github.com/adamkarvonen/SAEBench/commit/d4d4fb58db72d6b7d50bf67f9e9b25fb2e3cb891))
-
-* update stategy for running absorption via CLI ([`13f90d0`](https://github.com/adamkarvonen/SAEBench/commit/13f90d0647a0694112a82c1820b789fdcdfa5108))
 
 * Comment out outdated tests ([`f1e2f9e`](https://github.com/adamkarvonen/SAEBench/commit/f1e2f9e65b41336d283edb6a4f69a550b61bde5a))
 
@@ -1059,12 +1094,6 @@ Add additional sparse probing datasets ([`0512456`](https://github.com/adamkarvo
 
 * Use full huggingface dataset names ([`d2d4001`](https://github.com/adamkarvonen/SAEBench/commit/d2d4001497a075b68026bff753966a12f9ab4515))
 
-* Merge pull request #10 from curt-tigges/main
-
-Initial RAVEL code ([`fc6a59b`](https://github.com/adamkarvonen/SAEBench/commit/fc6a59baa414a95fe4529b0fb067fbd398a20c6e))
-
-* Merge branch &#39;main&#39; into main ([`d132ec3`](https://github.com/adamkarvonen/SAEBench/commit/d132ec3f63b22771cc6e519b7599fcd606d07363))
-
 * Change default unlearning hyperparameters ([`d4c1949`](https://github.com/adamkarvonen/SAEBench/commit/d4c19495b761d89fed1ccdaf12a9a88d69dc54ad))
 
 * Do further analysis of unlearning hyperparameters ([`8f6262c`](https://github.com/adamkarvonen/SAEBench/commit/8f6262ccb8ef5e259b61ca94e994975809057702))
@@ -1075,13 +1104,15 @@ Initial RAVEL code ([`fc6a59b`](https://github.com/adamkarvonen/SAEBench/commit/
 
 * Use stop at layer for faster inference ([`e752a9c`](https://github.com/adamkarvonen/SAEBench/commit/e752a9cf8e04a93998aca18cb6c7ee4ed0f1c946))
 
+* Merge pull request #10 from curt-tigges/main
+
+Initial RAVEL code ([`fc6a59b`](https://github.com/adamkarvonen/SAEBench/commit/fc6a59baa414a95fe4529b0fb067fbd398a20c6e))
+
+* Merge branch &#39;main&#39; into main ([`d132ec3`](https://github.com/adamkarvonen/SAEBench/commit/d132ec3f63b22771cc6e519b7599fcd606d07363))
+
 * Merge pull request #9 from adamkarvonen/unlearning_cleanup
 
 Unlearning cleanup ([`209e526`](https://github.com/adamkarvonen/SAEBench/commit/209e52601047e0eff2d3f887b52ed6bd6c6ed92d))
-
-* fix topk error ([`e39a9ab`](https://github.com/adamkarvonen/SAEBench/commit/e39a9aba072298e16cf309f4efca22c2bf3cbedb))
-
-* add sae encode function ([`b247f91`](https://github.com/adamkarvonen/SAEBench/commit/b247f91234929bffa5ee79a08e265f57f5222095))
 
 * Get known question ids if they don&#39;t exist ([`f3516f4`](https://github.com/adamkarvonen/SAEBench/commit/f3516f49680723c5fa00ef1c470d841169eb9047))
 
@@ -1091,10 +1122,6 @@ Unlearning cleanup ([`209e526`](https://github.com/adamkarvonen/SAEBench/commit/
 
 * Get results for all retain thresholds ([`08eec18`](https://github.com/adamkarvonen/SAEBench/commit/08eec18c88cab748df9f7e45f9aabb08a0beabe9))
 
-* add regex based sae selection strategy ([`57e9be0`](https://github.com/adamkarvonen/SAEBench/commit/57e9be0ac9199dba6b9f87fe92f80532e9aefced))
-
-* Updated notebook ([`ae40301`](https://github.com/adamkarvonen/SAEBench/commit/ae403013856e8ce13da4bb6c3e5df3ca76254774))
-
 * Save unlearning score in final output ([`f90b114`](https://github.com/adamkarvonen/SAEBench/commit/f90b114f86fb20864e0d09b02b2269841cd504a5))
 
 * Add file to get correct answers for a model ([`0361c07`](https://github.com/adamkarvonen/SAEBench/commit/0361c07ac29a5d893b08bca5e115099450006757))
@@ -1102,8 +1129,6 @@ Unlearning cleanup ([`209e526`](https://github.com/adamkarvonen/SAEBench/commit/
 * Fix missing filenames ([`6aad3ca`](https://github.com/adamkarvonen/SAEBench/commit/6aad3ca402e1e28e36a939c529f81dfebb976bdb))
 
 * Move hyperparameters to eval config ([`5d2b9d0`](https://github.com/adamkarvonen/SAEBench/commit/5d2b9d050c96527854e367884ed8bedb558c50ce))
-
-* restructure results json, store probe results ([`9ec59a8`](https://github.com/adamkarvonen/SAEBench/commit/9ec59a85fd9783387e0b8f904aca157143092cd2))
 
 * Move llm and sae to llm_dtype ([`56e8e43`](https://github.com/adamkarvonen/SAEBench/commit/56e8e43419d171e3cd9b943f581122b782fbded3))
 
@@ -1121,9 +1146,43 @@ implement unlearning eval ([`42de6df`](https://github.com/adamkarvonen/SAEBench/
 
 * Merge branch &#39;main&#39; into unlearning ([`b2f6d68`](https://github.com/adamkarvonen/SAEBench/commit/b2f6d6880059170dc210a50066a7b98ac0c1e616))
 
-* add version control utils ([`b516958`](https://github.com/adamkarvonen/SAEBench/commit/b5169583a8a150bfb95d6dae9df9df29eab6f153))
+* Merge remote-tracking branch &#39;upstream/main&#39; ([`daab3e2`](https://github.com/adamkarvonen/SAEBench/commit/daab3e25fbb77ae8b1920ba383338280a4ddacae))
 
-* first commit ([`4b23575`](https://github.com/adamkarvonen/SAEBench/commit/4b23575cca0f9422c7cdbefac093c6dead6a55eb))
+* add analysis ([`5eb7dfa`](https://github.com/adamkarvonen/SAEBench/commit/5eb7dfa94a04b36f8649986034e790cccf6e2617))
+
+* success ([`b67c97b`](https://github.com/adamkarvonen/SAEBench/commit/b67c97b2690f18d2ecdf060428de18ebd2c3211e))
+
+* add gemma-2-2b-it ([`5f502d7`](https://github.com/adamkarvonen/SAEBench/commit/5f502d7b46628f8f710f6bb415acb38c712a3da1))
+
+* revert changes to template.ipynb ([`aac04e0`](https://github.com/adamkarvonen/SAEBench/commit/aac04e0e5fc8bb12395f3b431a55a386ebeffcbd))
+
+* fix detail ([`e6e0985`](https://github.com/adamkarvonen/SAEBench/commit/e6e0985b70087d4e8a93d60613c70f82fdcf8302))
+
+* arrange structure ([`6392064`](https://github.com/adamkarvonen/SAEBench/commit/63920643775f2a5e5fd1827af8536f90b5c5ae8b))
+
+* replace model and sae loading ([`91ce2fd`](https://github.com/adamkarvonen/SAEBench/commit/91ce2fd9088c7dbb8063ba24556b1407d3942da2))
+
+* moved all code ([`7a714b4`](https://github.com/adamkarvonen/SAEBench/commit/7a714b41413866aa40f0919f82aea16101fecca7))
+
+* Updated notebook ([`ae40301`](https://github.com/adamkarvonen/SAEBench/commit/ae403013856e8ce13da4bb6c3e5df3ca76254774))
+
+* Added initial demo notebook ([`86dfd95`](https://github.com/adamkarvonen/SAEBench/commit/86dfd95e4bac9acdde9a37a511941703beaa8987))
+
+* Added initial RAVEL files for dataset generation ([`96e963f`](https://github.com/adamkarvonen/SAEBench/commit/96e963fe73cdea64dd6b127f0440545b6938a0fc))
+
+* delete old template ([`0092a1f`](https://github.com/adamkarvonen/SAEBench/commit/0092a1fc49fd18ac1315b18b3a99d778be02d8a5))
+
+* add re-usable testing utils for the config, cli and output format. ([`03aee86`](https://github.com/adamkarvonen/SAEBench/commit/03aee86846ea7e83c7f885ebe7ec0f33ce908960))
+
+* delete old template ([`8d66a49`](https://github.com/adamkarvonen/SAEBench/commit/8d66a4978360545d69a907e680dbd3fd1a5fa9a8))
+
+* update stategy for running absorption via CLI ([`13f90d0`](https://github.com/adamkarvonen/SAEBench/commit/13f90d0647a0694112a82c1820b789fdcdfa5108))
+
+* add regex based sae selection strategy ([`57e9be0`](https://github.com/adamkarvonen/SAEBench/commit/57e9be0ac9199dba6b9f87fe92f80532e9aefced))
+
+* restructure results json, store probe results ([`9ec59a8`](https://github.com/adamkarvonen/SAEBench/commit/9ec59a85fd9783387e0b8f904aca157143092cd2))
+
+* add version control utils ([`b516958`](https://github.com/adamkarvonen/SAEBench/commit/b5169583a8a150bfb95d6dae9df9df29eab6f153))
 
 * Add pytorch flag due to CUDA OOM message ([`c57eef7`](https://github.com/adamkarvonen/SAEBench/commit/c57eef755554220309270583f19ed7816e978074))
 
@@ -1139,23 +1198,7 @@ implement unlearning eval ([`42de6df`](https://github.com/adamkarvonen/SAEBench/
 
 Feature Absorption Eval ([`8d80be6`](https://github.com/adamkarvonen/SAEBench/commit/8d80be6f6beacc42c706185ac0f9828a9d109865))
 
-* Added initial demo notebook ([`86dfd95`](https://github.com/adamkarvonen/SAEBench/commit/86dfd95e4bac9acdde9a37a511941703beaa8987))
-
-* Added initial RAVEL files for dataset generation ([`96e963f`](https://github.com/adamkarvonen/SAEBench/commit/96e963fe73cdea64dd6b127f0440545b6938a0fc))
-
 * renaming dict keys ([`ff81c53`](https://github.com/adamkarvonen/SAEBench/commit/ff81c53d7652b121b4376bdc88240aa80da9b368))
-
-* Merge remote-tracking branch &#39;upstream/main&#39; ([`daab3e2`](https://github.com/adamkarvonen/SAEBench/commit/daab3e25fbb77ae8b1920ba383338280a4ddacae))
-
-* add analysis ([`5eb7dfa`](https://github.com/adamkarvonen/SAEBench/commit/5eb7dfa94a04b36f8649986034e790cccf6e2617))
-
-* success ([`b67c97b`](https://github.com/adamkarvonen/SAEBench/commit/b67c97b2690f18d2ecdf060428de18ebd2c3211e))
-
-* add gemma-2-2b-it ([`5f502d7`](https://github.com/adamkarvonen/SAEBench/commit/5f502d7b46628f8f710f6bb415acb38c712a3da1))
-
-* revert changes to template.ipynb ([`aac04e0`](https://github.com/adamkarvonen/SAEBench/commit/aac04e0e5fc8bb12395f3b431a55a386ebeffcbd))
-
-* fix detail ([`e6e0985`](https://github.com/adamkarvonen/SAEBench/commit/e6e0985b70087d4e8a93d60613c70f82fdcf8302))
 
 * fixing batching error in absorption calculator ([`8a425cd`](https://github.com/adamkarvonen/SAEBench/commit/8a425cdf2a33c50985ae55ac2d7261c0a3c58a1f))
 
@@ -1171,17 +1214,25 @@ Rename utils to avoid name conflict ([`eb6cc7b`](https://github.com/adamkarvonen
 
 * indentation ([`111a68b`](https://github.com/adamkarvonen/SAEBench/commit/111a68b43df1d1c95f8f89a72c90c6b98e55754c))
 
-* Utils renaming ([`cbd6b99`](https://github.com/adamkarvonen/SAEBench/commit/cbd6b998d4da7767de956bfeff5e62881721e853))
-
 * rename utils to avoid name conflict ([`e2a380a`](https://github.com/adamkarvonen/SAEBench/commit/e2a380a063d3d58bd2827456a6219305ef184841))
 
+* Merge branch &#39;main&#39; into absorption ([`5db6ecb`](https://github.com/adamkarvonen/SAEBench/commit/5db6ecb2591fbb9462c5f2b4bd629a7841c9cea5))
+
+* reverting to original sparse probing main.py ([`8d6779f`](https://github.com/adamkarvonen/SAEBench/commit/8d6779f1f80569a5faa27614582e236de88e9352))
+
+* fixing dtypes ([`280f51a`](https://github.com/adamkarvonen/SAEBench/commit/280f51aadb9ad4c647b540a2876a2826f0c58c58))
+
+* adding absorption calculation code ([`704eb00`](https://github.com/adamkarvonen/SAEBench/commit/704eb00a35fc4bdd66316cb25834722a13eeb77b))
+
+* adding in k-sparse probing experiment code ([`0ab6d2c`](https://github.com/adamkarvonen/SAEBench/commit/0ab6d2c45f9588861dfec31f3c4104a2ac06279d))
+
+* WIP: absorption ([`6348fb2`](https://github.com/adamkarvonen/SAEBench/commit/6348fb2fefdb60e360b03d5e26d391b5afbe1ea2))
+
+* Update mdl_eval ([`bdefc02`](https://github.com/adamkarvonen/SAEBench/commit/bdefc022abf3ba4ce05ddd1624f078b4748fb371))
+
+* Utils renaming ([`cbd6b99`](https://github.com/adamkarvonen/SAEBench/commit/cbd6b998d4da7767de956bfeff5e62881721e853))
+
 * Scaffold mdl eval (orange) ([`a6b3406`](https://github.com/adamkarvonen/SAEBench/commit/a6b340690c3c89463ae658041c8148048323bd61))
-
-* arrange structure ([`6392064`](https://github.com/adamkarvonen/SAEBench/commit/63920643775f2a5e5fd1827af8536f90b5c5ae8b))
-
-* replace model and sae loading ([`91ce2fd`](https://github.com/adamkarvonen/SAEBench/commit/91ce2fd9088c7dbb8063ba24556b1407d3942da2))
-
-* moved all code ([`7a714b4`](https://github.com/adamkarvonen/SAEBench/commit/7a714b41413866aa40f0919f82aea16101fecca7))
 
 * Merge pull request #4 from adamkarvonen/shift_eval
 
@@ -1191,19 +1242,11 @@ Shift eval ([`22a2a72`](https://github.com/adamkarvonen/SAEBench/commit/22a2a72e
 
 * Fixed shift and tpp end to end tests ([`2c2947a`](https://github.com/adamkarvonen/SAEBench/commit/2c2947ab03af1e0def3de94405b7218b055037d9))
 
-* Merge branch &#39;main&#39; into absorption ([`5db6ecb`](https://github.com/adamkarvonen/SAEBench/commit/5db6ecb2591fbb9462c5f2b4bd629a7841c9cea5))
-
-* reverting to original sparse probing main.py ([`8d6779f`](https://github.com/adamkarvonen/SAEBench/commit/8d6779f1f80569a5faa27614582e236de88e9352))
-
-* fixing dtypes ([`280f51a`](https://github.com/adamkarvonen/SAEBench/commit/280f51aadb9ad4c647b540a2876a2826f0c58c58))
-
 * Add README for shift and tpp ([`bcf3934`](https://github.com/adamkarvonen/SAEBench/commit/bcf3934c2b3f9455b5a1c80b4ce02dd83000d697))
 
 * Add end to end test for shift and tpp ([`4ac13ef`](https://github.com/adamkarvonen/SAEBench/commit/4ac13ef7265aaefd000c3eb2b3752a4156decd26))
 
 * Move SAE to model dtype, add option to set column1_vals_list ([`6ae4065`](https://github.com/adamkarvonen/SAEBench/commit/6ae4065f977eb78bb59ab014818fa85caec6dfbe))
-
-* adding absorption calculation code ([`704eb00`](https://github.com/adamkarvonen/SAEBench/commit/704eb00a35fc4bdd66316cb25834722a13eeb77b))
 
 * Initial working SHIFT / TPP evals ([`fab86d4`](https://github.com/adamkarvonen/SAEBench/commit/fab86d4b08a6c563f88d0ae4238da9c76d31b95f))
 
@@ -1214,8 +1257,6 @@ Shift eval ([`22a2a72`](https://github.com/adamkarvonen/SAEBench/commit/22a2a72e
 * Pin dataset name for sparse probing test ([`26d85ed`](https://github.com/adamkarvonen/SAEBench/commit/26d85ede28a2307b95505cb397a377e4c5cc3f2b))
 
 * Correct shape annotation ([`dc1f3d7`](https://github.com/adamkarvonen/SAEBench/commit/dc1f3d72f18eb8671acd5b5e2f3a92bec4077572))
-
-* adding in k-sparse probing experiment code ([`0ab6d2c`](https://github.com/adamkarvonen/SAEBench/commit/0ab6d2c45f9588861dfec31f3c4104a2ac06279d))
 
 * Merge pull request #2 from adamkarvonen/sparse_probing_add_datasets
 
@@ -1228,8 +1269,6 @@ Sparse probing add datasets ([`19b4c4a`](https://github.com/adamkarvonen/SAEBenc
 * Add function to average results from multiple runs ([`47af366`](https://github.com/adamkarvonen/SAEBench/commit/47af3662baee348f7d70afd99819dae5a2663768))
 
 * Remove html files ([`9c42b2f`](https://github.com/adamkarvonen/SAEBench/commit/9c42b2f0f98efd5d9d5bc49acb312e8bd1525d68))
-
-* WIP: absorption ([`6348fb2`](https://github.com/adamkarvonen/SAEBench/commit/6348fb2fefdb60e360b03d5e26d391b5afbe1ea2))
 
 * Update READMEs ([`e6f1e3b`](https://github.com/adamkarvonen/SAEBench/commit/e6f1e3b94c10bcd90f9e3f0908762dda2a174f9f))
 
@@ -1290,8 +1329,6 @@ restructure ([`c3952bd`](https://github.com/adamkarvonen/SAEBench/commit/c3952bd
 
 * Merge branch &#39;main&#39; of https://github.com/adamkarvonen/SAE_Bench_Template into main ([`54a6156`](https://github.com/adamkarvonen/SAEBench/commit/54a61568bb16d601e9e8a7bb32bdc8884bbf31b9))
 
-* add plot over training steps ([`065825e`](https://github.com/adamkarvonen/SAEBench/commit/065825e6a3e64d3e4d78fd8c86239f65df5d3fef))
-
 * Also calculate k-sparse probing for LLM activations ([`5e816b0`](https://github.com/adamkarvonen/SAEBench/commit/5e816b00bdf5a935fa251d219325119652a01c67))
 
 * Move default results into sparse_probing/ from sparse_probing/src/ ([`2283cc5`](https://github.com/adamkarvonen/SAEBench/commit/2283cc54035f672540deec8a17d12b28a9bdfe46))
@@ -1306,6 +1343,8 @@ restructure ([`c3952bd`](https://github.com/adamkarvonen/SAEBench/commit/c3952bd
 
 * Add type annotations so config parameters are saved ([`337c21d`](https://github.com/adamkarvonen/SAEBench/commit/337c21da9897c3064bdb0107ed3c8f0c010e289b))
 
+* add plot over training steps ([`065825e`](https://github.com/adamkarvonen/SAEBench/commit/065825e6a3e64d3e4d78fd8c86239f65df5d3fef))
+
 * add virtualenv instructions ([`68edafe`](https://github.com/adamkarvonen/SAEBench/commit/68edafe64c08f0cfaaacd13a6f099065d21f0908))
 
 * added interactive 3var plot and renamed files for clarity ([`5afafb7`](https://github.com/adamkarvonen/SAEBench/commit/5afafb7a4f9dbdc41256854447de0a69f0fa3323))
@@ -1314,15 +1353,15 @@ restructure ([`c3952bd`](https://github.com/adamkarvonen/SAEBench/commit/c3952bd
 
 * Merge branch &#39;main&#39; of https://github.com/adamkarvonen/SAE_Bench_Template into main ([`5ee11cf`](https://github.com/adamkarvonen/SAEBench/commit/5ee11cf1000d8ef755b43a7646b5d943a142d7aa))
 
-* debugging correlation plots ([`cee970f`](https://github.com/adamkarvonen/SAEBench/commit/cee970f7497ca92605d6814e0e916e47e0800bf4))
-
-* moved formatting utils to external file ([`8fcc5da`](https://github.com/adamkarvonen/SAEBench/commit/8fcc5da903333a0d116c1ea9dc1007a57b72ce60))
-
 * Update README.md ([`98d5f57`](https://github.com/adamkarvonen/SAEBench/commit/98d5f57a03dffaa481657b9154cb7197d2adfaeb))
 
 * Update README.md ([`2e2e9f8`](https://github.com/adamkarvonen/SAEBench/commit/2e2e9f8a9197f8d121208b110c9d6c6e0157bae7))
 
 * clarified README.md ([`205b2fb`](https://github.com/adamkarvonen/SAEBench/commit/205b2fbc9edbe604625be573cdf5e27e7278ee3a))
+
+* debugging correlation plots ([`cee970f`](https://github.com/adamkarvonen/SAEBench/commit/cee970f7497ca92605d6814e0e916e47e0800bf4))
+
+* moved formatting utils to external file ([`8fcc5da`](https://github.com/adamkarvonen/SAEBench/commit/8fcc5da903333a0d116c1ea9dc1007a57b72ce60))
 
 * clarify README.md ([`540123b`](https://github.com/adamkarvonen/SAEBench/commit/540123b0b66075e70baae7f1d49d3b3c586e0963))
 
