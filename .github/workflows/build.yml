@@ -46,9 +46,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-0-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-1-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            venv-0-${{ runner.os }}-${{ matrix.python-version }}-
+            venv-1-${{ runner.os }}-${{ matrix.python-version }}-
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
