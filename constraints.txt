@@ -15,4 +15,4 @@ torch==2.5.1
 torchvision==0.20.1
 tqdm==4.67.1
 transformer-lens==2.11.0
-sae-lens==5.4.1
+# sae-lens==5.4.1
