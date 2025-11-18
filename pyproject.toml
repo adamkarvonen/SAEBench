@@ -12,26 +12,60 @@ repository = "https://github.com/adamkarvonen/SAEBench"
 keywords = ["sparse-autoencoders", "mechanistic-interpretability", "PyTorch"]
 classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
+[project]
+name = "sae-bench"
+version = "0.4.1"
+description = "A framework for evaluating sparse autoencoders"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+authors = [
+    { name = "Adam Karvonen", email = "adam.karvonen@gmail.com" },
+    { name = "Can Rager", email = "canrager@gmail.com" },
+]
+keywords = ["sparse-autoencoders", "mechanistic-interpretability", "PyTorch"]
+classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence"]
+
+dependencies = [
+    "beartype==0.14.1",
+    "collectibles==0.1.5",
+    "einops==0.8.0",
+    "jaxtyping==0.2.37",
+    "matplotlib==3.10.0",
+    "numpy==1.26.4",
+    "openai==1.61.1",
+    "pandas==2.2.3",
+    "plotly==5.24.1",
+    "pydantic==2.10.6",
+    "scikit-learn==1.6.1",
+    "seaborn==0.13.2",
+    "tabulate==0.9.0",
+    "torch==2.5.1",
+    "torchvision==0.20.1",
+    "tqdm==4.67.1",
+    "transformer-lens==2.11.0",
+    "sae_lens==5.4.1",
+]
+
 [tool.poetry.dependencies]
-python = "^3.10,"
-sae_lens = "^5.4.0"
-transformer-lens = ">=2.0.0"
-torch = ">=2.1.0"
-einops = ">=0.8.0"
-numpy = ">=1.26.4,<2.0"
-pandas = ">=2.1.2"
-tqdm = ">=4.66.4"
-jaxtyping = ">=0.2.25"
-beartype = ">=0.14.1"
-scikit-learn = ">=1.5.2"
-collectibles = ">=0.1.5"
-pydantic = ">=2.9.2"
-seaborn = ">=0.13.2"
-plotly = ">=5.22.0"
-matplotlib = ">=3.8.4"
-tabulate = ">=0.9.0"
-openai = ">=1.0.0"
-torchvision = ">=0.16.1" # required for what I believe are nnsight related issues
+python = "^3.10"
+beartype = "0.14.1"
+collectibles = "0.1.5"
+einops = "0.8.0"
+jaxtyping = "0.2.37"
+matplotlib = "3.10.0"
+numpy = "1.26.4"
+openai = "1.61.1"
+pandas = "2.2.3"
+plotly = "5.24.1"
+pydantic = "2.10.6"
+scikit-learn = "1.6.1"
+seaborn = "0.13.2"
+tabulate = "0.9.0"
+torch = "2.5.1"
+torchvision = "0.20.1"
+tqdm = "4.67.1"
+transformer-lens = "2.11.0"
+sae_lens = "5.4.1"
 
 # If running into dependency issues these are tested and working
 # [tool.poetry.dependencies]

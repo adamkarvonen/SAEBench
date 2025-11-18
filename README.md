@@ -12,6 +12,8 @@
 
 ## Overview
 
+This is the stable, tested version that can reproduce the SAE Bench paper results. The environment is reproducible with `uv sync`.
+
 SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE) models:
 
 - **[Feature Absorption](https://arxiv.org/abs/2409.14507)**
@@ -38,7 +40,7 @@ Set up a virtual environment with python >= 3.10.
 ```
 git clone https://github.com/adamkarvonen/SAEBench.git
 cd SAEBench
-pip install -e .
+uv sync
 ```
 
 Alternative, you can install from pypi:
