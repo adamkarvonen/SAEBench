@@ -31,8 +31,8 @@ plotly = ">=5.22.0"
 matplotlib = ">=3.8.4"
 tabulate = ">=0.9.0"
 openai = ">=1.0.0"
-torchvision = ">=0.16.1" # required for what I believe are nnsight related issues
-datasets = "<4.0.0" # skylion openwebtext fails to load with datasets 4.0.0 currently, pending https://huggingface.co/datasets/Skylion007/openwebtext/discussions/22
+# torchvision = ">=0.16.1" # required for what I believe are nnsight related issues
+datasets = "=3.6.0" # skylion openwebtext fails to load with datasets 4.0.0 currently, pending https://huggingface.co/datasets/Skylion007/openwebtext/discussions/22
 
 # If running into dependency issues these are tested and working
 # [tool.poetry.dependencies]
