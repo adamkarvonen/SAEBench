@@ -748,8 +748,13 @@ def plot_2var_graph(
     ax.set_title(title)
 
     # x log
-    ax.set_xscale("log")
+    coll = ax.collections
+    if len(coll) > 0:
+        xy = coll[0].get_offsets()
+        if any(map(lambda point: point[1] > 0, xy)):
+            ax.set_xscale("log")
 
+    
     if baseline_value is not None:
         ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
         labels.append(baseline_label)
@@ -824,7 +829,6 @@ def plot_2var_graph_dict_size(
 
     # Iterate over each unique dictionary size
     handles, labels = [], []
-
     for dict_size in unique_sizes:
         # Filter data points for the current dictionary size
         size_data = {k: v for k, v in results.items() if v["d_sae"] == dict_size}
@@ -857,7 +861,6 @@ def plot_2var_graph_dict_size(
     ax.set_xlabel("L0 (Sparsity)")
     ax.set_ylabel(y_label)
     ax.set_title(title)
-
     if baseline_value:
         ax.axhline(baseline_value, color="red", linestyle="--", label=baseline_label)
         labels.append(baseline_label)
@@ -874,7 +877,11 @@ def plot_2var_graph_dict_size(
         ax.set_ylim(*ylims)
 
     # log scale
-    ax.set_xscale("log")
+    coll = ax.collections
+    if len(coll) > 0:
+        xy = coll[0].get_offsets()
+        if any(map(lambda point: point[1] > 0, xy)):
+            ax.set_xscale("log")
 
     plt.tight_layout()
 
