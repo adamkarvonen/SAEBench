@@ -5,11 +5,11 @@
       "title": "BaseResultDetail",
       "type": "object"
     },
-    "MetaSAEEvalConfig": {
+    "MetaStructureEvalConfig": {
       "properties": {
         "random_seed": {
           "default": 42,
-          "description": "Random seed used when training the meta-SAE.",
+          "description": "Random seed used when training the meta-structure model.",
           "title": "Random Seed",
           "type": "integer"
         },
@@ -21,37 +21,37 @@
         },
         "k": {
           "default": 4,
-          "description": "Average number of active latents to maintain during meta-SAE training.",
+          "description": "Average number of active latents to maintain during meta-structure training.",
           "title": "BatchTopK k",
           "type": "integer"
         },
         "train_steps": {
           "default": 1500,
-          "description": "Number of training steps to run when fitting the meta-SAE.",
+          "description": "Number of training steps to run when fitting the meta-structure model.",
           "title": "Training Steps",
           "type": "integer"
         },
         "train_batch_size": {
           "default": 1024,
-          "description": "Number of decoder rows to use per meta-SAE training batch.",
+          "description": "Number of decoder rows to use per meta-structure training batch.",
           "title": "Training Batch Size",
           "type": "integer"
         },
         "learning_rate": {
           "default": 0.0005,
-          "description": "Learning rate for the meta-SAE Adam optimizer.",
+          "description": "Learning rate for the meta-structure Adam optimizer.",
           "title": "Learning Rate",
           "type": "number"
         },
         "weight_decay": {
           "default": 0.0,
-          "description": "Weight decay to apply while training the meta-SAE.",
+          "description": "Weight decay to apply while training the meta-structure model.",
           "title": "Weight Decay",
           "type": "number"
         },
         "autocast": {
           "default": true,
-          "description": "Whether to enable torch.autocast during meta-SAE training.",
+          "description": "Whether to enable torch.autocast during meta-structure training.",
           "title": "Use Autocast",
           "type": "boolean"
         },
@@ -75,39 +75,39 @@
         },
         "dtype": {
           "default": "float32",
-          "description": "Datatype to use for meta-SAE training.",
-          "title": "Meta-SAE DType",
+          "description": "Datatype to use for meta-structure training.",
+          "title": "Meta-Structure DType",
           "type": "string"
         }
       },
-      "title": "MetaSAEEvalConfig",
+      "title": "MetaStructureEvalConfig",
       "type": "object"
     },
-    "MetaSAEMetricCategories": {
+    "MetaStructureMetricCategories": {
       "properties": {
-        "meta_sae": {
-          "$ref": "#/$defs/MetaSAEMetrics",
-          "description": "Metrics for the meta-SAE decoder variance evaluation.",
-          "title": "Meta-SAE",
+        "meta_structure": {
+          "$ref": "#/$defs/MetaStructureMetrics",
+          "description": "Metrics for the meta-structure decoder variance evaluation.",
+          "title": "Meta-Structure",
           "ui_default_display": true
         }
       },
       "required": [
-        "meta_sae"
+        "meta_structure"
       ],
-      "title": "MetaSAEMetricCategories",
+      "title": "MetaStructureMetricCategories",
       "type": "object"
     },
-    "MetaSAEMetrics": {
+    "MetaStructureMetrics": {
       "properties": {
         "decoder_fraction_variance_explained": {
-          "description": "Fraction of variance in the base SAE decoder reconstructed by the meta-SAE.",
+          "description": "Fraction of variance in the base SAE decoder reconstructed by the meta-structure model.",
           "title": "Decoder Fraction Variance Explained",
           "type": "number",
           "ui_default_display": true
         },
         "train_time_seconds": {
-          "description": "Wall-clock seconds spent fitting the meta-SAE.",
+          "description": "Wall-clock seconds spent fitting the meta-structure model.",
           "title": "Training Time (s)",
           "type": "number"
         },
@@ -122,20 +122,20 @@
         "train_time_seconds",
         "final_reconstruction_mse"
       ],
-      "title": "MetaSAEMetrics",
+      "title": "MetaStructureMetrics",
       "type": "object"
     }
   },
-  "description": "Evaluation measuring how well a BatchTopK meta-SAE compresses the decoder matrix of a base SAE.",
+  "description": "Evaluation measuring how well a BatchTopK meta-structure compresses the decoder matrix of a base SAE.",
   "properties": {
     "eval_type_id": {
-      "default": "meta_sae_decoder_variance",
+      "default": "meta_structure_decoder_variance",
       "description": "The type of the evaluation",
       "title": "Eval Type ID",
       "type": "string"
     },
     "eval_config": {
-      "$ref": "#/$defs/MetaSAEEvalConfig",
+      "$ref": "#/$defs/MetaStructureEvalConfig",
       "description": "The configuration of the evaluation.",
       "title": "Eval Config Type"
     },
@@ -150,7 +150,7 @@
       "type": "integer"
     },
     "eval_result_metrics": {
-      "$ref": "#/$defs/MetaSAEMetricCategories",
+      "$ref": "#/$defs/MetaStructureMetricCategories",
       "description": "The metrics of the evaluation, organized by category. Define your own categories and the metrics that go inside them.",
       "title": "Result Metrics Categorized"
     },
@@ -246,6 +246,6 @@
     "sae_lens_version",
     "sae_cfg_dict"
   ],
-  "title": "Meta-SAE Decoder Variance",
+  "title": "Meta-Structure Decoder Variance",
   "type": "object"
 }

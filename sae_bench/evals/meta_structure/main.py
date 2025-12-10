@@ -3,7 +3,7 @@ import math
 import os
 import random
 import time
-from typing import Iterator
+from collections.abc import Iterator
 
 import torch
 from sae_lens import SAE
@@ -12,12 +12,12 @@ from sae_lens.saes.batchtopk_sae import BatchTopKTrainingSAE, BatchTopKTrainingS
 from sae_lens.training.sae_trainer import SAETrainer
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
-from sae_bench.evals.meta_sae.eval_config import MetaSAEEvalConfig
-from sae_bench.evals.meta_sae.eval_output import (
-    EVAL_TYPE_ID_META_SAE,
-    MetaSAEEvalOutput,
-    MetaSAEMetricCategories,
-    MetaSAEMetrics,
+from sae_bench.evals.meta_structure.eval_config import MetaStructureEvalConfig
+from sae_bench.evals.meta_structure.eval_output import (
+    EVAL_TYPE_ID_META_STRUCTURE,
+    MetaStructureEvalOutput,
+    MetaStructureMetricCategories,
+    MetaStructureMetrics,
 )
 from sae_bench.sae_bench_utils import (
     get_eval_uuid,
@@ -37,13 +37,13 @@ def _decoder_data_provider(
         yield decoder[indices]
 
 
-def _train_meta_sae_on_decoder(
+def _train_meta_structure_on_decoder(
     decoder: torch.Tensor,
     meta_width: int,
-    config: MetaSAEEvalConfig,
+    config: MetaStructureEvalConfig,
     device: str,
 ) -> tuple[BatchTopKTrainingSAE, float]:
-    """Train a BatchTopK meta-SAE on the decoder matrix."""
+    """Train a BatchTopK meta-structure model on the decoder matrix."""
     meta_cfg = BatchTopKTrainingSAEConfig(
         d_in=decoder.shape[1],
         d_sae=meta_width,
@@ -52,7 +52,7 @@ def _train_meta_sae_on_decoder(
         dtype=config.dtype,
         rescale_acts_by_decoder_norm=True,
     )
-    meta_sae = BatchTopKTrainingSAE(meta_cfg)
+    meta_structure = BatchTopKTrainingSAE(meta_cfg)
 
     trainer_cfg = SAETrainerConfig(
         n_checkpoints=0,
@@ -76,7 +76,9 @@ def _train_meta_sae_on_decoder(
     )
 
     data_provider = _decoder_data_provider(decoder, config.train_batch_size)
-    trainer = SAETrainer(cfg=trainer_cfg, sae=meta_sae, data_provider=data_provider)
+    trainer = SAETrainer(
+        cfg=trainer_cfg, sae=meta_structure, data_provider=data_provider
+    )
     if config.weight_decay != 0.0:
         for group in trainer.optimizer.param_groups:
             group["weight_decay"] = config.weight_decay
@@ -90,12 +92,12 @@ def _train_meta_sae_on_decoder(
 
 @torch.no_grad()
 def _decoder_variance_metrics(
-    meta_sae: BatchTopKTrainingSAE,
+    meta_structure: BatchTopKTrainingSAE,
     decoder: torch.Tensor,
     eval_batch_size: int,
 ) -> tuple[float, float]:
     """Return (fraction_variance_explained, mse)."""
-    meta_sae.eval()
+    meta_structure.eval()
     total_var = 0.0
     residual = 0.0
 
@@ -103,7 +105,7 @@ def _decoder_variance_metrics(
 
     for start in range(0, decoder.shape[0], eval_batch_size):
         batch = decoder[start : start + eval_batch_size]
-        recon = meta_sae(batch)
+        recon = meta_structure(batch)
         residual += torch.sum((batch - recon) ** 2).item()
         total_var += torch.sum((batch - decoder_mean) ** 2).item()
 
@@ -117,33 +119,33 @@ def run_eval_single_sae(
     sae_release: str,
     sae_id: str,
     sae: SAE,
-    config: MetaSAEEvalConfig,
+    config: MetaStructureEvalConfig,
     device: str,
-) -> MetaSAEEvalOutput:
+) -> MetaStructureEvalOutput:
     dtype = general_utils.str_to_dtype(config.dtype)
     sae = sae.to(device=device, dtype=dtype)
     decoder = sae.W_dec.detach().to(device=device, dtype=dtype).contiguous()
 
-    meta_width = max(
-        math.ceil(decoder.shape[0] * config.width_ratio), config.k
-    )
+    meta_width = max(math.ceil(decoder.shape[0] * config.width_ratio), config.k)
 
-    meta_sae, train_time = _train_meta_sae_on_decoder(
+    meta_structure, train_time = _train_meta_structure_on_decoder(
         decoder=decoder, meta_width=meta_width, config=config, device=device
     )
     variance_explained, mse = _decoder_variance_metrics(
-        meta_sae=meta_sae, decoder=decoder, eval_batch_size=config.eval_batch_size
+        meta_structure=meta_structure,
+        decoder=decoder,
+        eval_batch_size=config.eval_batch_size,
     )
 
-    metrics = MetaSAEMetricCategories(
-        meta_sae=MetaSAEMetrics(
+    metrics = MetaStructureMetricCategories(
+        meta_structure=MetaStructureMetrics(
             decoder_fraction_variance_explained=variance_explained,
             train_time_seconds=train_time,
             final_reconstruction_mse=mse,
         )
     )
 
-    return MetaSAEEvalOutput(
+    return MetaStructureEvalOutput(
         eval_config=config,
         eval_id=get_eval_uuid(),
         datetime_epoch_millis=int(time.time() * 1000),
@@ -158,7 +160,7 @@ def run_eval_single_sae(
 
 
 def run_eval(
-    config: MetaSAEEvalConfig,
+    config: MetaStructureEvalConfig,
     selected_saes: list[tuple[str, str]],
     device: str,
     output_path: str,
@@ -189,16 +191,16 @@ def run_eval(
         )
         eval_output.to_json_file(sae_result_path, indent=2)
         results[f"{sae_release}_{sae_id}"] = (
-            eval_output.eval_result_metrics.meta_sae.decoder_fraction_variance_explained
+            eval_output.eval_result_metrics.meta_structure.decoder_fraction_variance_explained
         )
 
     return results
 
 
 def _arg_parser() -> argparse.ArgumentParser:
-    default_config = MetaSAEEvalConfig()
+    default_config = MetaStructureEvalConfig()
     parser = argparse.ArgumentParser(
-        description="Run meta-SAE decoder variance evaluation"
+        description="Run meta-structure decoder variance evaluation"
     )
     parser.add_argument(
         "--sae_regex_pattern",
@@ -207,7 +209,7 @@ def _arg_parser() -> argparse.ArgumentParser:
         help="Regex pattern to select SAE releases.",
     )
     parser.add_argument(
-        "--sae_block_pattern",
+        "--sae_id_pattern",
         type=str,
         required=True,
         help="Regex pattern to select SAEs within a release.",
@@ -215,14 +217,14 @@ def _arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output_folder",
         type=str,
-        default="eval_results/meta_sae",
+        default="eval_results/meta_structure",
         help="Where to store evaluation JSON outputs.",
     )
     parser.add_argument(
         "--width_ratio",
         type=float,
         default=default_config.width_ratio,
-        help="Meta-SAE width as a fraction of the base SAE width.",
+        help="Meta-structure width as a fraction of the base SAE width.",
     )
     parser.add_argument(
         "--k",
@@ -234,7 +236,7 @@ def _arg_parser() -> argparse.ArgumentParser:
         "--train_steps",
         type=int,
         default=default_config.train_steps,
-        help="Number of training steps for the meta-SAE.",
+        help="Number of training steps for the meta-structure.",
     )
     parser.add_argument(
         "--train_batch_size",
@@ -246,13 +248,13 @@ def _arg_parser() -> argparse.ArgumentParser:
         "--learning_rate",
         type=float,
         default=default_config.learning_rate,
-        help="Learning rate for meta-SAE training.",
+        help="Learning rate for meta-structure training.",
     )
     parser.add_argument(
         "--weight_decay",
         type=float,
         default=default_config.weight_decay,
-        help="Weight decay for the meta-SAE optimizer.",
+        help="Weight decay for the meta-structure optimizer.",
     )
     parser.add_argument(
         "--eval_batch_size",
@@ -265,13 +267,13 @@ def _arg_parser() -> argparse.ArgumentParser:
         type=str,
         default=default_config.dtype,
         choices=["float16", "float32", "bfloat16", "float64"],
-        help="Datatype for meta-SAE training.",
+        help="Datatype for meta-structure training.",
     )
     parser.add_argument(
         "--random_seed",
         type=int,
         default=default_config.random_seed,
-        help="Random seed for meta-SAE training.",
+        help="Random seed for meta-structure training.",
     )
     parser.add_argument(
         "--autocast",
@@ -295,7 +297,7 @@ def _set_random_seed(seed: int) -> None:
 
 
 def create_config(args: argparse.Namespace) -> MetaSAEEvalConfig:
-    return MetaSAEEvalConfig(
+    return MetaStructureEvalConfig(
         random_seed=args.random_seed,
         width_ratio=args.width_ratio,
         k=args.k,
@@ -312,22 +314,22 @@ def create_config(args: argparse.Namespace) -> MetaSAEEvalConfig:
 if __name__ == "__main__":
     """
     Example:
-    python sae_bench/evals/meta_sae/main.py \
+    python sae_bench/evals/meta_structure/main.py \
         --sae_regex_pattern ".*" \
-        --sae_block_pattern ".*" \
-        --output_folder eval_results/meta_sae
+        --sae_id_pattern ".*" \
+        --output_folder eval_results/meta_structure
     """
     args = _arg_parser().parse_args()
     _set_random_seed(args.random_seed)
     device = general_utils.setup_environment()
 
     config = create_config(args)
-    selected_saes = get_saes_from_regex(args.sae_regex_pattern, args.sae_block_pattern)
-    assert (
-        len(selected_saes) > 0
-    ), "No SAEs matched the provided regex patterns. Did you mistype them?"
+    selected_saes = get_saes_from_regex(args.sae_regex_pattern, args.sae_id_pattern)
+    assert len(selected_saes) > 0, (
+        "No SAEs matched the provided regex patterns. Did you mistype them?"
+    )
 
-    print(f"Running {EVAL_TYPE_ID_META_SAE} for {len(selected_saes)} SAEs...")
+    print(f"Running {EVAL_TYPE_ID_META_STRUCTURE} for {len(selected_saes)} SAEs...")
     start_time = time.time()
     run_eval(
         config=config,
