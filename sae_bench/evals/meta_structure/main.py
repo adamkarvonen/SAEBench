@@ -296,7 +296,7 @@ def _set_random_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def create_config(args: argparse.Namespace) -> MetaSAEEvalConfig:
+def create_config(args: argparse.Namespace) -> MetaStructureEvalConfig:
     return MetaStructureEvalConfig(
         random_seed=args.random_seed,
         width_ratio=args.width_ratio,
