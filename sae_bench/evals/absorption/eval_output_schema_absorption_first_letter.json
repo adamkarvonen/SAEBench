@@ -67,6 +67,31 @@
           "description": "Number of epochs for k-sparse probes.",
           "title": "K-Sparse Probe Number of Epochs",
           "type": "integer"
+        },
+        "min_GT_probe_f1": {
+          "default": 0.6,
+          "description": "The minimum ground truth probe F1 score for the first-letter feature to be considered present",
+          "title": "Minimum ground truth probe F1 score",
+          "type": "number"
+        },
+        "min_feats_for_eval": {
+          "default": 20,
+          "description": "The minimum number of first-letter features (as detected by the GT probes) needed to evaluate absorption",
+          "minimum": 1,
+          "title": "Minumum features for evaluation",
+          "type": "integer"
+        },
+        "eval_k_sparse_probe_batch_size": {
+          "default": 24,
+          "description": "Batch size for evaluating k-sparse probes.",
+          "title": "Eval K-Sparse Probe Batch Size",
+          "type": "integer"
+        },
+        "precalc_k_sparse_probe_sae_acts": {
+          "default": false,
+          "description": "Precalculate SAE acts when training k-sparse probes. This speeds up the training process, but takes up more memory. For smaller SAEs, this is highly recommended.",
+          "title": "Precalc SAE Acts when training k-sparse probes",
+          "type": "boolean"
         }
       },
       "title": "AbsorptionEvalConfig",
@@ -259,6 +284,7 @@
     "sae_cfg_dict": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {

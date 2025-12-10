@@ -1,0 +1,57 @@
+{
+  "eval_type_id": "meta_sae_decoder_variance",
+  "eval_config": {
+    "random_seed": 42,
+    "width_ratio": 0.25,
+    "k": 4,
+    "train_steps": 1500,
+    "train_batch_size": 1024,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.0,
+    "autocast": true,
+    "eval_batch_size": 4096,
+    "dead_feature_window": 2000,
+    "feature_sampling_window": 200,
+    "dtype": "float32"
+  },
+  "eval_id": "86785368-6690-42ac-b409-10cb1f9e32c7",
+  "datetime_epoch_millis": 1765370407541,
+  "eval_result_metrics": {
+    "meta_sae": {
+      "decoder_fraction_variance_explained": 0.2434181003213628,
+      "train_time_seconds": 5.193935394287109,
+      "final_reconstruction_mse": 0.0014604672323912382
+    }
+  },
+  "eval_result_details": [],
+  "sae_bench_commit_hash": "7dbb125eaf81971d221b2085332f371b87030129",
+  "sae_lens_id": "blocks.4.hook_resid_post__trainer_10",
+  "sae_lens_release_id": "sae_bench_pythia70m_sweep_standard_ctx128_0712",
+  "sae_lens_version": "6.22.3",
+  "sae_cfg_dict": {
+    "d_in": 512,
+    "d_sae": 16384,
+    "dtype": "torch.float32",
+    "device": "cuda",
+    "apply_b_dec_to_input": true,
+    "normalize_activations": "none",
+    "reshape_activations": "none",
+    "metadata": {
+      "sae_lens_version": "6.22.3",
+      "sae_lens_training_version": null,
+      "model_name": "pythia-70m-deduped",
+      "hook_name": "blocks.4.hook_resid_post",
+      "hook_head_index": null,
+      "prepend_bos": true,
+      "dataset_path": "monology/pile-uncopyrighted",
+      "context_size": 128,
+      "neuronpedia_id": "pythia-70m-deduped/4-sae_bench-standard-res-16k__trainer_10_step_final",
+      "hook_layer": 4,
+      "dataset_trust_remote_code": null,
+      "model_from_pretrained_kwargs": {},
+      "exclude_special_tokens": null
+    },
+    "architecture": "standard"
+  },
+  "eval_result_unstructured": null
+}

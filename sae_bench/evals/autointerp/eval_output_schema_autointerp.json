@@ -10,10 +10,17 @@
           "type": "string"
         },
         "n_latents": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": 1000,
           "description": "The number of latents for the LLM judge to interpret",
-          "title": "Number of Latents",
-          "type": "integer"
+          "title": "Number of Latents"
         },
         "override_latents": {
           "anyOf": [
@@ -265,6 +272,7 @@
     "sae_cfg_dict": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
