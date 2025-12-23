@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 
 @dataclass
@@ -37,3 +37,10 @@ class CustomSAEConfig:
     # Metadata
     sae_lens_training_version: str | None = None
     neuronpedia_id: str | None = None
+
+    def to_dict(self) -> dict:
+        cfg_dict = {**asdict(self)}
+        # this is added by the standardization process, but can't directly be serialized
+        if "metadata" in cfg_dict:
+            del cfg_dict["metadata"]
+        return cfg_dict

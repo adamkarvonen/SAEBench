@@ -94,7 +94,7 @@
 #         sae_lens_id=sae_lens_id,
 #         sae_lens_release_id=sae_release,
 #         sae_lens_version=get_sae_lens_version(),
-#         sae_cfg_dict=asdict(sae.cfg),
+#         sae_cfg_dict=sae.cfg.to_dict(),
 #     )
 #     eval_output.to_json_file("test_absorption_eval_output.json", indent=2)
 

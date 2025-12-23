@@ -87,8 +87,7 @@ def test_end_to_end():
     )
 
     path_to_eval_results = os.path.join(
-        test_data_dir,
-        f"{TEST_RELEASE}_{TEST_SAE_NAME}_eval_results.json",
+        test_data_dir, f"{TEST_RELEASE}_{TEST_SAE_NAME}_eval_results.json"
     )
     print(f"Path to eval results: {path_to_eval_results}")
     validate_eval_output_format_file(

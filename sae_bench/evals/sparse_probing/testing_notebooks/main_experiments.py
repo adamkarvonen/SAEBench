@@ -13,7 +13,7 @@ from dataclasses import asdict
 import pandas as pd
 import torch
 from sae_lens import SAE
-from sae_lens.toolkit.pretrained_saes_directory import get_pretrained_saes_directory
+from sae_lens.loading.pretrained_saes_directory import get_pretrained_saes_directory
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
 
@@ -484,7 +484,7 @@ for sae_name in tqdm(
 ):
     sae_id = sae_name_to_id_map[sae_name]
 
-    sae, cfg_dict, sparsity = SAE.from_pretrained(
+    sae = SAE.from_pretrained(
         release=sae_release,
         sae_id=sae_id,
         device=device,

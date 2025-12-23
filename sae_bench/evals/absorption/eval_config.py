@@ -77,3 +77,13 @@ class AbsorptionEvalConfig(BaseEvalConfig):
         title="Minumum features for evaluation",
         description="The minimum number of first-letter features (as detected by the GT probes) needed to evaluate absorption",
     )
+    eval_k_sparse_probe_batch_size: int = Field(
+        default=24,
+        title="Eval K-Sparse Probe Batch Size",
+        description="Batch size for evaluating k-sparse probes.",
+    )
+    precalc_k_sparse_probe_sae_acts: bool = Field(
+        default=False,
+        title="Precalc SAE Acts when training k-sparse probes",
+        description="Precalculate SAE acts when training k-sparse probes. This speeds up the training process, but takes up more memory. For smaller SAEs, this is highly recommended.",
+    )

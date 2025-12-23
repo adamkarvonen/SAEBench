@@ -33,15 +33,17 @@ For more information, refer to our [blog post](https://www.neuronpedia.org/sae-b
 
 ### Installation
 
-Set up a virtual environment with python >= 3.10.
+**Versioning and Stability** This repository will continue to evolve as upstream libraries (such as SAE Lens) update. If you ever run into dependency conflicts or want an environment that reproduces all results from the paper, you can use the `stable_paper_version` branch. That branch includes a UV lockfile with fully pinned dependencies and provides a fully reproducible setup that will not change over time.
+
+**Stable Install (Recommended):** Set up a virtual environment with python >= 3.10 and clone the repo. To use our tested pinned dependencies, also use our `constraints.txt`.
 
 ```
 git clone https://github.com/adamkarvonen/SAEBench.git
 cd SAEBench
-pip install -e .
+pip install -e . -c constraints.txt
 ```
 
-Alternative, you can install from pypi:
+Alternatively, you can install from pypi. However, note that you may run into dependency issues as libraries evolve.
 
 ```
 pip install sae-bench

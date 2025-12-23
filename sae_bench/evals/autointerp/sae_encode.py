@@ -53,14 +53,14 @@ def encode_gated(
 
     # Gating path
     gating_pre_activation = (
-        sae_in @ self.W_enc[:, latents_tensor] + self.b_gate[latents_tensor]
+        sae_in @ self.W_enc[:, latents_tensor] + self.b_gate[latents_tensor]  # type: ignore
     )
     active_features = (gating_pre_activation > 0).to(self.dtype)
 
     # Magnitude path with weight sharing
     magnitude_pre_activation = self.hook_sae_acts_pre(
-        sae_in @ (self.W_enc[:, latents_tensor] * self.r_mag[latents_tensor].exp())
-        + self.b_mag[latents_tensor]
+        sae_in @ (self.W_enc[:, latents_tensor] * self.r_mag[latents_tensor].exp())  # type: ignore
+        + self.b_mag[latents_tensor]  # type: ignore
     )
     feature_magnitudes = self.activation_fn(magnitude_pre_activation)
 
@@ -99,11 +99,11 @@ def encode_jumprelu(
 
     # "... d_in, d_in d_sae -> ... d_sae",
     hidden_pre = self.hook_sae_acts_pre(
-        sae_in @ self.W_enc[:, latents_tensor] + self.b_enc[latents_tensor]
+        sae_in @ self.W_enc[:, latents_tensor] + self.b_enc[latents_tensor]  # type: ignore
     )
 
     feature_acts = self.hook_sae_acts_post(
-        self.activation_fn(hidden_pre) * (hidden_pre > self.threshold[latents_tensor])
+        self.activation_fn(hidden_pre) * (hidden_pre > self.threshold[latents_tensor])  # type: ignore
     )
 
     return feature_acts
@@ -135,7 +135,7 @@ def encode_standard(
 
     # "... d_in, d_in d_sae -> ... d_sae",
     hidden_pre = self.hook_sae_acts_pre(
-        sae_in @ self.W_enc[:, latents_tensor] + self.b_enc[latents_tensor]
+        sae_in @ self.W_enc[:, latents_tensor] + self.b_enc[latents_tensor]  # type: ignore
     )
     feature_acts = self.hook_sae_acts_post(self.activation_fn(hidden_pre))
 

@@ -15,7 +15,7 @@ from collectibles import ListCollection
 from einops import rearrange
 from loguru import logger
 from sae_lens import SAE, ActivationsStore
-from sae_lens.sae import TopK
+from sae_lens.saes.topk_sae import TopK
 from torch import nn
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
@@ -104,7 +104,9 @@ def calculate_dl(
     float_entropy_F = torch.zeros(num_features, device=device, dtype=torch.float32)
     bool_entropy_F = torch.zeros(num_features, device=device, dtype=torch.float32)
 
-    x_BSN = activations_store.get_buffer(config.sae_batch_size)[0]
+    x_BSN = activations_store.get_filtered_buffer(config.sae_batch_size)
+    # previous SAELens version had an extra dim in the middle for layer
+    x_BSN = x_BSN.unsqueeze(1)
     feature_activations_BsF = sae.encode(x_BSN).squeeze()
 
     if feature_activations_BsF.ndim == 2:
@@ -235,7 +237,9 @@ def check_quantised_features_reach_mse_threshold(
     mse_losses: list[torch.Tensor] = []
 
     for i in range(1):
-        x_BSN = activations_store.get_buffer(config.sae_batch_size)[0]
+        x_BSN = activations_store.get_filtered_buffer(config.sae_batch_size)
+        # previous SAELens version had an extra dim in the middle for layer
+        x_BSN = x_BSN.unsqueeze(1)
         feature_activations_BSF = sae.encode(x_BSN).squeeze()
 
         if k is not None:
@@ -323,11 +327,17 @@ def run_eval_single_sae(
     mdl_eval_results_list: list[MDLEvalResult] = []
 
     sae.cfg.dataset_trust_remote_code = True
+    if hasattr(sae.cfg, "metadata"):
+        sae.cfg.metadata.dataset_trust_remote_code = True
     sae = sae.to(device)
     model = model.to(device)  # type: ignore
 
     activations_store = ActivationsStore.from_sae(
-        model, sae, config.sae_batch_size, dataset=dataset_name, device=device
+        model,
+        sae,
+        store_batch_size_prompts=config.sae_batch_size,
+        dataset=dataset_name,
+        device=device,
     )
 
     num_features = sae.cfg.d_sae
@@ -337,9 +347,9 @@ def run_eval_single_sae(
         max_activations_1F = torch.zeros(1, num_features, device=device) + 100
 
         for _ in range(10):
-            neuron_activations_BSN = activations_store.get_buffer(
+            neuron_activations_BSN = activations_store.get_filtered_buffer(
                 config.sae_batch_size
-            )[0]
+            ).unsqueeze(1)
 
             feature_activations_BsF = sae.encode(neuron_activations_BSN).squeeze()
 
@@ -491,7 +501,7 @@ def run_eval(
             "eval_config": asdict(config),
             "eval_results": eval_output,
             "eval_artifacts": {"artifacts": "None"},
-            "sae_cfg_dict": asdict(sae.cfg),
+            "sae_cfg_dict": sae.cfg.to_dict(),
         }
 
         with open(sae_result_path, "w") as f:

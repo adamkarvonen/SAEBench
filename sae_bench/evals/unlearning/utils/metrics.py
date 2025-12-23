@@ -176,7 +176,7 @@ def calculate_MCQ_metrics(
         ]
         prompts = [item for sublist in prompts for item in sublist]
 
-        answers = [[p.index(answer) for p in permutations] for answer in answers]
+        answers = [[p.index(answer) for p in permutations] for answer in answers]  # type: ignore
         answers = [item for sublist in answers for item in sublist]
 
     actual_answers = answers

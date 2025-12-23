@@ -3,11 +3,13 @@ import uuid
 
 import pytest
 import torch
+from sae_lens import SAE
 
 import sae_bench.sae_bench_utils.general_utils as general_utils
 import sae_bench.sae_bench_utils.indexing_utils as indexing_utils
 import sae_bench.sae_bench_utils.testing_utils as testing_utils
 from sae_bench import sae_bench_utils
+from sae_bench.custom_saes.identity_sae import IdentitySAE
 
 
 def test_average_results():
@@ -104,3 +106,94 @@ def test_indexing_utils():
         12,
         13,
     ]  # 2nd highest value in the middle
+
+
+def test_standardize_sae_cfg_with_saelens_sae(gpt2_l4_sae: SAE):
+    cfg = gpt2_l4_sae.cfg
+
+    general_utils._standardize_sae_cfg(cfg)
+
+    assert hasattr(cfg, "hook_layer")
+    assert cfg.hook_layer is not None
+    assert isinstance(cfg.hook_layer, int)
+    assert cfg.hook_layer == 4
+
+    assert hasattr(cfg, "hook_name")
+    assert cfg.hook_name is not None
+    assert isinstance(cfg.hook_name, str)
+    assert cfg.hook_name == "blocks.4.hook_resid_pre"
+
+    assert hasattr(cfg, "model_name")
+    assert cfg.model_name is not None
+    assert isinstance(cfg.model_name, str)
+    assert cfg.model_name == "gpt2-small"
+
+    assert hasattr(cfg, "architecture_str")
+    assert cfg.architecture_str is not None
+    assert isinstance(cfg.architecture_str, str)
+    assert cfg.architecture_str == "standard"
+
+    assert hasattr(cfg, "metadata")
+    assert cfg.metadata is not None
+    assert hasattr(cfg.metadata, "hook_layer")
+    assert cfg.metadata.hook_layer == cfg.hook_layer
+    assert hasattr(cfg.metadata, "hook_name")
+    assert cfg.metadata.hook_name == cfg.hook_name
+    assert hasattr(cfg.metadata, "model_name")
+    assert cfg.metadata.model_name == cfg.model_name
+
+
+def test_standardize_sae_cfg_with_custom_sae():
+    device = torch.device("cpu")
+    dtype = torch.float32
+    model_name = "gpt2"
+    hook_layer = 3
+    d_in = 768
+
+    custom_sae = IdentitySAE(
+        d_in=d_in,
+        model_name=model_name,
+        hook_layer=hook_layer,
+        device=device,
+        dtype=dtype,
+    )
+
+    cfg = custom_sae.cfg
+
+    general_utils._standardize_sae_cfg(cfg)
+
+    assert hasattr(cfg, "hook_layer")
+    assert cfg.hook_layer is not None
+    assert isinstance(cfg.hook_layer, int)
+    assert cfg.hook_layer == 3
+
+    assert hasattr(cfg, "hook_name")
+    assert cfg.hook_name is not None
+    assert isinstance(cfg.hook_name, str)
+    assert cfg.hook_name == "blocks.3.hook_resid_post"
+
+    assert hasattr(cfg, "model_name")
+    assert cfg.model_name is not None
+    assert isinstance(cfg.model_name, str)
+    assert cfg.model_name == "gpt2"
+
+    assert hasattr(cfg, "d_in")
+    assert cfg.d_in == d_in
+
+    assert hasattr(cfg, "d_sae")
+    assert cfg.d_sae == d_in
+
+    assert hasattr(cfg, "architecture_str")
+    architecture_str = getattr(cfg, "architecture_str", None)
+    assert architecture_str is not None
+    assert isinstance(architecture_str, str)
+
+    assert hasattr(cfg, "metadata")
+    metadata = getattr(cfg, "metadata", None)
+    assert metadata is not None
+    assert hasattr(metadata, "hook_layer")
+    assert metadata.hook_layer == cfg.hook_layer
+    assert hasattr(metadata, "hook_name")
+    assert metadata.hook_name == cfg.hook_name
+    assert hasattr(metadata, "model_name")
+    assert metadata.model_name == cfg.model_name

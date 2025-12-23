@@ -804,6 +804,7 @@
     "sae_cfg_dict": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {

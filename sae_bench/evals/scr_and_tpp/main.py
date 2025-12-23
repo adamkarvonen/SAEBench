@@ -850,7 +850,7 @@ def run_eval(
                 sae_lens_id=sae_id,
                 sae_lens_release_id=sae_release,
                 sae_lens_version=sae_lens_version,
-                sae_cfg_dict=asdict(sae.cfg),
+                sae_cfg_dict=sae.cfg.to_dict(),
             )
         elif eval_type == EVAL_TYPE_ID_TPP:
             eval_output = TppEvalOutput(
@@ -880,7 +880,7 @@ def run_eval(
                 sae_lens_id=sae_id,
                 sae_lens_release_id=sae_release,
                 sae_lens_version=sae_lens_version,
-                sae_cfg_dict=asdict(sae.cfg),
+                sae_cfg_dict=sae.cfg.to_dict(),
             )
         else:
             raise ValueError(f"Invalid eval type: {eval_type}")

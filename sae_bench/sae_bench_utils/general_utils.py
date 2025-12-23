@@ -8,7 +8,8 @@ from typing import Any, Callable
 import pandas as pd
 import torch
 from sae_lens import SAE
-from sae_lens.toolkit.pretrained_saes_directory import get_pretrained_saes_directory
+from sae_lens.loading.pretrained_saes_directory import get_pretrained_saes_directory
+from sae_lens.saes.sae import SAEMetadata
 
 
 def str_to_dtype(dtype_str: str) -> torch.dtype:
@@ -134,18 +135,25 @@ def load_and_format_sae(
 ) -> tuple[str, SAE, torch.Tensor | None] | None:
     """Handle both pretrained SAEs (identified by string) and custom SAEs (passed as objects)"""
     if isinstance(sae_object_or_sae_lens_id, str):
-        sae, _, sparsity = SAE.from_pretrained(
+        sae, _, sparsity = SAE.from_pretrained_with_cfg_and_sparsity(
             release=sae_release_or_unique_id,
             sae_id=sae_object_or_sae_lens_id,
             device=device,
         )
         sae_id = sae_object_or_sae_lens_id
-        sae.fold_W_dec_norm()
+        try:
+            sae.fold_W_dec_norm()
+        except NotImplementedError:
+            print(
+                f"Failed to fold W_dec norm for {sae_release_or_unique_id}_{sae_object_or_sae_lens_id}"
+            )
     else:
         sae = sae_object_or_sae_lens_id
         sae_id = "custom_sae"
         sparsity = None
         check_decoder_norms(sae.W_dec.data)
+
+    _standardize_sae_cfg(sae.cfg)
 
     return sae_id, sae, sparsity
 
@@ -266,3 +274,70 @@ def retry_with_exponential_backoff(
         return wrapper
 
     return decorator
+
+
+def _get_cfg_meta_field(cfg: Any, field: str) -> Any | None:
+    # SAELens v6 moves some cfg properties to `cfg.metadata` that were previously on the cfg object
+    if hasattr(cfg, field):
+        return getattr(cfg, field)
+    if hasattr(cfg, "metadata") and hasattr(cfg.metadata, field):
+        return getattr(cfg.metadata, field)
+    return None
+
+
+def _standardize_sae_cfg(cfg: Any):
+    """
+    Helper to standardize the SAE cfg object so both SAEBench SAEs and SAELens v6 SAEs can be used interchangeably.
+    """
+    hook_name = _get_cfg_meta_field(cfg, "hook_name")
+    hook_layer = _get_cfg_meta_field(cfg, "hook_layer")
+    if hook_name is not None and hook_layer is None:
+        match = re.search(r"\d+", str(hook_name))
+        if match:
+            hook_layer = int(match.group(0))
+    context_size = _get_cfg_meta_field(cfg, "context_size")
+    dataset_trust_remote_code = _get_cfg_meta_field(cfg, "dataset_trust_remote_code")
+    model_name = _get_cfg_meta_field(cfg, "model_name")
+    hook_head_index = _get_cfg_meta_field(cfg, "hook_head_index")
+    exclude_special_tokens = _get_cfg_meta_field(cfg, "exclude_special_tokens")
+    model_from_pretrained_kwargs = (
+        _get_cfg_meta_field(cfg, "model_from_pretrained_kwargs") or {}
+    )
+    prepend_bos = _get_cfg_meta_field(cfg, "prepend_bos")
+    if hook_layer is None:
+        raise ValueError("Cound not determine Hook layer from SAE cfg")
+    if hook_name is None:
+        raise ValueError("Cound not determine Hook name from SAE cfg")
+    if model_name is None:
+        raise ValueError("Cound not determine Model name from SAE cfg")
+
+    # for SAELens v6, these fields are on the cfg.metadata object
+    # for backwards compatibility, we also set them on the cfg object
+    cfg.hook_layer = hook_layer
+    cfg.hook_name = hook_name
+    cfg.context_size = context_size
+    cfg.dataset_trust_remote_code = dataset_trust_remote_code
+    cfg.model_name = model_name
+    cfg.hook_head_index = hook_head_index
+    cfg.model_from_pretrained_kwargs = model_from_pretrained_kwargs
+    cfg.prepend_bos = prepend_bos
+    cfg.exclude_special_tokens = exclude_special_tokens
+
+    # In SAELens v6, sae.architecture is a function rather than a raw string, so we need a new field that stores the string version
+    cfg.architecture_str = (
+        cfg.architecture() if callable(cfg.architecture) else cfg.architecture
+    )
+
+    # If the SAE doesn't have a SAELens v6 metadata field, add it
+    metadata = cfg.metadata if hasattr(cfg, "metadata") else SAEMetadata()
+    metadata.hook_layer = hook_layer
+    metadata.hook_name = hook_name
+    metadata.context_size = context_size
+    metadata.dataset_trust_remote_code = dataset_trust_remote_code
+    metadata.model_name = model_name
+    metadata.hook_head_index = hook_head_index
+    metadata.model_from_pretrained_kwargs = model_from_pretrained_kwargs
+    metadata.prepend_bos = prepend_bos
+    metadata.exclude_special_tokens = exclude_special_tokens
+
+    cfg.metadata = metadata

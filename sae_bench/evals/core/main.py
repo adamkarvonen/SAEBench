@@ -10,7 +10,7 @@ import subprocess
 import time
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from functools import partial
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -18,8 +18,8 @@ from typing import Any
 
 import einops
 import torch
-from sae_lens.sae import SAE
-from sae_lens.toolkit.pretrained_saes_directory import get_pretrained_saes_directory
+from sae_lens import SAE
+from sae_lens.loading.pretrained_saes_directory import get_pretrained_saes_directory
 from sae_lens.training.activations_store import ActivationsStore
 from tqdm import tqdm
 from transformer_lens import HookedTransformer
@@ -338,10 +338,10 @@ def get_featurewise_weight_based_metrics(sae: SAE) -> dict[str, Any]:
     # gated models have a different bias (no b_enc)
     if not hasattr(sae, "b_enc") and not hasattr(sae, "b_mag"):
         encoder_bias = torch.zeros(sae.cfg.d_sae).cpu().tolist()
-    elif sae.cfg.architecture != "gated":
-        encoder_bias = sae.b_enc.cpu().tolist()
+    elif sae.cfg.architecture_str == "gated":
+        encoder_bias = sae.b_mag.cpu().tolist()  # type: ignore
     else:
-        encoder_bias = sae.b_mag.cpu().tolist()
+        encoder_bias = sae.b_enc.cpu().tolist()  # type: ignore
 
     encoder_decoder_cosine_sim = (
         torch.nn.functional.cosine_similarity(
@@ -517,17 +517,10 @@ def get_sparsity_and_variance_metrics(
         else:
             original_act = cache[hook_name]
 
-        # normalise if necessary (necessary in training only, otherwise we should fold the scaling in)
-        if activation_store.normalize_activations == "expected_average_only_in":
-            original_act = activation_store.apply_norm_scaling_factor(original_act)
-
         # send the (maybe normalised) activations into the SAE
         sae_feature_activations = sae.encode(original_act.to(sae.device))
         sae_out = sae.decode(sae_feature_activations).to(original_act.device)
         del cache
-
-        if activation_store.normalize_activations == "expected_average_only_in":
-            sae_out = activation_store.unscale(sae_out)
 
         flattened_sae_input = einops.rearrange(original_act, "b ctx d -> (b ctx) d")
         flattened_sae_feature_acts = einops.rearrange(
@@ -679,20 +672,10 @@ def get_recons_loss(
         original_device = activations.device
         activations = activations.to(sae.device)
 
-        # Handle rescaling if SAE expects it
-        if activation_store.normalize_activations == "expected_average_only_in":
-            activations = activation_store.apply_norm_scaling_factor(activations)
-
         # SAE class agnost forward forward pass.
         reconstructed_activations = sae.decode(sae.encode(activations)).to(
             activations.dtype
         )
-
-        # Unscale if activations were scaled prior to going into the SAE
-        if activation_store.normalize_activations == "expected_average_only_in":
-            reconstructed_activations = activation_store.unscale(
-                reconstructed_activations
-            )
 
         reconstructed_activations = torch.where(
             mask[..., None], reconstructed_activations, activations
@@ -704,10 +687,6 @@ def get_recons_loss(
         original_device = activations.device
         activations = activations.to(sae.device)
 
-        # Handle rescaling if SAE expects it
-        if activation_store.normalize_activations == "expected_average_only_in":
-            activations = activation_store.apply_norm_scaling_factor(activations)
-
         # SAE class agnost forward forward pass.
         new_activations = sae.decode(sae.encode(activations.flatten(-2, -1))).to(
             activations.dtype
@@ -716,10 +695,6 @@ def get_recons_loss(
         new_activations = new_activations.reshape(
             activations.shape
         )  # reshape to match original shape
-
-        # Unscale if activations were scaled prior to going into the SAE
-        if activation_store.normalize_activations == "expected_average_only_in":
-            new_activations = activation_store.unscale(new_activations)
 
         # Apply mask to keep original activations for ignored tokens
         new_activations = torch.where(
@@ -731,10 +706,6 @@ def get_recons_loss(
     def single_head_replacement_hook(activations: torch.Tensor, hook: Any):
         original_device = activations.device
         activations = activations.to(sae.device)
-
-        # Handle rescaling if SAE expects it
-        if activation_store.normalize_activations == "expected_average_only_in":
-            activations = activation_store.apply_norm_scaling_factor(activations)
 
         # Create a copy of activations to modify
         new_activations = activations.clone()
@@ -749,10 +720,6 @@ def get_recons_loss(
             mask[..., None], head_activations, activations[:, :, head_index]
         )
         new_activations[:, :, head_index] = masked_head_activations
-
-        # Unscale if activations were scaled prior to going into the SAE
-        if activation_store.normalize_activations == "expected_average_only_in":
-            new_activations = activation_store.unscale(new_activations)
 
         return new_activations.to(original_device)
 
@@ -948,7 +915,7 @@ def save_single_eval_result(
         sae_lens_id=result["sae_id"],
         sae_lens_release_id=result["sae_set"],
         sae_lens_version=sae_lens_version,
-        sae_cfg_dict=asdict(sae.cfg),
+        sae_cfg_dict=sae.cfg.to_dict(),
     )
 
     eval_output.to_json_file(json_path)
@@ -1114,6 +1081,7 @@ def multiple_evals(
                     sae,
                     context_size=context_size,
                     dataset=dataset,
+                    dataset_trust_remote_code=True,
                 )
 
             activation_store = create_activation_store()

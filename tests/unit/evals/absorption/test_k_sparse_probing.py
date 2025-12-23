@@ -1,7 +1,10 @@
+import numpy as np
+import pandas as pd
 import torch
 from sae_lens import SAE
 
 from sae_bench.evals.absorption.k_sparse_probing import (
+    KSparseProbe,
     _get_sae_acts,
     eval_probe_and_sae_k_sparse_raw_scores,
     train_k_sparse_probes,
@@ -87,3 +90,73 @@ def test_eval_probe_and_sae_k_sparse_raw_scores_gives_sane_results(gpt2_l4_sae: 
             expected_columns.append(f"sum_sparse_sae_{letter}_k_{k}")
             expected_columns.append(f"sparse_sae_{letter}_k_{k}_acts")
     assert set(df.columns.values.tolist()) == set(expected_columns)
+
+
+def test_eval_probe_and_sae_k_sparse_raw_scores_matches_previous_implementation_results(
+    gpt2_l4_sae: SAE,
+):
+    @torch.inference_mode()
+    def _prev_eval_probe_and_sae_k_sparse_raw_scores(
+        sae: SAE,
+        probe: LinearProbe,
+        k_sparse_probes: dict[int, dict[int, KSparseProbe]],
+        eval_labels: list[tuple[str, int]],  # list of (token, letter number) pairs
+        eval_activations: torch.Tensor,  # n_vocab X d_model
+    ) -> pd.DataFrame:
+        probe = probe.to("cpu")
+
+        # using a generator to avoid storing all the rows in memory
+        def row_generator():
+            for token_act, (token, answer_idx) in zip(eval_activations, eval_labels):
+                probe_scores = probe(token_act).tolist()
+                row: dict[str, float | str | int | np.ndarray] = {
+                    "token": token,
+                    "answer_letter": LETTERS[answer_idx],
+                }
+                sae_acts = (
+                    _get_sae_acts(sae, token_act.unsqueeze(0).to(sae.device))
+                    .float()
+                    .cpu()
+                ).squeeze()
+                for letter_i, (letter, probe_score) in enumerate(
+                    zip(LETTERS, probe_scores)
+                ):
+                    row[f"score_probe_{letter}"] = probe_score
+                    for k, k_probes in k_sparse_probes.items():
+                        k_probe = k_probes[letter_i]
+                        k_probe_score = k_probe(sae_acts)
+                        sparse_acts = sae_acts[k_probe.feature_ids]
+                        row[f"score_sparse_sae_{letter}_k_{k}"] = k_probe_score.item()
+                        row[f"sum_sparse_sae_{letter}_k_{k}"] = sparse_acts.sum().item()
+                        row[f"sparse_sae_{letter}_k_{k}_acts"] = sparse_acts.numpy()
+                yield row
+
+        return pd.DataFrame(row_generator())
+
+    torch.set_grad_enabled(True)
+    fake_probe = LinearProbe(768, 26)
+    eval_data = [(letter, i) for i, letter in enumerate(LETTERS)] * 10
+    eval_activations = torch.randn(len(eval_data), 768)
+    k_sparse_probes = train_k_sparse_probes(
+        gpt2_l4_sae,
+        eval_data,
+        eval_activations,
+        ks=[1, 2, 3],
+    )
+    new_df = eval_probe_and_sae_k_sparse_raw_scores(
+        gpt2_l4_sae,
+        fake_probe,
+        k_sparse_probes,
+        eval_data,
+        eval_activations,
+    )
+    prev_df = _prev_eval_probe_and_sae_k_sparse_raw_scores(
+        gpt2_l4_sae,
+        fake_probe,
+        k_sparse_probes,
+        eval_data,
+        eval_activations,
+    )
+    pd.testing.assert_frame_equal(
+        new_df, prev_df, check_exact=False, rtol=1e-3, atol=1e-3, check_dtype=False
+    )
