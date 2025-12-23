@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from sae_lens.sae import SAE
+from sae_lens import SAE
 
 from sae_bench.evals.sparse_probing_sae_probes.eval_config import (
     SparseProbingSaeProbesEvalConfig,

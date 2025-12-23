@@ -54,9 +54,17 @@ def test_meta_structure_eval_matches_fixture(tmp_path):
         actual = json.load(f)
     actual_metrics = _load_metrics(actual)
 
-    assert pytest.approx(
-        expected_metrics["decoder_fraction_variance_explained"], rel=1e-2,
-    ) == actual_metrics["decoder_fraction_variance_explained"]
-    assert pytest.approx(
-        expected_metrics["final_reconstruction_mse"], rel=1e-2,
-    ) == actual_metrics["final_reconstruction_mse"]
+    assert (
+        pytest.approx(
+            expected_metrics["decoder_fraction_variance_explained"],
+            rel=1e-2,
+        )
+        == actual_metrics["decoder_fraction_variance_explained"]
+    )
+    assert (
+        pytest.approx(
+            expected_metrics["final_reconstruction_mse"],
+            rel=1e-2,
+        )
+        == actual_metrics["final_reconstruction_mse"]
+    )
