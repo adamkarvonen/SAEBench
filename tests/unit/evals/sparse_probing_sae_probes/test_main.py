@@ -90,7 +90,9 @@ def test_run_eval_without_baselines(gpt2_l4_sae: SAE, tmp_path: Path):
         assert detail.llm_test_auc is None
         assert detail.llm_test_f1 is None
 
-    sae_probes_results_dir = artifacts_path / "sae_probes_gpt2" / "normal_setting"
+    sae_probes_results_dir = (
+        artifacts_path / "gpt2_l4_sae_custom_sae" / "sae_probes_gpt2" / "normal_setting"
+    )
     assert sae_probes_results_dir.exists()
     json_files = list(sae_probes_results_dir.glob("*.json"))
     assert len(json_files) >= 2

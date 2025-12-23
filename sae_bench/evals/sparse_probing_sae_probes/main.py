@@ -117,6 +117,9 @@ def run_eval(
             print(f"Skipping {sae_release}_{sae_id} as results already exist")
             continue
 
+        sae_results_path = os.path.join(config.results_path, f"{sae_release}_{sae_id}")
+        os.makedirs(sae_results_path, exist_ok=True)
+
         # Run sae-probes (idempotent; will skip if JSONs exist)
         run_sae_evals(
             sae=sae,
@@ -126,7 +129,7 @@ def run_eval(
             setting=config.setting,  # type: ignore[arg-type]
             ks=config.ks,
             binarize=config.binarize,
-            results_path=config.results_path,
+            results_path=sae_results_path,
             model_cache_path=config.model_cache_path,
             datasets=config.dataset_names,
             device=device,
@@ -137,7 +140,7 @@ def run_eval(
         json_files = [
             f
             for f in _sae_probes_results_glob(
-                config.results_path, config.model_name, config.setting
+                sae_results_path, config.model_name, config.setting
             )
             if f.name.endswith(expected_suffix)
         ]
