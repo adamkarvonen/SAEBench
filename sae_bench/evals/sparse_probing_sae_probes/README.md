@@ -24,7 +24,7 @@ python sae_bench/evals/sparse_probing_sae_probes/main.py \
 - `--setting`: Data balance setting (`normal`, `scarcity`, or `imbalance`, default: `normal`)
 - `--binarize`: Whether to binarize probe targets (flag, default: False)
 - `--results_path`: Directory where sae-probes writes intermediate JSONs (default: `artifacts/sparse_probing_sae_probes`)
-- `--model_cache_path`: Optional directory to cache model activations for faster re-runs
+- `--model_cache_path`: Optional directory to cache model activations for faster re-runs (default: `artifacts/sparse_probing_sae_probes--model_acts_cache`)
 - `--output_folder`: Where to save SAEBench output files (default: `eval_results/sparse_probing_sae_probes`)
 - `--force_rerun`: Force re-running the eval even if results exist (flag)
 
@@ -153,4 +153,4 @@ This adds LLM baseline metrics to the output, allowing you to compare how well k
 
 ### Caching model activations for Faster Iteration
 
-Set `model_cache_path` to cache model activations across runs if you expect to rerun this eval for lots of different SAEs on the same model / layers. If this is not set, the eval will re-generate model activations every time the eval is run.
+Set `model_cache_path` to cache model activations across runs if you expect to rerun this eval for lots of different SAEs on the same model / layers. Set this to `None` to disable caching.

@@ -50,7 +50,7 @@ class SparseProbingSaeProbesEvalConfig(BaseEvalConfig):
     )
 
     model_cache_path: str | None = Field(
-        default=None,
+        default="artifacts/sparse_probing_sae_probes--model_acts_cache",
         title="Model Activations Cache",
         description="Optional path where sae-probes will cache generated model activations.",
     )

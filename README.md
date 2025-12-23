@@ -124,19 +124,20 @@ The computational requirements for running SAEBench evaluations were measured on
 - **Setup Phase**: Includes operations like precomputing model activations, training probes, or other one-time preprocessing steps which can be reused across multiple SAE evaluations.
 - **Per-SAE Evaluation Time**: The time required to evaluate a single SAE once the setup is complete.
 
-The total evaluation time for a single SAE across all benchmarks is approximately **110 minutes**, with an additional **152 minutes** of setup time. Note that actual runtimes may vary significantly based on factors such as SAE dictionary size, base model, and GPU selection.
+The total evaluation time for a single SAE across all benchmarks is approximately **113 minutes**, with an additional **177 minutes** of setup time. Note that actual runtimes may vary significantly based on factors such as SAE dictionary size, base model, and GPU selection.
 
-| Evaluation Type | Avg Time per SAE (min) | Setup Time (min) |
-| --------------- | ---------------------- | ---------------- |
-| Absorption      | 26                     | 33               |
-| Core            | 9                      | 0                |
-| SCR             | 6                      | 22               |
-| TPP             | 2                      | 5                |
-| Sparse Probing  | 3                      | 15               |
-| Auto-Interp     | 9                      | 0                |
-| Unlearning      | 10                     | 33               |
-| RAVEL           | 45                     | 45               |
-| **Total**       | **110**                | **152**          |
+| Evaluation Type             | Avg Time per SAE (min) | Setup Time (min) |
+| --------------------------- | ---------------------- | ---------------- |
+| Absorption                  | 26                     | 33               |
+| Core                        | 9                      | 0                |
+| SCR                         | 6                      | 22               |
+| TPP                         | 2                      | 5                |
+| Sparse Probing              | 3                      | 15               |
+| Sparse Probing (SAE Probes) | 3                      | 25               |
+| Auto-Interp                 | 9                      | 0                |
+| Unlearning                  | 10                     | 33               |
+| RAVEL                       | 45                     | 45               |
+| **Total**                   | **113**                | **177**          |
 
 # SAE Bench Baseline Suite
 
