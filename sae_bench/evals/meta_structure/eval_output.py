@@ -53,7 +53,7 @@ class MetaStructureEvalOutput(
     eval_id: str
     datetime_epoch_millis: int
     eval_result_metrics: MetaStructureMetricCategories
-    eval_result_details: list[BaseResultDetail] | None = None
+    eval_result_details: list[BaseResultDetail] | None = None  # pyright: ignore[reportIncompatibleVariableOverride]
     eval_type_id: str = Field(
         default=EVAL_TYPE_ID_META_STRUCTURE,
         title="Eval Type ID",
