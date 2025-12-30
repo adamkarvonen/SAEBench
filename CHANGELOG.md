@@ -1,5 +1,55 @@
 # CHANGELOG
 
+## v0.5.1 (2025-12-30)
+
+### Fix
+
+* fix: warn rather than crash if sae is unnormalized ([`7aba53c`](https://github.com/adamkarvonen/SAEBench/commit/7aba53c934547dc348ffd6328fce0791a44553c5))
+
+* fix: update to fixed saelens version ([`283e839`](https://github.com/adamkarvonen/SAEBench/commit/283e839309c0fce988004ca6601048e9bce51c0d))
+
+### Unknown
+
+* Merge pull request #88 from chanind/allow-unnormalized-saes
+
+fix: warn rather than crash if sae is unnormalized ([`88b87a8`](https://github.com/adamkarvonen/SAEBench/commit/88b87a8c5a9d3dbfc964b611616654b9031150a9))
+
+* Merge pull request #79 from chanind/sae-probes-sparse-probing
+
+feat: Sparse probing eval based on &#34;Are SAEs useful&#34; paper ([`c1a27da`](https://github.com/adamkarvonen/SAEBench/commit/c1a27dac6697133be98591651e70c64dcc83aa41))
+
+* updating readme ([`9eaffa8`](https://github.com/adamkarvonen/SAEBench/commit/9eaffa87714d178ad17945cc095b6ce6acbf8a81))
+
+* nest individual results under SAE name ([`7e70996`](https://github.com/adamkarvonen/SAEBench/commit/7e70996afca2ed2804fca631bb1baa01dfb12b76))
+
+* updating README ([`5a3a63d`](https://github.com/adamkarvonen/SAEBench/commit/5a3a63d7af20631bde416919fdc5d71edba09296))
+
+* ignoring type error ([`d3f8836`](https://github.com/adamkarvonen/SAEBench/commit/d3f88362e1e2391493399e70df5071fbd79655ae))
+
+* fixing formatting and import in test ([`db48f97`](https://github.com/adamkarvonen/SAEBench/commit/db48f97dc0c850752cbd0fa536677e48d666178e))
+
+* Merge branch &#39;main&#39; into sae-probes-sparse-probing ([`dacaf5e`](https://github.com/adamkarvonen/SAEBench/commit/dacaf5ec109dbb925fc0b36c56d517fcc94a7744))
+
+* Merge pull request #87 from pleask/meta-structure-eval
+
+Meta structure eval ([`fbc649f`](https://github.com/adamkarvonen/SAEBench/commit/fbc649fd2c336f5a383ff6840ecac740d485f3d6))
+
+* add README for meta structure eval ([`3a57f28`](https://github.com/adamkarvonen/SAEBench/commit/3a57f2851e7624bf7aa99efe176cee8105295567))
+
+* add acceptance test for meta structure eval ([`1747f24`](https://github.com/adamkarvonen/SAEBench/commit/1747f2458a8d5147390b171c614d420006624ea1))
+
+* rename meta sae evals; also, generated files updated? ([`10e6447`](https://github.com/adamkarvonen/SAEBench/commit/10e6447f4977a7b40caedc00f2e735d568a963f6))
+
+* add meta sae evaluation ([`bfaabc4`](https://github.com/adamkarvonen/SAEBench/commit/bfaabc4c1e7cb65b68d48eb1f5fb1d3a2652fd9f))
+
+* Merge pull request #84 from chanind/update-saelens
+
+fix: update to fixed saelens version ([`c00c27f`](https://github.com/adamkarvonen/SAEBench/commit/c00c27feda375b4d52fd4ea3d78e82568b154779))
+
+* lock pyright version ([`aab0648`](https://github.com/adamkarvonen/SAEBench/commit/aab06484d73cb3b801d4ad8267a15c2574f8497a))
+
+* add pinned branch ([`7dbb125`](https://github.com/adamkarvonen/SAEBench/commit/7dbb125eaf81971d221b2085332f371b87030129))
+
 ## v0.5.0 (2025-10-19)
 
 ### Chore
@@ -47,6 +97,10 @@ feat: updating to SAELens v6 ([`5de6c00`](https://github.com/adamkarvonen/SAEBen
 * updating to SAELens v6 ([`1fad11f`](https://github.com/adamkarvonen/SAEBench/commit/1fad11f0b802e64fcb5bdbfe846f0a07d24ef9b8))
 
 * Pin dependencies ([`7f61449`](https://github.com/adamkarvonen/SAEBench/commit/7f61449e015a0fade7a88d4d3cc3790edd550efc))
+
+* updating more docs / eval locations ([`e196506`](https://github.com/adamkarvonen/SAEBench/commit/e19650649fd431d2e18333de9756ce3d6ca2be39))
+
+* polishing sae-probes sparse probing eval ([`850ee49`](https://github.com/adamkarvonen/SAEBench/commit/850ee4991adbc9e6f09b381f385ea69ce4b1343d))
 
 ## v0.4.2 (2025-07-15)
 
