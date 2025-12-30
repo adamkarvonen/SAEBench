@@ -9,7 +9,6 @@
 - [Training Your Own SAEs](#training-your-own-saes)
 - [Graphing Results](#graphing-results)
 
-
 ## Overview
 
 SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE) models:
@@ -21,6 +20,7 @@ SAE Bench is a comprehensive suite of 8 evaluations for Sparse Autoencoder (SAE)
 - **[Spurious Correlation Removal (SCR)](https://arxiv.org/abs/2411.18895)**
 - **[Targeted Probe Pertubation (TPP)](https://arxiv.org/abs/2411.18895)**
 - **Sparse Probing**
+- **[Sparse Probing (SAE Probes version)](https://arxiv.org/pdf/2502.16681)**
 - **[Unlearning](https://arxiv.org/abs/2410.19278)**
 
 For more information, refer to our [blog post](https://www.neuronpedia.org/sae-bench/info).
@@ -124,20 +124,20 @@ The computational requirements for running SAEBench evaluations were measured on
 - **Setup Phase**: Includes operations like precomputing model activations, training probes, or other one-time preprocessing steps which can be reused across multiple SAE evaluations.
 - **Per-SAE Evaluation Time**: The time required to evaluate a single SAE once the setup is complete.
 
-The total evaluation time for a single SAE across all benchmarks is approximately **110 minutes**, with an additional **152 minutes** of setup time. Note that actual runtimes may vary significantly based on factors such as SAE dictionary size, base model, and GPU selection.
+The total evaluation time for a single SAE across all benchmarks is approximately **115 minutes**, with an additional **177 minutes** of setup time. Note that actual runtimes may vary significantly based on factors such as SAE dictionary size, base model, and GPU selection.
 
-| Evaluation Type | Avg Time per SAE (min) | Setup Time (min) |
-| --------------- | ---------------------- | ---------------- |
-| Absorption      | 26                     | 33               |
-| Core            | 9                      | 0                |
-| SCR             | 6                      | 22               |
-| TPP             | 2                      | 5                |
-| Sparse Probing  | 3                      | 15               |
-| Auto-Interp     | 9                      | 0                |
-| Unlearning      | 10                     | 33               |
-| RAVEL           | 45                     | 45               |
-| **Total**       | **110**                | **152**          |
-
+| Evaluation Type             | Avg Time per SAE (min) | Setup Time (min) |
+| --------------------------- | ---------------------- | ---------------- |
+| Absorption                  | 26                     | 33               |
+| Core                        | 9                      | 0                |
+| SCR                         | 6                      | 22               |
+| TPP                         | 2                      | 5                |
+| Sparse Probing              | 3                      | 15               |
+| Sparse Probing (SAE Probes) | 5                      | 25               |
+| Auto-Interp                 | 9                      | 0                |
+| Unlearning                  | 10                     | 33               |
+| RAVEL                       | 45                     | 45               |
+| **Total**                   | **115**                | **177**          |
 
 # SAE Bench Baseline Suite
 

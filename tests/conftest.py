@@ -24,9 +24,11 @@ def fake_mistral_tokenizer():
 
 @pytest.fixture
 def gpt2_l4_sae() -> SAE:
-    return SAE.from_pretrained(
+    sae = SAE.from_pretrained(
         "gpt2-small-res-jb", "blocks.4.hook_resid_pre", device="cpu"
     )
+    sae.fold_W_dec_norm()
+    return sae
 
 
 @pytest.fixture
@@ -40,9 +42,11 @@ def gpt2_l4_sae_sparsity() -> torch.Tensor:
 
 @pytest.fixture
 def gpt2_l5_sae() -> SAE:
-    return SAE.from_pretrained(
+    sae = SAE.from_pretrained(
         "gpt2-small-res-jb", "blocks.5.hook_resid_pre", device="cpu"
     )
+    sae.fold_W_dec_norm()
+    return sae
 
 
 @pytest.fixture
