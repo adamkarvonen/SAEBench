@@ -90,6 +90,19 @@ For other SAE types, refer to `sae_bench/custom_saes/run_all_evals_custom_saes.p
 
 We currently have a suite of SAE Bench SAEs on layer 8 of Pythia-160M and layer 12 of Gemma-2-2B, each trained on 500M tokens with some having checkpoints at various points. These SAEs can serve as baselines for any new custom SAEs. We also have baseline eval results, saved [here](https://huggingface.co/datasets/adamkarvonen/sae_bench_results_0125). For more information, refer to `sae_bench/custom_saes/README.md`.
 
+### Support for Signed SAE Activations
+
+SAE Bench fully supports SAE architectures that return **signed activations** (both positive and negative values), not just non-negative ReLU-style activations. All metrics correctly handle signed activations:
+
+- **L1 Sparsity**: Calculated as sum of absolute values (standard L1 norm)
+- **Feature Density**: Counts any non-zero activation (positive or negative)
+- **L0 Sparsity**: Unchanged (counts all non-zero activations)
+- **All Other Metrics**: Reconstruction quality, variance explained, and other metrics work correctly with signed activations
+
+For custom SAEs with signed activations, simply ensure your `encode()` method returns tensors that may contain negative values. All evaluations will handle this correctly and maintain full backward compatibility with traditional non-negative SAEs.
+
+**Note on Absorption Evaluation**: The absorption metric is directional and only considers positive probe projections when detecting feature absorption. This is a semantic choice about what constitutes meaningful absorption.
+
 ## Using New Models / Adjusting VRAM Usage
 
 SAE Bench primarily supports Pythia and Gemma models out of the box. If you want to use a different model, you’ll need to make a couple of minor changes:

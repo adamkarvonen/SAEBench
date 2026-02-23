@@ -101,7 +101,8 @@ class FeatureAbsorptionCalculator:
         top_projection_feature_scores: list[FeatureScore],
     ) -> bool:
         # if any of the main features fired, this isn't absorption
-        if not all(score.activation < EPS for score in main_feature_scores):
+        # Use abs() to check magnitude for signed SAE support - large negative activations are still active
+        if not all(abs(score.activation) < EPS for score in main_feature_scores):
             return False
         # If the top firing feature isn't aligned with the probe, this isn't absorption
         if (
@@ -110,6 +111,8 @@ class FeatureAbsorptionCalculator:
         ):
             return False
         # If the probe isn't even activated, this can't be absorption
+        # NOTE: For signed SAEs, this means we only detect absorption when the probe direction
+        # is positively aligned. Negative projections are treated as non-absorption.
         if probe_projection < 0:
             return False
         # If the top firing feature doesn't contribute much to the total probe projection, this isn't absorption
@@ -180,6 +183,8 @@ class FeatureAbsorptionCalculator:
                 potential_absorbers_mask &= (
                     cos_sims >= self.absorption_fraction_probe_cos_sim_threshold
                 )
+                # NOTE: For signed SAEs, only positive probe projections count as potential absorbers
+                # This is semantically meaningful - absorption is directional
                 potential_absorbers_mask &= sae_act_probe_proj > 0
                 potential_absorbers_probe_proj = sae_act_probe_proj[
                     potential_absorbers_mask

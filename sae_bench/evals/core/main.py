@@ -559,7 +559,8 @@ def get_sparsity_and_variance_metrics(
 
         if compute_sparsity_metrics:
             l0 = (flattened_sae_feature_acts != 0).sum(dim=-1).float()
-            l1 = flattened_sae_feature_acts.sum(dim=-1)
+            # Use abs() to handle signed SAE activations - L1 norm is sum of absolute values
+            l1 = flattened_sae_feature_acts.abs().sum(dim=-1)
             metric_dict["l0"].append(l0)
             metric_dict["l1"].append(l1)
 
@@ -601,7 +602,8 @@ def get_sparsity_and_variance_metrics(
             metric_dict["cossim"].append(cossim)
 
         if compute_featurewise_density_statistics:
-            sae_feature_activations_bool = (masked_sae_feature_activations > 0).float()
+            # Count any non-zero activation (positive or negative) for signed SAE support
+            sae_feature_activations_bool = (masked_sae_feature_activations != 0).float()
             total_feature_acts += sae_feature_activations_bool.sum(dim=1).sum(dim=0)
             total_feature_prompts += (sae_feature_activations_bool.sum(dim=1) > 0).sum(
                 dim=0

@@ -235,8 +235,8 @@ def get_feature_activation_sparsity(
         resid_BLD: Float[torch.Tensor, "batch seq_len d_model"] = cache[hook_name]
 
         sae_act_BLF: Float[torch.Tensor, "batch seq_len d_sae"] = sae.encode(resid_BLD)
-        # make act to zero or one
-        sae_act_BLF = (sae_act_BLF > 0).to(dtype=torch.float32)
+        # Convert activations to binary (0 or 1) - count any non-zero for signed SAE support
+        sae_act_BLF = (sae_act_BLF != 0).to(dtype=torch.float32)
 
         if mask_bos_pad_eos_tokens:
             attn_mask_BL = get_bos_pad_eos_mask(tokens_BL, model.tokenizer)
