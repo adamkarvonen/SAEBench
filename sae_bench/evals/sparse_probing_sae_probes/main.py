@@ -133,6 +133,7 @@ def run_eval(
             model_cache_path=config.model_cache_path,
             datasets=config.dataset_names,
             device=device,
+            seed=config.random_seed,
         )
 
         # Collect per-dataset JSONs and collate (filter by hook/reg to avoid stale files)
@@ -198,6 +199,7 @@ def run_eval(
                 model_cache_path=config.model_cache_path,
                 datasets=config.dataset_names,
                 device=device,
+                seed=config.random_seed,
             )
             # Baseline JSON pattern: baseline_results_{model_name}/{setting}_setting/{dataset}_{hook}_{method}.json
             baseline_suffix = f"_{sae.cfg.hook_name}_{config.baseline_method}.json"
@@ -282,6 +284,7 @@ def create_config_and_selected_saes(
 ) -> tuple[SparseProbingSaeProbesEvalConfig, list[tuple[str, str]]]:
     config = SparseProbingSaeProbesEvalConfig(
         model_name=args.model_name,
+        random_seed=args.random_seed,
         reg_type=args.reg_type,
         setting=args.setting,
         ks=args.ks,
@@ -313,6 +316,7 @@ def arg_parser():
         choices=["l1", "l2"],
         help="sae-probes regularization type",
     )
+    parser.add_argument("--random_seed", type=int, default=42)
     parser.add_argument(
         "--setting",
         type=str,
