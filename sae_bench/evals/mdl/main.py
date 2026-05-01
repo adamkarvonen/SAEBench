@@ -39,6 +39,15 @@ class Decodable(Protocol):
     def decode(self, x: torch.Tensor) -> torch.Tensor: ...
 
 
+def _get_filtered_buffer(
+    activations_store: ActivationsStore, n_batches: int
+) -> torch.Tensor:
+    return torch.cat(
+        [activations_store.get_filtered_llm_batch() for _ in range(n_batches)],
+        dim=0,
+    )
+
+
 def build_bins(
     min_pos_activations_F: torch.Tensor,
     max_activations_F: torch.Tensor,
@@ -104,7 +113,7 @@ def calculate_dl(
     float_entropy_F = torch.zeros(num_features, device=device, dtype=torch.float32)
     bool_entropy_F = torch.zeros(num_features, device=device, dtype=torch.float32)
 
-    x_BSN = activations_store.get_filtered_buffer(config.sae_batch_size)
+    x_BSN = _get_filtered_buffer(activations_store, config.sae_batch_size)
     # previous SAELens version had an extra dim in the middle for layer
     x_BSN = x_BSN.unsqueeze(1)
     feature_activations_BsF = sae.encode(x_BSN).squeeze()
@@ -237,7 +246,7 @@ def check_quantised_features_reach_mse_threshold(
     mse_losses: list[torch.Tensor] = []
 
     for i in range(1):
-        x_BSN = activations_store.get_filtered_buffer(config.sae_batch_size)
+        x_BSN = _get_filtered_buffer(activations_store, config.sae_batch_size)
         # previous SAELens version had an extra dim in the middle for layer
         x_BSN = x_BSN.unsqueeze(1)
         feature_activations_BSF = sae.encode(x_BSN).squeeze()
@@ -347,8 +356,8 @@ def run_eval_single_sae(
         max_activations_1F = torch.zeros(1, num_features, device=device) + 100
 
         for _ in range(10):
-            neuron_activations_BSN = activations_store.get_filtered_buffer(
-                config.sae_batch_size
+            neuron_activations_BSN = _get_filtered_buffer(
+                activations_store, config.sae_batch_size
             ).unsqueeze(1)
 
             feature_activations_BsF = sae.encode(neuron_activations_BSN).squeeze()
