@@ -1,5 +1,49 @@
 # CHANGELOG
 
+## v0.6.0 (2026-05-01)
+
+### Feature
+
+* feat: allow setting random_seed for sae_probes_sparse_probing eval ([`5b13f0e`](https://github.com/adamkarvonen/SAEBench/commit/5b13f0e91097739ef81465cc73809568ca9e6baf))
+
+### Fix
+
+* fix: migrate mdl eval to sae-lens &gt;=6.28 get_filtered_llm_batch API
+
+sae-lens 6.28.0 renamed ActivationsStore.get_filtered_buffer(n_batches)
+to get_filtered_llm_batch() (single-batch). Bumps the floor pin and
+adds a small _get_filtered_buffer helper that loops the new API to
+preserve the original sample size at the three mdl call sites. The
+dropped in-place shuffle is harmless: all callers compute
+order-invariant aggregates (histograms, MSE, min/max).
+
+Co-Authored-By: Claude Opus 4.7 (1M context) &lt;noreply@anthropic.com&gt; ([`217e2d5`](https://github.com/adamkarvonen/SAEBench/commit/217e2d5839c48c88463b76c647b619c6398d79ea))
+
+### Test
+
+* test: add basic unit tests for the mdl eval
+
+Covers build_bins (num_bins, bin_precision, the min_pos-zero quirk,
+arg validation), quantize_features_to_bin_midpoints (correctness +
+out-of-range clamping), IdentityAE, and an integration test for the
+new _get_filtered_buffer helper that uses a real ActivationsStore on
+gpt2 + the gpt2-small-res-jb SAE (already-cached fixtures from
+tests/conftest.py) and asserts the exact concatenated shape.
+
+Suite runs in ~13s on cpu.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) &lt;noreply@anthropic.com&gt; ([`b350267`](https://github.com/adamkarvonen/SAEBench/commit/b3502679481bb36f3f436d52084b3287c63aebce))
+
+### Unknown
+
+* Merge pull request #93 from chanind/sae-probes-seed
+
+feat: allow setting random_seed for sae_probes_sparse_probing eval ([`23827bc`](https://github.com/adamkarvonen/SAEBench/commit/23827bcb342ee2e859c1e69a487457a7603fccd1))
+
+* Merge pull request #94 from chanind/fix-mdl-sae-lens-api
+
+fix: update mdl sae for new SAELens api ([`d486a19`](https://github.com/adamkarvonen/SAEBench/commit/d486a19c4d749d4e32efb25b7313d39f4473e90e))
+
 ## v0.5.1 (2025-12-30)
 
 ### Fix
