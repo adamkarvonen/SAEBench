@@ -13,6 +13,12 @@ class SparseProbingSaeProbesEvalConfig(BaseEvalConfig):
         description="TransformerLens model name used by sae-probes (e.g., 'gemma-2-2b').",
     )
 
+    random_seed: int = Field(
+        default=42,
+        title="Random Seed",
+        description="Random seed",
+    )
+
     dataset_names: list[str] = Field(
         default_factory=lambda: [*DATASETS],
         title="Dataset Names",

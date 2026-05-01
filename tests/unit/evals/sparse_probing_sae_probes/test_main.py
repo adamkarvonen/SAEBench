@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 from sae_lens import SAE
 
@@ -231,3 +232,38 @@ def test_run_eval_with_custom_ks(gpt2_l4_sae: SAE, tmp_path: Path):
         metrics = detail.sae_metrics_by_k[k]
         assert "test_accuracy" in metrics
         assert 0 <= metrics["test_accuracy"] <= 1
+
+
+def test_run_eval_propagates_random_seed(gpt2_l4_sae: SAE, tmp_path: Path):
+    custom_seed = 1234
+    config = SparseProbingSaeProbesEvalConfig(
+        model_name="gpt2",
+        include_llm_baseline=True,
+        model_cache_path=str(tmp_path / "model_cache"),
+        results_path=str(tmp_path / "test_artifacts"),
+        dataset_names=["118_us_state_CA"],
+        random_seed=custom_seed,
+    )
+
+    with (
+        patch(
+            "sae_bench.evals.sparse_probing_sae_probes.main.run_sae_evals"
+        ) as mock_sae_evals,
+        patch(
+            "sae_bench.evals.sparse_probing_sae_probes.main.run_baseline_evals"
+        ) as mock_baseline_evals,
+    ):
+        results_dict = run_eval(
+            config,
+            [("gpt2_l4_sae", gpt2_l4_sae)],
+            device="cpu",
+            output_path=str(tmp_path / "test_output"),
+        )
+
+    mock_sae_evals.assert_called_once()
+    assert mock_sae_evals.call_args.kwargs["seed"] == custom_seed
+    mock_baseline_evals.assert_called_once()
+    assert mock_baseline_evals.call_args.kwargs["seed"] == custom_seed
+
+    result_data = results_dict["gpt2_l4_sae_custom_sae"]
+    assert result_data["eval_config"]["random_seed"] == custom_seed

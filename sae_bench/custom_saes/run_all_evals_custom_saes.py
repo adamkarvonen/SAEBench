@@ -177,6 +177,7 @@ def run_evals(
             lambda: sparse_probing_sae_probes.run_eval(
                 sparse_probing_sae_probes.SparseProbingSaeProbesEvalConfig(
                     model_name=model_name,
+                    random_seed=RANDOM_SEED,
                 ),
                 selected_saes,
                 device,
