@@ -311,15 +311,15 @@ class AutoInterp:
     def get_api_response(
         self, messages: Messages, max_tokens: int, n_completions: int = 1
     ) -> tuple[list[str], str]:
-        """Generic API usage function for OpenAI"""
+        """Call the configured OpenAI-compatible judge for generation or scoring."""
         for message in messages:
             assert message.keys() == {"content", "role"}
             assert message["role"] in ["system", "user", "assistant"]
 
-        client = OpenAI(api_key=self.api_key)
+        client = OpenAI(api_key=self.api_key, base_url=self.cfg.judge_base_url)
 
         result = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=self.cfg.judge_model_name,
             messages=messages,  # type: ignore
             n=n_completions,
             max_tokens=max_tokens,
@@ -682,6 +682,8 @@ def create_config_and_selected_saes(
 ) -> tuple[AutoInterpEvalConfig, list[tuple[str, str]]]:
     config = AutoInterpEvalConfig(
         model_name=args.model_name,
+        judge_model_name=args.judge_model_name,
+        judge_base_url=args.judge_base_url,
     )
 
     if args.llm_batch_size is not None:
@@ -716,6 +718,18 @@ def arg_parser():
     parser = argparse.ArgumentParser(description="Run auto interp evaluation")
     parser.add_argument("--random_seed", type=int, default=None, help="Random seed")
     parser.add_argument("--model_name", type=str, required=True, help="Model name")
+    parser.add_argument(
+        "--judge_model_name",
+        type=str,
+        default="gpt-4o-mini",
+        help="Model used to generate explanations and score them",
+    )
+    parser.add_argument(
+        "--judge_base_url",
+        type=str,
+        default=None,
+        help="OpenAI-compatible API base URL for the judge (defaults to the OpenAI SDK setting)",
+    )
 
     parser.add_argument(
         "--sae_regex_pattern",

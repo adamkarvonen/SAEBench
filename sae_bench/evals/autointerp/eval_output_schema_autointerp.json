@@ -1,7 +1,7 @@
 {
   "$defs": {
     "AutoInterpEvalConfig": {
-      "description": "Controls all parameters for how autointerp will work.\n\nArguments:\n    model_name:                     The name of the model to use\n    device:                         The device to use\n    n_latents:                      The number of latents to use\n    override_latents:               The latents to use (overrides n_latents if supplied)\n    dead_latent_threshold:          The log sparsity value below which we consider a latent to be dead\n    seed:                           The seed to use for all randomness\n\n    buffer:                         The size of the buffer to use for scoring\n    no_overlap:                     Whether to allow overlapping sequences for scoring\n    act_threshold_frac:             The fraction of the maximum activation to use as the activation threshold\n    total_tokens:                   The total number of tokens we'll gather data for.\n    batch_size:                     The batch size to use for the scoring phase\n    scoring:                        Whether to perform the scoring phase, or just return explanation\n    max_tokens_in_explanation:      The maximum number of tokens to allow in an explanation\n    use_demos_in_explanation:       Whether to use demonstrations in the explanation prompt\n\n    n_top_ex_for_generation:        The number of top activating sequences to use for the generation phase\n    n_iw_sampled_ex_for_generation: The number of importance-sampled sequences to use for the generation phase (this\n                                    is a replacement for quantile sampling)\n\n    n_top_ex_for_scoring:           The number of top sequences to use for scoring\n    n_random_ex_for_scoring:        The number of random sequences to use for scoring\n    n_iw_sampled_ex_for_scoring:    The number of importance-sampled sequences to use for scoring",
+      "description": "Controls all parameters for how autointerp will work.\n\nArguments:\n    model_name:                     The name of the model whose SAE is being evaluated\n    judge_model_name:               The model used to generate explanations and score them\n    judge_base_url:                 Optional OpenAI-compatible API base URL for the judge\n    device:                         The device to use\n    n_latents:                      The number of latents to use\n    override_latents:               The latents to use (overrides n_latents if supplied)\n    dead_latent_threshold:          The log sparsity value below which we consider a latent to be dead\n    seed:                           The seed to use for all randomness\n\n    buffer:                         The size of the buffer to use for scoring\n    no_overlap:                     Whether to allow overlapping sequences for scoring\n    act_threshold_frac:             The fraction of the maximum activation to use as the activation threshold\n    total_tokens:                   The total number of tokens we'll gather data for.\n    batch_size:                     The batch size to use for the scoring phase\n    scoring:                        Whether to perform the scoring phase, or just return explanation\n    max_tokens_in_explanation:      The maximum number of tokens to allow in an explanation\n    use_demos_in_explanation:       Whether to use demonstrations in the explanation prompt\n\n    n_top_ex_for_generation:        The number of top activating sequences to use for the generation phase\n    n_iw_sampled_ex_for_generation: The number of importance-sampled sequences to use for the generation phase (this\n                                    is a replacement for quantile sampling)\n\n    n_top_ex_for_scoring:           The number of top sequences to use for scoring\n    n_random_ex_for_scoring:        The number of random sequences to use for scoring\n    n_iw_sampled_ex_for_scoring:    The number of importance-sampled sequences to use for scoring",
       "properties": {
         "model_name": {
           "default": "",
@@ -145,6 +145,25 @@
           "description": "The number of importance-sampled sequences to use for scoring",
           "title": "Number of IW Sampled Examples for Scoring",
           "type": "integer"
+        },
+        "judge_model_name": {
+          "default": "gpt-4o-mini",
+          "description": "The model used to generate explanations and score them",
+          "title": "Judge Model Name",
+          "type": "string"
+        },
+        "judge_base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OpenAI-compatible API base URL for the judge. None uses the OpenAI SDK default, including OPENAI_BASE_URL if set.",
+          "title": "Judge API Base URL"
         }
       },
       "title": "AutoInterpEvalConfig",

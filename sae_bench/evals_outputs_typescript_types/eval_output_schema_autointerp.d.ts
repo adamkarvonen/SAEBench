@@ -16,7 +16,7 @@ export type ModelName = string;
 /**
  * The number of latents for the LLM judge to interpret
  */
-export type NumberOfLatents = number;
+export type NumberOfLatents = number | null;
 /**
  * The latents to use (overrides n_latents if supplied)
  */
@@ -93,6 +93,14 @@ export type NumberOfRandomExamplesForScoring = number;
  * The number of importance-sampled sequences to use for scoring
  */
 export type NumberOfIWSampledExamplesForScoring = number;
+/**
+ * The model used to generate explanations and score them
+ */
+export type JudgeModelName = string;
+/**
+ * OpenAI-compatible API base URL for the judge. None uses the OpenAI SDK default, including OPENAI_BASE_URL if set.
+ */
+export type JudgeAPIBaseURL = string | null;
 /**
  * A unique UUID identifying this specific eval run
  */
@@ -179,6 +187,8 @@ export interface EvalConfigType {
   n_top_ex_for_scoring?: NumberOfTopExamplesForScoring;
   n_random_ex_for_scoring?: NumberOfRandomExamplesForScoring;
   n_iw_sampled_ex_for_scoring?: NumberOfIWSampledExamplesForScoring;
+  judge_model_name?: JudgeModelName;
+  judge_base_url?: JudgeAPIBaseURL;
   [k: string]: unknown;
 }
 /**
