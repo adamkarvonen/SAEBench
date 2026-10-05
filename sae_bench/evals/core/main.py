@@ -462,9 +462,10 @@ def get_sparsity_and_variance_metrics(
     if compute_sparsity_metrics:
         metric_dict["l0"] = []
         metric_dict["l1"] = []
-    mean_sum_of_squares: list[torch.Tensor] = []  # for explained variance
-    mean_act_per_dimension: list[torch.Tensor] = []  # for explained variance
-    mean_sum_of_resid_squared: list[torch.Tensor] = []  # for explained variance
+    sum_of_squares: list[torch.Tensor] = []  # for explained variance
+    sum_act_per_dimension: list[torch.Tensor] = []  # for explained variance
+    sum_of_resid_squared: list[torch.Tensor] = []  # for explained variance
+    variance_token_count = 0
     if compute_variance_metrics:
         metric_dict["explained_variance"] = []
         metric_dict["explained_variance_legacy"] = []
@@ -576,18 +577,25 @@ def get_sparsity_and_variance_metrics(
             )
             explained_variance_legacy = 1 - resid_sum_of_squares / batched_variance_sum
             metric_dict["explained_variance_legacy"].append(explained_variance_legacy)
-            # Individual sums for the new (correct) formula. We're taking the mean over the batch
-            # dimension here to save memory, but we could also pass the full tensors and take the
-            # mean later (like we do for other metrics).
-            mean_sum_of_squares.append(
-                (flattened_sae_input).pow(2).sum(dim=-1).mean(dim=0)  # scalar
+            # Accumulate global moments, weighted by the retained token count.
+            # Promote low-precision inputs before squaring and reduction.
+            variance_dtype = torch.promote_types(
+                torch.promote_types(flattened_sae_input.dtype, flattened_sae_out.dtype),
+                torch.float32,
             )
-            mean_act_per_dimension.append(
-                (flattened_sae_input).pow(2).mean(dim=0)  # [d_model]
+            variance_input = flattened_sae_input.to(variance_dtype)
+            variance_residual = variance_input - flattened_sae_out.to(variance_dtype)
+            # Transfer only reduced summaries; MPS does not support float64.
+            sum_of_squares.append(
+                variance_input.square().sum().to(device="cpu", dtype=torch.float64)
             )
-            mean_sum_of_resid_squared.append(
-                resid_sum_of_squares.mean(dim=0)  # scalar
+            sum_act_per_dimension.append(
+                variance_input.sum(dim=0).to(device="cpu", dtype=torch.float64)
             )
+            sum_of_resid_squared.append(
+                variance_residual.square().sum().to(device="cpu", dtype=torch.float64)
+            )
+            variance_token_count += variance_input.shape[0]
 
             x_normed = flattened_sae_input / torch.norm(
                 flattened_sae_input, dim=-1, keepdim=True
@@ -614,14 +622,12 @@ def get_sparsity_and_variance_metrics(
         if metric_name != "explained_variance":
             metrics[f"{metric_name}"] = torch.cat(metric_values).mean().item()
         else:
-            mean_sum_of_squares_tensor = torch.stack(mean_sum_of_squares).mean(dim=0)
-            mean_act_per_dimension_tensor = torch.cat(mean_act_per_dimension).mean(
-                dim=0
-            )
+            global_sum = torch.stack(sum_act_per_dimension).sum(dim=0)
             total_variance = (
-                mean_sum_of_squares_tensor - mean_act_per_dimension_tensor**2
+                torch.stack(sum_of_squares).sum()
+                - global_sum.square().sum() / variance_token_count
             )
-            residual_variance = torch.stack(mean_sum_of_resid_squared).mean(dim=0)
+            residual_variance = torch.stack(sum_of_resid_squared).sum()
             metrics["explained_variance"] = (
                 1 - residual_variance / total_variance
             ).item()
