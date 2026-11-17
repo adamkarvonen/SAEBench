@@ -1,6 +1,6 @@
 import argparse
 import asyncio
-import gc
+import logging
 import os
 import random
 import time
@@ -597,82 +597,91 @@ def run_eval(
     for sae_release, sae_object_or_id in tqdm(
         selected_saes, desc="Running SAE evaluation on all selected SAEs"
     ):
-        sae_id, sae, sparsity = general_utils.load_and_format_sae(
-            sae_release, sae_object_or_id, device
-        )  # type: ignore
-        sae = sae.to(device=device, dtype=llm_dtype)
+        sae = None
+        sae_label = general_utils.format_sae_label(sae_object_or_id)
+        try:
+            sae_id, sae, sparsity = general_utils.load_and_format_sae(
+                sae_release, sae_object_or_id, device
+            )  # type: ignore
+            sae_label = sae_id
+            sae = sae.to(device=device, dtype=llm_dtype)
 
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
-
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist")
-            continue
-
-        artifacts_folder = os.path.join(artifacts_path, EVAL_TYPE_ID_AUTOINTERP)
-
-        sae_eval_result = run_eval_single_sae(
-            config, sae, model, device, artifacts_folder, api_key, sparsity
-        )
-
-        # Save nicely formatted logs to a text file, helpful for debugging.
-        if save_logs_path is not None:
-            # Get summary results for all latents, as well logs for the best and worst-scoring latents
-            headers = [
-                "latent",
-                "explanation",
-                "predictions",
-                "correct seqs",
-                "score",
-            ]
-            logs = "Summary table:\n" + tabulate(
-                [
-                    [sae_eval_result[latent][h] for h in headers]  # type: ignore
-                    for latent in sae_eval_result
-                ],
-                headers=headers,
-                tablefmt="simple_outline",
+            sae_result_path = general_utils.get_results_filepath(
+                output_path, sae_release, sae_id
             )
-            worst_result = min(sae_eval_result.values(), key=lambda x: x["score"])  # type: ignore
-            best_result = max(sae_eval_result.values(), key=lambda x: x["score"])  # type: ignore
-            logs += f"\n\nWorst scoring idx {worst_result['latent']}, score = {worst_result['score']}\n{worst_result['logs']}"  # type: ignore
-            logs += f"\n\nBest scoring idx {best_result['latent']}, score = {best_result['score']}\n{best_result['logs']}"  # type: ignore
-            # Save the results to a file
-            with open(save_logs_path, "a") as f:
-                f.write(logs)
 
-        # Put important results into the results dict
-        all_scores = [r["score"] for r in sae_eval_result.values()]  # type: ignore
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist")
+                continue
 
-        all_scores_tensor = torch.tensor(all_scores)
-        score = all_scores_tensor.mean().item()
-        std_dev = all_scores_tensor.std().item()
+            artifacts_folder = os.path.join(artifacts_path, EVAL_TYPE_ID_AUTOINTERP)
 
-        eval_output = AutoInterpEvalOutput(
-            eval_config=config,
-            eval_id=eval_instance_id,
-            datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
-            eval_result_metrics=AutoInterpMetricCategories(
-                autointerp=AutoInterpMetrics(
-                    autointerp_score=score, autointerp_std_dev=std_dev
+            sae_eval_result = run_eval_single_sae(
+                config, sae, model, device, artifacts_folder, api_key, sparsity
+            )
+
+            # Save nicely formatted logs to a text file, helpful for debugging.
+            if save_logs_path is not None:
+                # Get summary results for all latents, as well logs for the best and worst-scoring latents
+                headers = [
+                    "latent",
+                    "explanation",
+                    "predictions",
+                    "correct seqs",
+                    "score",
+                ]
+                logs = "Summary table:\n" + tabulate(
+                    [
+                        [sae_eval_result[latent][h] for h in headers]  # type: ignore
+                        for latent in sae_eval_result
+                    ],
+                    headers=headers,
+                    tablefmt="simple_outline",
                 )
-            ),
-            eval_result_details=[],
-            eval_result_unstructured=sae_eval_result,
-            sae_bench_commit_hash=sae_bench_commit_hash,
-            sae_lens_id=sae_id,
-            sae_lens_release_id=sae_release,
-            sae_lens_version=sae_lens_version,
-            sae_cfg_dict=sae.cfg.to_dict(),
-        )
+                worst_result = min(sae_eval_result.values(), key=lambda x: x["score"])  # type: ignore
+                best_result = max(sae_eval_result.values(), key=lambda x: x["score"])  # type: ignore
+                logs += f"\n\nWorst scoring idx {worst_result['latent']}, score = {worst_result['score']}\n{worst_result['logs']}"  # type: ignore
+                logs += f"\n\nBest scoring idx {best_result['latent']}, score = {best_result['score']}\n{best_result['logs']}"  # type: ignore
+                # Save the results to a file
+                with open(save_logs_path, "a") as f:
+                    f.write(logs)
 
-        results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
+            # Put important results into the results dict
+            all_scores = [r["score"] for r in sae_eval_result.values()]  # type: ignore
 
-        eval_output.to_json_file(sae_result_path, indent=2)
+            all_scores_tensor = torch.tensor(all_scores)
+            score = all_scores_tensor.mean().item()
+            std_dev = all_scores_tensor.std().item()
 
-        gc.collect()
-        torch.cuda.empty_cache()
+            eval_output = AutoInterpEvalOutput(
+                eval_config=config,
+                eval_id=eval_instance_id,
+                datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
+                eval_result_metrics=AutoInterpMetricCategories(
+                    autointerp=AutoInterpMetrics(
+                        autointerp_score=score, autointerp_std_dev=std_dev
+                    )
+                ),
+                eval_result_details=[],
+                eval_result_unstructured=sae_eval_result,
+                sae_bench_commit_hash=sae_bench_commit_hash,
+                sae_lens_id=sae_id,
+                sae_lens_release_id=sae_release,
+                sae_lens_version=sae_lens_version,
+                sae_cfg_dict=sae.cfg.to_dict(),
+            )
+
+            results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
+
+            eval_output.to_json_file(sae_result_path, indent=2)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                f"Failed to evaluate SAE {sae_label} from {sae_release}; continuing with remaining SAEs"
+            )
+            continue
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
 
     return results_dict
 

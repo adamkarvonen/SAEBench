@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import time
 from dataclasses import asdict
@@ -105,176 +106,190 @@ def run_eval(
     for sae_release, sae_object_or_id in tqdm(
         selected_saes, desc="Running sae-probes on selected SAEs"
     ):
-        sae_id, sae, sparsity = general_utils.load_and_format_sae(  # type: ignore
-            sae_release, sae_object_or_id, device
-        )
-
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
-
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist")
-            continue
-
-        sae_results_path = os.path.join(config.results_path, f"{sae_release}_{sae_id}")
-        os.makedirs(sae_results_path, exist_ok=True)
-
-        # Run sae-probes (idempotent; will skip if JSONs exist)
-        run_sae_evals(
-            sae=sae,
-            model_name=config.model_name,
-            hook_name=sae.cfg.hook_name,
-            reg_type=config.reg_type,  # type: ignore[arg-type]
-            setting=config.setting,  # type: ignore[arg-type]
-            ks=config.ks,
-            binarize=config.binarize,
-            results_path=sae_results_path,
-            model_cache_path=config.model_cache_path,
-            datasets=config.dataset_names,
-            device=device,
-            seed=config.random_seed,
-        )
-
-        # Collect per-dataset JSONs and collate (filter by hook/reg to avoid stale files)
-        expected_suffix = f"_{sae.cfg.hook_name}_{config.reg_type}.json"
-        json_files = [
-            f
-            for f in _sae_probes_results_glob(
-                sae_results_path, config.model_name, config.setting
+        sae = None
+        sae_label = general_utils.format_sae_label(sae_object_or_id)
+        try:
+            sae_id, sae, sparsity = general_utils.load_and_format_sae(  # type: ignore
+                sae_release, sae_object_or_id, device
             )
-            if f.name.endswith(expected_suffix)
-        ]
-        per_dataset_details: list[SaeProbesResultDetail] = []
-        per_dataset_metric_dicts: list[dict[str, float]] = []
-        for jf in json_files:
-            ds_name = _parse_dataset_from_filename(jf)
-            ds_metrics = _aggregate_metrics_from_sae_probes_json(jf)
-            per_dataset_metric_dicts.append(
-                {k: v for k, v in ds_metrics.items() if k.startswith("sae_top_")}
+            sae_label = sae_id
+
+            sae_result_path = general_utils.get_results_filepath(
+                output_path, sae_release, sae_id
             )
 
-            # Build sae_metrics_by_k dictionary for this dataset
-            ds_metrics_by_k: dict[int, dict[str, float]] = {}
-            for k in config.ks:
-                k_metrics = {}
-                for metric in ["test_accuracy", "test_auc", "test_f1"]:
-                    key = f"sae_top_{k}_{metric}"
-                    if key in ds_metrics:
-                        k_metrics[metric] = ds_metrics[key]
-                if k_metrics:
-                    ds_metrics_by_k[k] = k_metrics
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist")
+                continue
 
-            per_dataset_details.append(
-                SaeProbesResultDetail(
-                    dataset_name=ds_name,
-                    sae_metrics_by_k=ds_metrics_by_k if ds_metrics_by_k else None,
-                    **ds_metrics,
-                )
+            sae_results_path = os.path.join(
+                config.results_path, f"{sae_release}_{sae_id}"
             )
+            os.makedirs(sae_results_path, exist_ok=True)
 
-        # Aggregate across datasets (mean per-k)
-        agg_metrics_dict: dict[str, float | None] = {}
-        agg_metrics_by_k: dict[int, dict[str, float]] = {}
-        for k in config.ks:
-            k_metrics: dict[str, float] = {}
-            for metric in ["test_accuracy", "test_auc", "test_f1"]:
-                key = f"sae_top_{k}_{metric}"
-                mean_val = _mean_of_keys(per_dataset_metric_dicts, key)
-                agg_metrics_dict[key] = mean_val
-                if mean_val is not None:
-                    k_metrics[metric] = mean_val
-            if k_metrics:
-                agg_metrics_by_k[k] = k_metrics
-
-        llm_metrics = SaeProbesLlmMetrics()
-        if config.include_llm_baseline:
-            # Run baseline evals (idempotent) and parse results to populate llm metrics
-            run_baseline_evals(
+            # Run sae-probes (idempotent; will skip if JSONs exist)
+            run_sae_evals(
+                sae=sae,
                 model_name=config.model_name,
                 hook_name=sae.cfg.hook_name,
+                reg_type=config.reg_type,  # type: ignore[arg-type]
                 setting=config.setting,  # type: ignore[arg-type]
-                method=config.baseline_method,  # type: ignore[arg-type]
-                results_path=config.results_path,
+                ks=config.ks,
+                binarize=config.binarize,
+                results_path=sae_results_path,
                 model_cache_path=config.model_cache_path,
                 datasets=config.dataset_names,
                 device=device,
                 seed=config.random_seed,
             )
-            # Baseline JSON pattern: baseline_results_{model_name}/{setting}_setting/{dataset}_{hook}_{method}.json
-            baseline_suffix = f"_{sae.cfg.hook_name}_{config.baseline_method}.json"
-            baseline_files = [
+
+            # Collect per-dataset JSONs and collate (filter by hook/reg to avoid stale files)
+            expected_suffix = f"_{sae.cfg.hook_name}_{config.reg_type}.json"
+            json_files = [
                 f
                 for f in _sae_probes_results_glob(
-                    config.results_path,
-                    config.model_name,
-                    config.setting,
-                    prefix="baseline_results",
+                    sae_results_path, config.model_name, config.setting
                 )
-                if f.name.endswith(baseline_suffix)
+                if f.name.endswith(expected_suffix)
             ]
-            # compute overall mean test_acc, test_auc, test_f1 across datasets
-            llm_accs: list[float] = []
-            llm_aucs: list[float] = []
-            llm_f1s: list[float] = []
-            per_ds_metrics: dict[str, dict[str, float]] = {}
-            for bf in baseline_files:
-                ds_name = _parse_dataset_from_filename(bf)
-                with open(bf) as f:
-                    entries: list[dict[str, Any]] = json.load(f)
-                # baselines save a single-element list
-                if entries and "test_acc" in entries[0]:
-                    metrics = {}
-                    if "test_acc" in entries[0]:
-                        acc = float(entries[0]["test_acc"])  # type: ignore[arg-type]
-                        metrics["test_accuracy"] = acc
-                        llm_accs.append(acc)
-                    if "test_auc" in entries[0]:
-                        auc = float(entries[0]["test_auc"])  # type: ignore[arg-type]
-                        metrics["test_auc"] = auc
-                        llm_aucs.append(auc)
-                    if "test_f1" in entries[0]:
-                        f1 = float(entries[0]["test_f1"])  # type: ignore[arg-type]
-                        metrics["test_f1"] = f1
-                        llm_f1s.append(f1)
-                    per_ds_metrics[ds_name] = metrics
-            if llm_accs:
-                llm_metrics.llm_test_accuracy = float(sum(llm_accs) / len(llm_accs))
-            if llm_aucs:
-                llm_metrics.llm_test_auc = float(sum(llm_aucs) / len(llm_aucs))
-            if llm_f1s:
-                llm_metrics.llm_test_f1 = float(sum(llm_f1s) / len(llm_f1s))
-            # attach per-dataset baseline to details
-            for detail in per_dataset_details:
-                if detail.dataset_name in per_ds_metrics:
-                    metrics = per_ds_metrics[detail.dataset_name]
-                    if "test_accuracy" in metrics:
-                        detail.llm_test_accuracy = metrics["test_accuracy"]
-                    if "test_auc" in metrics:
-                        detail.llm_test_auc = metrics["test_auc"]
-                    if "test_f1" in metrics:
-                        detail.llm_test_f1 = metrics["test_f1"]
+            per_dataset_details: list[SaeProbesResultDetail] = []
+            per_dataset_metric_dicts: list[dict[str, float]] = []
+            for jf in json_files:
+                ds_name = _parse_dataset_from_filename(jf)
+                ds_metrics = _aggregate_metrics_from_sae_probes_json(jf)
+                per_dataset_metric_dicts.append(
+                    {k: v for k, v in ds_metrics.items() if k.startswith("sae_top_")}
+                )
 
-        eval_output = SparseProbingSaeProbesEvalOutput(
-            eval_config=config,
-            eval_id=eval_instance_id,
-            datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
-            eval_result_metrics=SaeProbesMetricCategories(
-                llm=llm_metrics,
-                sae=SaeProbesSaeMetrics(**agg_metrics_dict),  # type: ignore[arg-type]
-            ),
-            eval_result_details=per_dataset_details,
-            sae_metrics_by_k=agg_metrics_by_k if agg_metrics_by_k else None,
-            eval_result_unstructured=None,
-            sae_bench_commit_hash=sae_bench_commit_hash,
-            sae_lens_id=sae_id,
-            sae_lens_release_id=sae_release,
-            sae_lens_version=sae_lens_version,
-            sae_cfg_dict=asdict(sae.cfg),
-        )
+                # Build sae_metrics_by_k dictionary for this dataset
+                ds_metrics_by_k: dict[int, dict[str, float]] = {}
+                for k in config.ks:
+                    k_metrics = {}
+                    for metric in ["test_accuracy", "test_auc", "test_f1"]:
+                        key = f"sae_top_{k}_{metric}"
+                        if key in ds_metrics:
+                            k_metrics[metric] = ds_metrics[key]
+                    if k_metrics:
+                        ds_metrics_by_k[k] = k_metrics
 
-        results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
-        eval_output.to_json_file(sae_result_path, indent=2)
+                per_dataset_details.append(
+                    SaeProbesResultDetail(
+                        dataset_name=ds_name,
+                        sae_metrics_by_k=ds_metrics_by_k if ds_metrics_by_k else None,
+                        **ds_metrics,
+                    )
+                )
+
+            # Aggregate across datasets (mean per-k)
+            agg_metrics_dict: dict[str, float | None] = {}
+            agg_metrics_by_k: dict[int, dict[str, float]] = {}
+            for k in config.ks:
+                k_metrics: dict[str, float] = {}
+                for metric in ["test_accuracy", "test_auc", "test_f1"]:
+                    key = f"sae_top_{k}_{metric}"
+                    mean_val = _mean_of_keys(per_dataset_metric_dicts, key)
+                    agg_metrics_dict[key] = mean_val
+                    if mean_val is not None:
+                        k_metrics[metric] = mean_val
+                if k_metrics:
+                    agg_metrics_by_k[k] = k_metrics
+
+            llm_metrics = SaeProbesLlmMetrics()
+            if config.include_llm_baseline:
+                # Run baseline evals (idempotent) and parse results to populate llm metrics
+                run_baseline_evals(
+                    model_name=config.model_name,
+                    hook_name=sae.cfg.hook_name,
+                    setting=config.setting,  # type: ignore[arg-type]
+                    method=config.baseline_method,  # type: ignore[arg-type]
+                    results_path=config.results_path,
+                    model_cache_path=config.model_cache_path,
+                    datasets=config.dataset_names,
+                    device=device,
+                    seed=config.random_seed,
+                )
+                # Baseline JSON pattern: baseline_results_{model_name}/{setting}_setting/{dataset}_{hook}_{method}.json
+                baseline_suffix = f"_{sae.cfg.hook_name}_{config.baseline_method}.json"
+                baseline_files = [
+                    f
+                    for f in _sae_probes_results_glob(
+                        config.results_path,
+                        config.model_name,
+                        config.setting,
+                        prefix="baseline_results",
+                    )
+                    if f.name.endswith(baseline_suffix)
+                ]
+                # compute overall mean test_acc, test_auc, test_f1 across datasets
+                llm_accs: list[float] = []
+                llm_aucs: list[float] = []
+                llm_f1s: list[float] = []
+                per_ds_metrics: dict[str, dict[str, float]] = {}
+                for bf in baseline_files:
+                    ds_name = _parse_dataset_from_filename(bf)
+                    with open(bf) as f:
+                        entries: list[dict[str, Any]] = json.load(f)
+                    # baselines save a single-element list
+                    if entries and "test_acc" in entries[0]:
+                        metrics = {}
+                        if "test_acc" in entries[0]:
+                            acc = float(entries[0]["test_acc"])  # type: ignore[arg-type]
+                            metrics["test_accuracy"] = acc
+                            llm_accs.append(acc)
+                        if "test_auc" in entries[0]:
+                            auc = float(entries[0]["test_auc"])  # type: ignore[arg-type]
+                            metrics["test_auc"] = auc
+                            llm_aucs.append(auc)
+                        if "test_f1" in entries[0]:
+                            f1 = float(entries[0]["test_f1"])  # type: ignore[arg-type]
+                            metrics["test_f1"] = f1
+                            llm_f1s.append(f1)
+                        per_ds_metrics[ds_name] = metrics
+                if llm_accs:
+                    llm_metrics.llm_test_accuracy = float(sum(llm_accs) / len(llm_accs))
+                if llm_aucs:
+                    llm_metrics.llm_test_auc = float(sum(llm_aucs) / len(llm_aucs))
+                if llm_f1s:
+                    llm_metrics.llm_test_f1 = float(sum(llm_f1s) / len(llm_f1s))
+                # attach per-dataset baseline to details
+                for detail in per_dataset_details:
+                    if detail.dataset_name in per_ds_metrics:
+                        metrics = per_ds_metrics[detail.dataset_name]
+                        if "test_accuracy" in metrics:
+                            detail.llm_test_accuracy = metrics["test_accuracy"]
+                        if "test_auc" in metrics:
+                            detail.llm_test_auc = metrics["test_auc"]
+                        if "test_f1" in metrics:
+                            detail.llm_test_f1 = metrics["test_f1"]
+
+            eval_output = SparseProbingSaeProbesEvalOutput(
+                eval_config=config,
+                eval_id=eval_instance_id,
+                datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
+                eval_result_metrics=SaeProbesMetricCategories(
+                    llm=llm_metrics,
+                    sae=SaeProbesSaeMetrics(**agg_metrics_dict),  # type: ignore[arg-type]
+                ),
+                eval_result_details=per_dataset_details,
+                sae_metrics_by_k=agg_metrics_by_k if agg_metrics_by_k else None,
+                eval_result_unstructured=None,
+                sae_bench_commit_hash=sae_bench_commit_hash,
+                sae_lens_id=sae_id,
+                sae_lens_release_id=sae_release,
+                sae_lens_version=sae_lens_version,
+                sae_cfg_dict=asdict(sae.cfg),
+            )
+
+            results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
+            eval_output.to_json_file(sae_result_path, indent=2)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                f"Failed to evaluate SAE {sae_label} from {sae_release}; continuing with remaining SAEs"
+            )
+            continue
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
 
     return results_dict
 
