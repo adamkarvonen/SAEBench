@@ -1,5 +1,5 @@
 import argparse
-import gc
+import logging
 import os
 import statistics
 import time
@@ -66,133 +66,146 @@ def run_eval(
     for sae_release, sae_object_or_id in tqdm(
         selected_saes, desc="Running SAE evaluation on all selected SAEs"
     ):
-        sae_id, sae, sparsity = general_utils.load_and_format_sae(
-            sae_release, sae_object_or_id, device
-        )  # type: ignore
-        sae = sae.to(device=device, dtype=llm_dtype)
+        sae = None
+        sae_label = general_utils.format_sae_label(sae_object_or_id)
+        try:
+            sae_id, sae, sparsity = general_utils.load_and_format_sae(
+                sae_release, sae_object_or_id, device
+            )  # type: ignore
+            sae_label = sae_id
+            sae = sae.to(device=device, dtype=llm_dtype)
 
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
-
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist")
-            continue
-
-        k_sparse_probing_results = run_k_sparse_probing_experiment(
-            model=model,
-            sae=sae,
-            layer=sae.cfg.hook_layer,
-            sae_name=f"{sae_release}_{sae_id}",
-            force=force_rerun,
-            max_k_value=config.max_k_value,
-            f1_jump_threshold=config.f1_jump_threshold,
-            prompt_template=config.prompt_template,
-            prompt_token_pos=config.prompt_token_pos,
-            device=device,
-            k_sparse_probe_l1_decay=config.k_sparse_probe_l1_decay,
-            k_sparse_probe_batch_size=config.k_sparse_probe_batch_size,
-            k_sparse_probe_num_epochs=config.k_sparse_probe_num_epochs,
-            eval_batch_size=config.eval_k_sparse_probe_batch_size,
-            precalc_k_sparse_probe_sae_acts=config.precalc_k_sparse_probe_sae_acts,
-        )
-
-        # Save k_sparse_probing_results as a separate JSON
-        artifacts_folder = os.path.join("artifacts", "absorption")
-        os.makedirs(artifacts_folder, exist_ok=True)
-        k_sparse_probing_file = f"{sae_release}_{sae_id}_k_sparse_probing.json"
-        k_sparse_probing_file = k_sparse_probing_file.replace("/", "_")
-        k_sparse_probing_path = os.path.join(artifacts_folder, k_sparse_probing_file)
-        os.makedirs(os.path.dirname(k_sparse_probing_path), exist_ok=True)
-        k_sparse_probing_results.to_json(
-            k_sparse_probing_path, orient="records", indent=4
-        )
-
-        # check we have enough first-letter features to evaluate absorption
-        if (
-            k_sparse_probing_results["f1_probe"] > config.min_GT_probe_f1
-        ).sum() < config.min_feats_for_eval:
-            print(
-                f"\n\n\nCannot evaluate absorption due to insufficent first-letter features detected in model: {config.model_name}\n\n\n"
+            sae_result_path = general_utils.get_results_filepath(
+                output_path, sae_release, sae_id
             )
-            break
 
-        raw_df = run_feature_absortion_experiment(
-            model=model,
-            sae=sae,
-            layer=sae.cfg.hook_layer,
-            sae_name=f"{sae_release}_{sae_id}",
-            force=force_rerun,
-            max_k_value=config.max_k_value,
-            feature_split_f1_jump_threshold=config.f1_jump_threshold,
-            prompt_template=config.prompt_template,
-            prompt_token_pos=config.prompt_token_pos,
-            batch_size=config.llm_batch_size,
-            device=device,
-        )
-        agg_df = _aggregate_results_df(raw_df)
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist")
+                continue
 
-        # aggregate results and produce the output
-        mean_absorption_fractions = []
-        full_absorption_rates = []
-        num_split_features = []
-        eval_result_details = []
-        for _, row in agg_df.iterrows():
-            letter = row["letter"]
+            k_sparse_probing_results = run_k_sparse_probing_experiment(
+                model=model,
+                sae=sae,
+                layer=sae.cfg.hook_layer,
+                sae_name=f"{sae_release}_{sae_id}",
+                force=force_rerun,
+                max_k_value=config.max_k_value,
+                f1_jump_threshold=config.f1_jump_threshold,
+                prompt_template=config.prompt_template,
+                prompt_token_pos=config.prompt_token_pos,
+                device=device,
+                k_sparse_probe_l1_decay=config.k_sparse_probe_l1_decay,
+                k_sparse_probe_batch_size=config.k_sparse_probe_batch_size,
+                k_sparse_probe_num_epochs=config.k_sparse_probe_num_epochs,
+                eval_batch_size=config.eval_k_sparse_probe_batch_size,
+                precalc_k_sparse_probe_sae_acts=config.precalc_k_sparse_probe_sae_acts,
+            )
+
+            # Save k_sparse_probing_results as a separate JSON
+            artifacts_folder = os.path.join("artifacts", "absorption")
+            os.makedirs(artifacts_folder, exist_ok=True)
+            k_sparse_probing_file = f"{sae_release}_{sae_id}_k_sparse_probing.json"
+            k_sparse_probing_file = k_sparse_probing_file.replace("/", "_")
+            k_sparse_probing_path = os.path.join(
+                artifacts_folder, k_sparse_probing_file
+            )
+            os.makedirs(os.path.dirname(k_sparse_probing_path), exist_ok=True)
+            k_sparse_probing_results.to_json(
+                k_sparse_probing_path, orient="records", indent=4
+            )
+
+            # check we have enough first-letter features to evaluate absorption
             if (
-                k_sparse_probing_results[
-                    k_sparse_probing_results["letter"] == row["letter"]
-                ]["f1_probe"].item()
-                > config.min_GT_probe_f1
-            ):
-                mean_absorption_fractions.append(row["mean_absorption_fraction"])
-                full_absorption_rates.append(row["full_absorption_rate"])
-                num_split_features.append(row["num_split_feats"])
-                eval_result_details.append(
-                    AbsorptionResultDetail(
-                        first_letter=letter,  # type: ignore
-                        mean_absorption_fraction=row["mean_absorption_fraction"],  # type: ignore
-                        full_absorption_rate=row["full_absorption_rate"],  # type: ignore
-                        num_full_absorption=row["num_full_absorption"],  # type: ignore
-                        num_probe_true_positives=row["num_probe_true_positives"],  # type: ignore
-                        num_split_features=row["num_split_feats"],  # type: ignore
+                k_sparse_probing_results["f1_probe"] > config.min_GT_probe_f1
+            ).sum() < config.min_feats_for_eval:
+                print(
+                    f"\n\n\nCannot evaluate absorption due to insufficent first-letter features detected in model: {config.model_name}\n\n\n"
+                )
+                break
+
+            raw_df = run_feature_absortion_experiment(
+                model=model,
+                sae=sae,
+                layer=sae.cfg.hook_layer,
+                sae_name=f"{sae_release}_{sae_id}",
+                force=force_rerun,
+                max_k_value=config.max_k_value,
+                feature_split_f1_jump_threshold=config.f1_jump_threshold,
+                prompt_template=config.prompt_template,
+                prompt_token_pos=config.prompt_token_pos,
+                batch_size=config.llm_batch_size,
+                device=device,
+            )
+            agg_df = _aggregate_results_df(raw_df)
+
+            # aggregate results and produce the output
+            mean_absorption_fractions = []
+            full_absorption_rates = []
+            num_split_features = []
+            eval_result_details = []
+            for _, row in agg_df.iterrows():
+                letter = row["letter"]
+                if (
+                    k_sparse_probing_results[
+                        k_sparse_probing_results["letter"] == row["letter"]
+                    ]["f1_probe"].item()
+                    > config.min_GT_probe_f1
+                ):
+                    mean_absorption_fractions.append(row["mean_absorption_fraction"])
+                    full_absorption_rates.append(row["full_absorption_rate"])
+                    num_split_features.append(row["num_split_feats"])
+                    eval_result_details.append(
+                        AbsorptionResultDetail(
+                            first_letter=letter,  # type: ignore
+                            mean_absorption_fraction=row["mean_absorption_fraction"],  # type: ignore
+                            full_absorption_rate=row["full_absorption_rate"],  # type: ignore
+                            num_full_absorption=row["num_full_absorption"],  # type: ignore
+                            num_probe_true_positives=row["num_probe_true_positives"],  # type: ignore
+                            num_split_features=row["num_split_feats"],  # type: ignore
+                        )
                     )
-                )
-        eval_output = AbsorptionEvalOutput(
-            eval_type_id=EVAL_TYPE_ID_ABSORPTION,
-            eval_config=config,
-            eval_id=eval_instance_id,
-            datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
-            eval_result_metrics=AbsorptionMetricCategories(
-                mean=AbsorptionMeanMetrics(
-                    mean_absorption_fraction_score=statistics.mean(
-                        mean_absorption_fractions
-                    ),
-                    mean_full_absorption_score=statistics.mean(full_absorption_rates),
-                    mean_num_split_features=statistics.mean(num_split_features),
-                    std_dev_absorption_fraction_score=statistics.stdev(
-                        mean_absorption_fractions
-                    ),
-                    std_dev_full_absorption_score=statistics.stdev(
-                        full_absorption_rates
-                    ),
-                    std_dev_num_split_features=statistics.stdev(num_split_features),
-                )
-            ),
-            eval_result_details=eval_result_details,
-            sae_bench_commit_hash=sae_bench_commit_hash,
-            sae_lens_id=sae_id,
-            sae_lens_release_id=sae_release,
-            sae_lens_version=sae_lens_version,
-            sae_cfg_dict=sae.cfg.to_dict(),
-        )
+            eval_output = AbsorptionEvalOutput(
+                eval_type_id=EVAL_TYPE_ID_ABSORPTION,
+                eval_config=config,
+                eval_id=eval_instance_id,
+                datetime_epoch_millis=int(datetime.now().timestamp() * 1000),
+                eval_result_metrics=AbsorptionMetricCategories(
+                    mean=AbsorptionMeanMetrics(
+                        mean_absorption_fraction_score=statistics.mean(
+                            mean_absorption_fractions
+                        ),
+                        mean_full_absorption_score=statistics.mean(
+                            full_absorption_rates
+                        ),
+                        mean_num_split_features=statistics.mean(num_split_features),
+                        std_dev_absorption_fraction_score=statistics.stdev(
+                            mean_absorption_fractions
+                        ),
+                        std_dev_full_absorption_score=statistics.stdev(
+                            full_absorption_rates
+                        ),
+                        std_dev_num_split_features=statistics.stdev(num_split_features),
+                    )
+                ),
+                eval_result_details=eval_result_details,
+                sae_bench_commit_hash=sae_bench_commit_hash,
+                sae_lens_id=sae_id,
+                sae_lens_release_id=sae_release,
+                sae_lens_version=sae_lens_version,
+                sae_cfg_dict=sae.cfg.to_dict(),
+            )
 
-        results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
+            results_dict[f"{sae_release}_{sae_id}"] = asdict(eval_output)
 
-        eval_output.to_json_file(sae_result_path, indent=2)
-
-        gc.collect()
-        torch.cuda.empty_cache()
+            eval_output.to_json_file(sae_result_path, indent=2)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                f"Failed to evaluate SAE {sae_label} from {sae_release}; continuing with remaining SAEs"
+            )
+            continue
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
 
     return results_dict
 

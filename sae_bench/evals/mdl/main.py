@@ -1,5 +1,4 @@
 import argparse
-import gc
 import json
 import os
 import random
@@ -478,50 +477,61 @@ def run_eval(
     for sae_release, sae_object_or_id in tqdm(
         selected_saes, desc="Running SAE evaluation on all selected SAEs"
     ):
-        sae_id, sae, sparsity = general_utils.load_and_format_sae(
-            sae_release, sae_object_or_id, device
-        )  # type: ignore
-        sae = sae.to(device=device, dtype=llm_dtype)
+        sae = None
+        sae_label = general_utils.format_sae_label(sae_object_or_id)
+        try:
+            sae_id, sae, sparsity = general_utils.load_and_format_sae(
+                sae_release, sae_object_or_id, device
+            )  # type: ignore
+            sae_label = sae_id
+            sae = sae.to(device=device, dtype=llm_dtype)
 
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
+            sae_result_path = general_utils.get_results_filepath(
+                output_path, sae_release, sae_id
+            )
 
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist")
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist")
+                continue
+
+            eval_output = run_eval_single_sae(
+                config=config,
+                sae=sae,
+                model=model,
+                dataset_name=config.dataset_name,
+                device=device,
+            )
+
+            sae_eval_result = {
+                "eval_instance_id": eval_instance_id,
+                "sae_lens_release": sae_release,
+                "sae_lens_id": sae_id,
+                "eval_type_id": EVAL_TYPE,
+                "sae_lens_version": sae_lens_version,
+                "sae_bench_version": sae_bench_commit_hash,
+                "date_time": datetime.now().isoformat(),
+                "eval_config": asdict(config),
+                "eval_results": eval_output,
+                "eval_artifacts": {"artifacts": "None"},
+                "sae_cfg_dict": sae.cfg.to_dict(),
+            }
+
+            with open(sae_result_path, "w") as f:
+                json.dump(sae_eval_result, f, indent=4)
+
+            results_dict[f"{sae_release}_{sae_id}"] = eval_output
+        except Exception:
+            logger.exception(
+                f"Failed to evaluate SAE {sae_label} from {sae_release}; continuing with remaining SAEs"
+            )
             continue
-
-        eval_output = run_eval_single_sae(
-            config=config,
-            sae=sae,
-            model=model,
-            dataset_name=config.dataset_name,
-            device=device,
-        )
-
-        sae_eval_result = {
-            "eval_instance_id": eval_instance_id,
-            "sae_lens_release": sae_release,
-            "sae_lens_id": sae_id,
-            "eval_type_id": EVAL_TYPE,
-            "sae_lens_version": sae_lens_version,
-            "sae_bench_version": sae_bench_commit_hash,
-            "date_time": datetime.now().isoformat(),
-            "eval_config": asdict(config),
-            "eval_results": eval_output,
-            "eval_artifacts": {"artifacts": "None"},
-            "sae_cfg_dict": sae.cfg.to_dict(),
-        }
-
-        with open(sae_result_path, "w") as f:
-            json.dump(sae_eval_result, f, indent=4)
-
-        results_dict[f"{sae_release}_{sae_id}"] = eval_output
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
 
     results_dict["custom_eval_config"] = asdict(config)
 
-    gc.collect()
-    torch.cuda.empty_cache()
+    general_utils.cleanup_cuda()
 
     return results_dict
 

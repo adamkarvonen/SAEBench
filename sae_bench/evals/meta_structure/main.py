@@ -1,4 +1,5 @@
 import argparse
+import logging
 import math
 import os
 import random
@@ -25,6 +26,8 @@ from sae_bench.sae_bench_utils import (
     get_sae_lens_version,
 )
 from sae_bench.sae_bench_utils.sae_selection_utils import get_saes_from_regex
+
+logger = logging.getLogger(__name__)
 
 
 def _decoder_data_provider(
@@ -170,29 +173,41 @@ def run_eval(
     os.makedirs(output_path, exist_ok=True)
 
     for sae_release, sae_id_or_path in selected_saes:
-        sae_id, sae, _ = general_utils.load_and_format_sae(
-            sae_release, sae_id_or_path, device
-        )  # type: ignore
+        sae = None
+        sae_label = general_utils.format_sae_label(sae_id_or_path)
+        try:
+            sae_id, sae, _ = general_utils.load_and_format_sae(
+                sae_release, sae_id_or_path, device
+            )  # type: ignore
+            sae_label = sae_id
 
-        sae_result_path = general_utils.get_results_filepath(
-            output_path, sae_release, sae_id
-        )
+            sae_result_path = general_utils.get_results_filepath(
+                output_path, sae_release, sae_id
+            )
 
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist.")
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist.")
+                continue
+
+            eval_output = run_eval_single_sae(
+                sae_release=sae_release,
+                sae_id=sae_id,
+                sae=sae,
+                config=config,
+                device=device,
+            )
+            eval_output.to_json_file(sae_result_path, indent=2)
+            results[f"{sae_release}_{sae_id}"] = (
+                eval_output.eval_result_metrics.meta_structure.decoder_fraction_variance_explained
+            )
+        except Exception:
+            logger.exception(
+                f"Failed to evaluate SAE {sae_label} from {sae_release}; continuing with remaining SAEs"
+            )
             continue
-
-        eval_output = run_eval_single_sae(
-            sae_release=sae_release,
-            sae_id=sae_id,
-            sae=sae,
-            config=config,
-            device=device,
-        )
-        eval_output.to_json_file(sae_result_path, indent=2)
-        results[f"{sae_release}_{sae_id}"] = (
-            eval_output.eval_result_metrics.meta_structure.decoder_fraction_variance_explained
-        )
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
 
     return results
 

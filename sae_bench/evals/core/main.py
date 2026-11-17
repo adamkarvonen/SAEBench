@@ -2,7 +2,6 @@
 # flake8: noqa: E501
 # fmt: on
 import argparse
-import gc
 import logging
 import math
 import os
@@ -1007,48 +1006,51 @@ def multiple_evals(
     for sae_release, sae_object_or_id in tqdm(
         selected_saes, desc="Running SAE evaluation on all selected SAEs"
     ):
-        sae_id, sae, sparsity = general_utils.load_and_format_sae(
-            sae_release, sae_object_or_id, device
-        )  # type: ignore
-        sae = sae.to(device=device, dtype=llm_dtype)
-
-        sae_result_path = general_utils.get_results_filepath(
-            output_folder, sae_release, sae_id
-        )
-
-        if os.path.exists(sae_result_path) and not force_rerun:
-            print(f"Skipping {sae_release}_{sae_id} as results already exist")
-            continue
-
-        if current_model_str != sae.cfg.model_name:
-            # Wrap model loading with retry
-            @general_utils.retry_with_exponential_backoff(
-                retries=5,
-                exceptions=(
-                    Exception,
-                ),  # We might want to be more specific about which exceptions to catch
-                initial_delay=1.0,
-                max_delay=60.0,
-            )
-            def load_model():
-                return HookedTransformer.from_pretrained_no_processing(
-                    sae.cfg.model_name,
-                    device=device,
-                    dtype=sae.W_enc.dtype,
-                    **sae.cfg.model_from_pretrained_kwargs,
-                )
-
-            try:
-                del current_model  # type: ignore
-                current_model_str = sae.cfg.model_name
-                current_model = load_model()
-            except Exception as e:
-                logger.error(f"Failed to load model {sae.cfg.model_name}: {str(e)}")
-                continue  # Skip this SAE and continue with the next one
-
-        assert current_model is not None  # type: ignore
-
+        sae = None
+        sae_id = general_utils.format_sae_label(sae_object_or_id)
         try:
+            sae_id, sae, sparsity = general_utils.load_and_format_sae(
+                sae_release, sae_object_or_id, device
+            )  # type: ignore
+            sae = sae.to(device=device, dtype=llm_dtype)
+
+            sae_result_path = general_utils.get_results_filepath(
+                output_folder, sae_release, sae_id
+            )
+
+            if os.path.exists(sae_result_path) and not force_rerun:
+                print(f"Skipping {sae_release}_{sae_id} as results already exist")
+                continue
+
+            if current_model_str != sae.cfg.model_name:
+                # Wrap model loading with retry
+                @general_utils.retry_with_exponential_backoff(
+                    retries=5,
+                    exceptions=(
+                        Exception,
+                    ),  # We might want to be more specific about which exceptions to catch
+                    initial_delay=1.0,
+                    max_delay=60.0,
+                )
+                def load_model(sae_obj: SAE):
+                    return HookedTransformer.from_pretrained_no_processing(
+                        sae_obj.cfg.model_name,
+                        device=device,
+                        dtype=sae_obj.W_enc.dtype,
+                        **sae_obj.cfg.model_from_pretrained_kwargs,
+                    )
+
+                try:
+                    current_model = None
+                    current_model_str = None
+                    current_model = load_model(sae)
+                    current_model_str = sae.cfg.model_name
+                except Exception as e:
+                    logger.error(f"Failed to load model {sae.cfg.model_name}: {str(e)}")
+                    continue  # Skip this SAE and continue with the next one
+
+            assert current_model is not None  # type: ignore
+
             # Create a CoreEvalConfig for this specific evaluation
             core_eval_config = CoreEvalConfig(
                 model_name=sae.cfg.model_name,
@@ -1075,16 +1077,16 @@ def multiple_evals(
                 initial_delay=1.0,
                 max_delay=30.0,
             )
-            def create_activation_store():
+            def create_activation_store(sae_obj: SAE):
                 return ActivationsStore.from_sae(
                     current_model,  # type: ignore
-                    sae,
+                    sae_obj,
                     context_size=context_size,
                     dataset=dataset,
                     dataset_trust_remote_code=True,
                 )
 
-            activation_store = create_activation_store()
+            activation_store = create_activation_store(sae)
             activation_store.shuffle_input_dataset(seed=42)
 
             eval_metrics = nested_dict()
@@ -1139,9 +1141,9 @@ def multiple_evals(
                 f"with context length {context_size} on dataset {dataset}: {str(e)}"
             )
             continue  # Skip this combination and continue with the next one
-
-        gc.collect()
-        torch.cuda.empty_cache()
+        finally:
+            sae = None
+            general_utils.cleanup_cuda()
     return eval_results
 
 

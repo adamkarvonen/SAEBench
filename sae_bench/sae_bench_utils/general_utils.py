@@ -1,4 +1,5 @@
 import functools
+import gc
 import os
 import random
 import re
@@ -342,3 +343,19 @@ def _standardize_sae_cfg(cfg: Any):
     metadata.exclude_special_tokens = exclude_special_tokens
 
     cfg.metadata = metadata
+
+
+def format_sae_label(sae_object_or_id: Any) -> str:
+    """Return a human-readable identifier for logging per-SAE status/errors."""
+    if isinstance(sae_object_or_id, str):
+        return sae_object_or_id
+    cfg = getattr(sae_object_or_id, "cfg", None)
+    sae_id = _get_cfg_meta_field(cfg, "sae_lens_id") if cfg is not None else None
+    return str(sae_id) if sae_id else "custom_sae"
+
+
+def cleanup_cuda() -> None:
+    """Run garbage collection and release unused PyTorch CUDA cache when available."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
