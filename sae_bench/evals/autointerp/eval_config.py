@@ -8,7 +8,9 @@ class AutoInterpEvalConfig:
     Controls all parameters for how autointerp will work.
 
     Arguments:
-        model_name:                     The name of the model to use
+        model_name:                     The name of the model whose SAE is being evaluated
+        judge_model_name:               The model used to generate explanations and score them
+        judge_base_url:                 Optional OpenAI-compatible API base URL for the judge
         device:                         The device to use
         n_latents:                      The number of latents to use
         override_latents:               The latents to use (overrides n_latents if supplied)
@@ -142,6 +144,17 @@ class AutoInterpEvalConfig:
         default=2,
         title="Number of IW Sampled Examples for Scoring",
         description="The number of importance-sampled sequences to use for scoring",
+    )
+
+    judge_model_name: str = Field(
+        default="gpt-4o-mini",
+        title="Judge Model Name",
+        description="The model used to generate explanations and score them",
+    )
+    judge_base_url: str | None = Field(
+        default=None,
+        title="Judge API Base URL",
+        description="OpenAI-compatible API base URL for the judge. None uses the OpenAI SDK default, including OPENAI_BASE_URL if set.",
     )
 
     def __post_init__(self):
